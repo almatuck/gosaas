@@ -370,6 +370,7 @@ See [Deployment Guide](./docs/DEPLOYMENT.md) for platform-specific instructions 
 - [Stripe Integration](./docs/STRIPE.md) - Standalone mode billing setup
 - [Levee Integration](./docs/LEVEE_INTEGRATION.md) - Managed platform features
 - [Customization](./docs/CUSTOMIZATION.md) - Theming, branding, components
+- [Research Runner](./docs/RESEARCH.md) - Validate your SaaS idea (bonus tool)
 
 ## Tech Stack
 
