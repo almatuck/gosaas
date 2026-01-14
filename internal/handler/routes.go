@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	admin "gosaas/internal/handler/admin"
 	auth "gosaas/internal/handler/auth"
 	subscription "gosaas/internal/handler/subscription"
 	user "gosaas/internal/handler/user"
@@ -24,6 +25,34 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: HealthCheckHandler(serverCtx),
 			},
 		},
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminAuth},
+			[]rest.Route{
+				{
+					// Get admin dashboard stats
+					Method:  http.MethodGet,
+					Path:    "/admin/stats",
+					Handler: admin.GetAdminStatsHandler(serverCtx),
+				},
+				{
+					// List all subscriptions (paginated)
+					Method:  http.MethodGet,
+					Path:    "/admin/subscriptions",
+					Handler: admin.AdminListSubscriptionsHandler(serverCtx),
+				},
+				{
+					// List all users (paginated)
+					Method:  http.MethodGet,
+					Path:    "/admin/users",
+					Handler: admin.AdminListUsersHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1"),
 	)
 
 	server.AddRoutes(

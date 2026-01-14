@@ -10,6 +10,10 @@ type Config struct {
 		ProductionMode bool   `json:",default=false"`
 		AdminEmail     string `json:",optional"` // For Let's Encrypt notifications
 	}
+	Admin struct {
+		Username string `json:",optional"` // Backoffice admin username
+		Password string `json:",optional"` // Backoffice admin password
+	}
 	Auth struct {
 		AccessSecret       string
 		AccessExpire       int64

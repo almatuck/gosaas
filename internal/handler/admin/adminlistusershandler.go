@@ -1,0 +1,29 @@
+package admin
+
+import (
+	"net/http"
+
+	"github.com/zeromicro/go-zero/rest/httpx"
+	"gosaas/internal/logic/admin"
+	"gosaas/internal/svc"
+	"gosaas/internal/types"
+)
+
+// List all users (paginated)
+func AdminListUsersHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req types.AdminListUsersRequest
+		if err := httpx.Parse(r, &req); err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+			return
+		}
+
+		l := admin.NewAdminListUsersLogic(r.Context(), svcCtx)
+		resp, err := l.AdminListUsers(&req)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
+	}
+}

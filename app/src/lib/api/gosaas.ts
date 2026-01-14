@@ -10,6 +10,29 @@ export function healthCheck() {
 }
 
 /**
+ * @description "Get admin dashboard stats"
+ */
+export function getAdminStats() {
+	return webapi.get<components.AdminStatsResponse>(`/api/v1/admin/stats`)
+}
+
+/**
+ * @description "List all subscriptions (paginated)"
+ * @param params
+ */
+export function adminListSubscriptions(params: components.AdminListSubscriptionsRequestParams) {
+	return webapi.get<components.AdminListSubscriptionsResponse>(`/api/v1/admin/subscriptions`, params)
+}
+
+/**
+ * @description "List all users (paginated)"
+ * @param params
+ */
+export function adminListUsers(params: components.AdminListUsersRequestParams) {
+	return webapi.get<components.AdminListUsersResponse>(`/api/v1/admin/users`, params)
+}
+
+/**
  * @description "Request password reset"
  * @param req
  */

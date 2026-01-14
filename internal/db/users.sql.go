@@ -22,6 +22,30 @@ func (q *Queries) CheckEmailExists(ctx context.Context, email string) (int64, er
 	return found, err
 }
 
+const countUsers = `-- name: CountUsers :one
+
+SELECT COUNT(*) as total FROM users
+`
+
+// Admin queries
+func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsers)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countUsersCreatedAfter = `-- name: CountUsersCreatedAfter :one
+SELECT COUNT(*) as total FROM users WHERE created_at >= ?1
+`
+
+func (q *Queries) CountUsersCreatedAfter(ctx context.Context, after int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsersCreatedAfter, after)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     id, email, password_hash, name, created_at, updated_at
@@ -191,6 +215,61 @@ func (q *Queries) GetUserByPasswordResetToken(ctx context.Context, token sql.Nul
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listUsersPaginated = `-- name: ListUsersPaginated :many
+SELECT id, email, name, avatar_url, email_verified, created_at, updated_at
+FROM users
+WHERE (?1 = '' OR LOWER(email) LIKE '%' || LOWER(?1) || '%' OR LOWER(name) LIKE '%' || LOWER(?1) || '%')
+ORDER BY created_at DESC
+LIMIT ?3 OFFSET ?2
+`
+
+type ListUsersPaginatedParams struct {
+	Search     interface{} `json:"search"`
+	PageOffset int64       `json:"page_offset"`
+	PageSize   int64       `json:"page_size"`
+}
+
+type ListUsersPaginatedRow struct {
+	ID            string         `json:"id"`
+	Email         string         `json:"email"`
+	Name          string         `json:"name"`
+	AvatarUrl     sql.NullString `json:"avatar_url"`
+	EmailVerified int64          `json:"email_verified"`
+	CreatedAt     int64          `json:"created_at"`
+	UpdatedAt     int64          `json:"updated_at"`
+}
+
+func (q *Queries) ListUsersPaginated(ctx context.Context, arg ListUsersPaginatedParams) ([]ListUsersPaginatedRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersPaginated, arg.Search, arg.PageOffset, arg.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUsersPaginatedRow
+	for rows.Next() {
+		var i ListUsersPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Name,
+			&i.AvatarUrl,
+			&i.EmailVerified,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const setEmailVerified = `-- name: SetEmailVerified :exec

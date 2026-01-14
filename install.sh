@@ -444,21 +444,33 @@ if [[ "$CREATE_ENV" == true ]]; then
   if [[ -f ".env" ]] && [[ "$FORCE_ENV" != true ]]; then
     print_success ".env exists (use --force to overwrite)"
   else
-    # Generate secure secret
-    ACCESS_SECRET=""
-    if command -v openssl &> /dev/null; then
-      ACCESS_SECRET=$(openssl rand -hex 32 2>/dev/null)
-    fi
-    if [[ -z "$ACCESS_SECRET" ]] && [[ -r /dev/urandom ]]; then
-      ACCESS_SECRET=$(head -c 32 /dev/urandom | xxd -p 2>/dev/null | tr -d '\n')
-    fi
-    if [[ -z "$ACCESS_SECRET" ]] && [[ -r /dev/urandom ]]; then
-      ACCESS_SECRET=$(head -c 32 /dev/urandom | od -A n -t x1 2>/dev/null | tr -d ' \n')
-    fi
+    # Generate secure secrets
+    generate_secret() {
+      local length=${1:-32}
+      local secret=""
+      if command -v openssl &> /dev/null; then
+        secret=$(openssl rand -hex "$length" 2>/dev/null)
+      fi
+      if [[ -z "$secret" ]] && [[ -r /dev/urandom ]]; then
+        secret=$(head -c "$length" /dev/urandom | xxd -p 2>/dev/null | tr -d '\n')
+      fi
+      if [[ -z "$secret" ]] && [[ -r /dev/urandom ]]; then
+        secret=$(head -c "$length" /dev/urandom | od -A n -t x1 2>/dev/null | tr -d ' \n')
+      fi
+      echo "$secret"
+    }
+
+    ACCESS_SECRET=$(generate_secret 32)
+    ADMIN_PASSWORD=$(generate_secret 16)
+
     if [[ -z "$ACCESS_SECRET" ]] || [[ ${#ACCESS_SECRET} -lt 32 ]]; then
-      # Fallback (less secure)
       ACCESS_SECRET="CHANGE_THIS_$(date +%s)_INSECURE_PLEASE_REGENERATE"
-      print_warning "Could not generate secure secret - please regenerate with: openssl rand -hex 32"
+      print_warning "Could not generate secure JWT secret - please regenerate with: openssl rand -hex 32"
+    fi
+
+    if [[ -z "$ADMIN_PASSWORD" ]] || [[ ${#ADMIN_PASSWORD} -lt 16 ]]; then
+      ADMIN_PASSWORD="admin_$(date +%s)"
+      print_warning "Could not generate secure admin password - please change in .env"
     fi
 
     cat > .env << ENVEOF
@@ -474,6 +486,10 @@ PRODUCTION_MODE=false
 
 # JWT Secret (auto-generated - keep this safe!)
 ACCESS_SECRET=${ACCESS_SECRET}
+
+# Backoffice Admin (for SaaS metrics at /backoffice)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
 # CORS
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8888
@@ -574,6 +590,11 @@ echo "    make air              # Backend with hot reload"
 echo "    cd app && pnpm dev    # Frontend (another terminal)"
 echo ""
 echo -e "  ${BOLD}Then visit:${NC} http://localhost:5173"
+echo ""
+echo -e "  ${BOLD}Admin Backoffice:${NC}"
+echo "    URL:      http://localhost:8888/backoffice"
+echo "    Username: admin"
+echo "    Password: (see ADMIN_PASSWORD in .env)"
 echo ""
 echo -e "  ${BOLD}Configure payments:${NC}"
 echo "    1. Get keys from https://dashboard.stripe.com/apikeys"

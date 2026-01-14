@@ -3,6 +3,64 @@
 
 package types
 
+type AdminListSubscriptionsRequest struct {
+	Page     int    `form:"page,optional"`
+	PageSize int    `form:"pageSize,optional"`
+	Status   string `form:"status,optional"`
+}
+
+type AdminListSubscriptionsResponse struct {
+	Subscriptions []AdminSubscription `json:"subscriptions"`
+	TotalCount    int                 `json:"totalCount"`
+	Page          int                 `json:"page"`
+	PageSize      int                 `json:"pageSize"`
+}
+
+type AdminListUsersRequest struct {
+	Page     int    `form:"page,optional"`
+	PageSize int    `form:"pageSize,optional"`
+	Search   string `form:"search,optional"`
+}
+
+type AdminListUsersResponse struct {
+	Users      []AdminUser `json:"users"`
+	TotalCount int         `json:"totalCount"`
+	Page       int         `json:"page"`
+	PageSize   int         `json:"pageSize"`
+}
+
+type AdminStatsResponse struct {
+	TotalUsers          int    `json:"totalUsers"`
+	ActiveSubscriptions int    `json:"activeSubscriptions"`
+	TrialSubscriptions  int    `json:"trialSubscriptions"`
+	MonthlyRevenue      int    `json:"monthlyRevenue"`
+	Currency            string `json:"currency"`
+	NewUsersToday       int    `json:"newUsersToday"`
+	NewUsersThisWeek    int    `json:"newUsersThisWeek"`
+	NewUsersThisMonth   int    `json:"newUsersThisMonth"`
+}
+
+type AdminSubscription struct {
+	Id        string `json:"id"`
+	UserId    string `json:"userId"`
+	UserEmail string `json:"userEmail"`
+	PlanName  string `json:"planName"`
+	Status    string `json:"status"`
+	Amount    int    `json:"amount"`
+	Currency  string `json:"currency"`
+	Interval  string `json:"interval"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type AdminUser struct {
+	Id        string `json:"id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Plan      string `json:"plan"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"createdAt"`
+}
+
 type BillingRecord struct {
 	Id               string `json:"id"`
 	Amount           int    `json:"amount"`

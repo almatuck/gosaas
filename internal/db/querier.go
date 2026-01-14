@@ -12,7 +12,14 @@ import (
 type Querier interface {
 	CancelSubscription(ctx context.Context, arg CancelSubscriptionParams) error
 	CheckEmailExists(ctx context.Context, email string) (int64, error)
+	// Admin queries
+	CountActiveSubscriptions(ctx context.Context) (int64, error)
 	CountLeads(ctx context.Context, filterStatus interface{}) (int64, error)
+	CountSubscriptionsFiltered(ctx context.Context, statusFilter interface{}) (int64, error)
+	CountTrialSubscriptions(ctx context.Context) (int64, error)
+	// Admin queries
+	CountUsers(ctx context.Context) (int64, error)
+	CountUsersCreatedAfter(ctx context.Context, after int64) (int64, error)
 	CreateLead(ctx context.Context, arg CreateLeadParams) (Lead, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
@@ -38,6 +45,8 @@ type Querier interface {
 	GetUserByPasswordResetToken(ctx context.Context, token sql.NullString) (User, error)
 	GetUserPreferences(ctx context.Context, userID string) (UserPreference, error)
 	ListLeads(ctx context.Context, arg ListLeadsParams) ([]Lead, error)
+	ListSubscriptionsPaginated(ctx context.Context, arg ListSubscriptionsPaginatedParams) ([]ListSubscriptionsPaginatedRow, error)
+	ListUsersPaginated(ctx context.Context, arg ListUsersPaginatedParams) ([]ListUsersPaginatedRow, error)
 	SetEmailVerified(ctx context.Context, id string) error
 	SetEmailVerifyToken(ctx context.Context, arg SetEmailVerifyTokenParams) error
 	SetPasswordResetToken(ctx context.Context, arg SetPasswordResetTokenParams) error

@@ -344,3 +344,84 @@ service gosaas {
 	get /subscription/billing-history (ListBillingHistoryRequest) returns (ListBillingHistoryResponse)
 }
 
+// =====================================================
+// ADMIN/BACKOFFICE TYPES
+// =====================================================
+type AdminStatsResponse {
+	TotalUsers          int    `json:"totalUsers"`
+	ActiveSubscriptions int    `json:"activeSubscriptions"`
+	TrialSubscriptions  int    `json:"trialSubscriptions"`
+	MonthlyRevenue      int    `json:"monthlyRevenue"`
+	Currency            string `json:"currency"`
+	NewUsersToday       int    `json:"newUsersToday"`
+	NewUsersThisWeek    int    `json:"newUsersThisWeek"`
+	NewUsersThisMonth   int    `json:"newUsersThisMonth"`
+}
+
+type AdminUser {
+	Id        string `json:"id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Plan      string `json:"plan"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type AdminListUsersRequest {
+	Page     int    `form:"page,optional"`
+	PageSize int    `form:"pageSize,optional"`
+	Search   string `form:"search,optional"`
+}
+
+type AdminListUsersResponse {
+	Users      []AdminUser `json:"users"`
+	TotalCount int         `json:"totalCount"`
+	Page       int         `json:"page"`
+	PageSize   int         `json:"pageSize"`
+}
+
+type AdminSubscription {
+	Id        string `json:"id"`
+	UserId    string `json:"userId"`
+	UserEmail string `json:"userEmail"`
+	PlanName  string `json:"planName"`
+	Status    string `json:"status"`
+	Amount    int    `json:"amount"`
+	Currency  string `json:"currency"`
+	Interval  string `json:"interval"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type AdminListSubscriptionsRequest {
+	Page     int    `form:"page,optional"`
+	PageSize int    `form:"pageSize,optional"`
+	Status   string `form:"status,optional"`
+}
+
+type AdminListSubscriptionsResponse {
+	Subscriptions []AdminSubscription `json:"subscriptions"`
+	TotalCount    int                 `json:"totalCount"`
+	Page          int                 `json:"page"`
+	PageSize      int                 `json:"pageSize"`
+}
+
+@server (
+	prefix:     /api/v1
+	group:      admin
+	jwt:        Auth
+	middleware: AdminAuth
+)
+service gosaas {
+	@doc "Get admin dashboard stats"
+	@handler GetAdminStats
+	get /admin/stats returns (AdminStatsResponse)
+
+	@doc "List all users (paginated)"
+	@handler AdminListUsers
+	get /admin/users (AdminListUsersRequest) returns (AdminListUsersResponse)
+
+	@doc "List all subscriptions (paginated)"
+	@handler AdminListSubscriptions
+	get /admin/subscriptions (AdminListSubscriptionsRequest) returns (AdminListSubscriptionsResponse)
+}
+

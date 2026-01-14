@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/subtle"
 	"fmt"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"gosaas/internal/types"
 
 	levee "github.com/almatuck/levee-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -61,6 +63,11 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, 
 
 // loginLocal handles login with local SQLite auth
 func (l *LoginLogic) loginLocal(req *types.LoginRequest) (*types.LoginResponse, error) {
+	// Check if this is an admin login
+	if req.Email == l.svcCtx.Config.Admin.Username {
+		return l.loginAdmin(req)
+	}
+
 	if l.svcCtx.Auth == nil {
 		return nil, fmt.Errorf("local auth service not configured")
 	}
@@ -77,5 +84,43 @@ func (l *LoginLogic) loginLocal(req *types.LoginRequest) (*types.LoginResponse, 
 		Token:        authResp.Token,
 		RefreshToken: authResp.RefreshToken,
 		ExpiresAt:    authResp.ExpiresAt.UnixMilli(),
+	}, nil
+}
+
+// loginAdmin handles admin login using credentials from env
+func (l *LoginLogic) loginAdmin(req *types.LoginRequest) (*types.LoginResponse, error) {
+	// Constant-time comparison to prevent timing attacks
+	expectedPass := []byte(l.svcCtx.Config.Admin.Password)
+	providedPass := []byte(req.Password)
+
+	if subtle.ConstantTimeCompare(expectedPass, providedPass) != 1 {
+		l.Errorf("Admin login failed: invalid password")
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	// Generate JWT token with same structure as regular users
+	now := time.Now()
+	accessExpiry := now.Add(time.Duration(l.svcCtx.Config.Auth.AccessExpire) * time.Second)
+
+	claims := jwt.MapClaims{
+		"userId": "admin",
+		"email":  l.svcCtx.Config.Admin.Username,
+		"iat":    now.Unix(),
+		"exp":    accessExpiry.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	accessToken, err := token.SignedString([]byte(l.svcCtx.Config.Auth.AccessSecret))
+	if err != nil {
+		l.Errorf("Failed to sign admin token: %v", err)
+		return nil, fmt.Errorf("failed to generate token")
+	}
+
+	l.Infof("Admin logged in: %s", req.Email)
+
+	return &types.LoginResponse{
+		Token:       accessToken,
+		ExpiresAt:   accessExpiry.UnixMilli(),
+		CheckoutUrl: "/backoffice",
 	}, nil
 }

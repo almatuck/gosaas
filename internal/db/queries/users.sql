@@ -86,3 +86,18 @@ LIMIT 1;
 -- name: CheckEmailExists :one
 SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END as found
 FROM users WHERE LOWER(email) = LOWER(sqlc.arg(email));
+
+-- Admin queries
+
+-- name: CountUsers :one
+SELECT COUNT(*) as total FROM users;
+
+-- name: CountUsersCreatedAfter :one
+SELECT COUNT(*) as total FROM users WHERE created_at >= sqlc.arg(after);
+
+-- name: ListUsersPaginated :many
+SELECT id, email, name, avatar_url, email_verified, created_at, updated_at
+FROM users
+WHERE (sqlc.arg(search) = '' OR LOWER(email) LIKE '%' || LOWER(sqlc.arg(search)) || '%' OR LOWER(name) LIKE '%' || LOWER(sqlc.arg(search)) || '%')
+ORDER BY created_at DESC
+LIMIT sqlc.arg(page_size) OFFSET sqlc.arg(page_offset);

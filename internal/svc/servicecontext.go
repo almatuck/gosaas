@@ -8,11 +8,13 @@ import (
 
 	leveeSDK "github.com/almatuck/levee-go"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/rest"
 )
 
 type ServiceContext struct {
 	Config             config.Config
 	SecurityMiddleware *middleware.SecurityMiddleware
+	AdminAuth          rest.Middleware // Admin backoffice basic auth
 
 	// Levee SDK (used when Levee.Enabled=true)
 	Levee *leveeSDK.Client
@@ -30,9 +32,13 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	securityMw := middleware.NewSecurityMiddleware(c)
 	logx.Info("Security middleware initialized")
 
+	// Initialize admin auth middleware (only needs username - password validated at login)
+	adminAuth := middleware.NewAdminAuthMiddleware(c.Admin.Username)
+
 	svc := &ServiceContext{
 		Config:             c,
 		SecurityMiddleware: securityMw,
+		AdminAuth:          adminAuth.Handle,
 	}
 
 	// Initialize email service (SMTP or Outlet.sh - available in both modes)

@@ -8,6 +8,11 @@ App:
   Domain: ${APP_DOMAIN}
   ProductionMode: ${PRODUCTION_MODE}
 
+# Backoffice Admin (for viewing SaaS stats)
+Admin:
+  Username: ${ADMIN_USERNAME}
+  Password: ${ADMIN_PASSWORD}
+
 # Authentication configuration
 Auth:
   AccessSecret: ${ACCESS_SECRET}

@@ -29,6 +29,43 @@ func (q *Queries) CancelSubscription(ctx context.Context, arg CancelSubscription
 	return err
 }
 
+const countActiveSubscriptions = `-- name: CountActiveSubscriptions :one
+
+SELECT COUNT(*) as total FROM subscriptions WHERE status = 'active' AND plan_id != 'free'
+`
+
+// Admin queries
+func (q *Queries) CountActiveSubscriptions(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countActiveSubscriptions)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countSubscriptionsFiltered = `-- name: CountSubscriptionsFiltered :one
+SELECT COUNT(*) as total
+FROM subscriptions s
+WHERE (?1 = '' OR s.status = ?1)
+`
+
+func (q *Queries) CountSubscriptionsFiltered(ctx context.Context, statusFilter interface{}) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countSubscriptionsFiltered, statusFilter)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countTrialSubscriptions = `-- name: CountTrialSubscriptions :one
+SELECT COUNT(*) as total FROM subscriptions WHERE status = 'trialing'
+`
+
+func (q *Queries) CountTrialSubscriptions(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countTrialSubscriptions)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const createSubscription = `-- name: CreateSubscription :one
 INSERT INTO subscriptions (
     id, user_id, plan_id, status, created_at, updated_at
@@ -174,6 +211,72 @@ func (q *Queries) GetSubscriptionByUserID(ctx context.Context, userID string) (S
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listSubscriptionsPaginated = `-- name: ListSubscriptionsPaginated :many
+SELECT s.id, s.user_id, u.email as user_email, s.plan_id, s.status,
+       s.stripe_subscription_id, s.current_period_start, s.current_period_end,
+       s.cancel_at_period_end, s.created_at, s.updated_at
+FROM subscriptions s
+JOIN users u ON s.user_id = u.id
+WHERE (?1 = '' OR s.status = ?1)
+ORDER BY s.created_at DESC
+LIMIT ?3 OFFSET ?2
+`
+
+type ListSubscriptionsPaginatedParams struct {
+	StatusFilter interface{} `json:"status_filter"`
+	PageOffset   int64       `json:"page_offset"`
+	PageSize     int64       `json:"page_size"`
+}
+
+type ListSubscriptionsPaginatedRow struct {
+	ID                   string         `json:"id"`
+	UserID               string         `json:"user_id"`
+	UserEmail            string         `json:"user_email"`
+	PlanID               string         `json:"plan_id"`
+	Status               string         `json:"status"`
+	StripeSubscriptionID sql.NullString `json:"stripe_subscription_id"`
+	CurrentPeriodStart   sql.NullInt64  `json:"current_period_start"`
+	CurrentPeriodEnd     sql.NullInt64  `json:"current_period_end"`
+	CancelAtPeriodEnd    int64          `json:"cancel_at_period_end"`
+	CreatedAt            int64          `json:"created_at"`
+	UpdatedAt            int64          `json:"updated_at"`
+}
+
+func (q *Queries) ListSubscriptionsPaginated(ctx context.Context, arg ListSubscriptionsPaginatedParams) ([]ListSubscriptionsPaginatedRow, error) {
+	rows, err := q.db.QueryContext(ctx, listSubscriptionsPaginated, arg.StatusFilter, arg.PageOffset, arg.PageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSubscriptionsPaginatedRow
+	for rows.Next() {
+		var i ListSubscriptionsPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.UserEmail,
+			&i.PlanID,
+			&i.Status,
+			&i.StripeSubscriptionID,
+			&i.CurrentPeriodStart,
+			&i.CurrentPeriodEnd,
+			&i.CancelAtPeriodEnd,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateSubscriptionStatus = `-- name: UpdateSubscriptionStatus :exec

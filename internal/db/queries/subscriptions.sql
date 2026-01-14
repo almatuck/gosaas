@@ -65,3 +65,26 @@ WHERE stripe_subscription_id = sqlc.arg(stripe_subscription_id);
 
 -- name: DeleteSubscription :exec
 DELETE FROM subscriptions WHERE user_id = sqlc.arg(user_id);
+
+-- Admin queries
+
+-- name: CountActiveSubscriptions :one
+SELECT COUNT(*) as total FROM subscriptions WHERE status = 'active' AND plan_id != 'free';
+
+-- name: CountTrialSubscriptions :one
+SELECT COUNT(*) as total FROM subscriptions WHERE status = 'trialing';
+
+-- name: ListSubscriptionsPaginated :many
+SELECT s.id, s.user_id, u.email as user_email, s.plan_id, s.status,
+       s.stripe_subscription_id, s.current_period_start, s.current_period_end,
+       s.cancel_at_period_end, s.created_at, s.updated_at
+FROM subscriptions s
+JOIN users u ON s.user_id = u.id
+WHERE (sqlc.arg(status_filter) = '' OR s.status = sqlc.arg(status_filter))
+ORDER BY s.created_at DESC
+LIMIT sqlc.arg(page_size) OFFSET sqlc.arg(page_offset);
+
+-- name: CountSubscriptionsFiltered :one
+SELECT COUNT(*) as total
+FROM subscriptions s
+WHERE (sqlc.arg(status_filter) = '' OR s.status = sqlc.arg(status_filter));
