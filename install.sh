@@ -369,107 +369,47 @@ fi
 # ============================================================
 print_step "Replacing all occurrences of 'gosaas' and 'GoSaaS'..."
 
-# Function to replace in a single file (both lowercase and proper case)
-replace_in_file() {
-  local file="$1"
-  if [[ -f "$file" ]]; then
-    # Replace GoSaaS (proper case) with NewName (proper case)
-    if grep -q "${OLD_NAME_PROPER}" "$file" 2>/dev/null; then
-      sed_inplace "s/${OLD_NAME_PROPER}/${NEW_NAME_PROPER}/g" "$file"
-    fi
-    # Replace gosaas (lowercase) with newname (lowercase)
-    if grep -q "${OLD_NAME}" "$file" 2>/dev/null; then
-      sed_inplace "s/${OLD_NAME}/${NEW_NAME}/g" "$file"
-    fi
-  fi
-}
-
-# Go files
-print_info "Updating Go files..."
-while IFS= read -r -d '' file; do
-  replace_in_file "$file"
-done < <(find . -type f -name "*.go" ! -path "./vendor/*" -print0 2>/dev/null)
-
-# API definition file
-if [[ -f "${NEW_NAME}.api" ]]; then
-  replace_in_file "${NEW_NAME}.api"
-fi
-
-# YAML files (config, compose, etc)
-print_info "Updating YAML files..."
-while IFS= read -r -d '' file; do
-  replace_in_file "$file"
-done < <(find . -type f \( -name "*.yaml" -o -name "*.yml" \) -print0 2>/dev/null)
-
-# Markdown files (docs, README, CLAUDE.md, etc)
-print_info "Updating documentation..."
-while IFS= read -r -d '' file; do
-  replace_in_file "$file"
-done < <(find . -type f -name "*.md" -print0 2>/dev/null)
-
-# SQL files
-print_info "Updating SQL files..."
-while IFS= read -r -d '' file; do
-  replace_in_file "$file"
-done < <(find . -type f -name "*.sql" -print0 2>/dev/null)
-
-# Config files in root
-for file in Makefile .air.toml Dockerfile .env.example go.mod go.sum compose.yaml; do
-  replace_in_file "$file"
-done
-
-# Frontend files
-if [[ -d "app" ]]; then
-  print_info "Updating frontend files..."
-
-  # Rename API files first
+# Rename frontend API files first
+if [[ -d "app/src/lib/api" ]]; then
   [[ -f "app/src/lib/api/${OLD_NAME}.ts" ]] && mv "app/src/lib/api/${OLD_NAME}.ts" "app/src/lib/api/${NEW_NAME}.ts"
   [[ -f "app/src/lib/api/${OLD_NAME}Components.ts" ]] && mv "app/src/lib/api/${OLD_NAME}Components.ts" "app/src/lib/api/${NEW_NAME}Components.ts"
-
-  # TypeScript files
-  while IFS= read -r -d '' file; do
-    replace_in_file "$file"
-  done < <(find app -type f -name "*.ts" -print0 2>/dev/null)
-
-  # Svelte files (all of them - routes, components, layouts)
-  while IFS= read -r -d '' file; do
-    replace_in_file "$file"
-  done < <(find app -type f -name "*.svelte" -print0 2>/dev/null)
-
-  # CSS files
-  while IFS= read -r -d '' file; do
-    replace_in_file "$file"
-  done < <(find app -type f -name "*.css" -print0 2>/dev/null)
-
-  # JSON files (package.json, manifest, etc)
-  while IFS= read -r -d '' file; do
-    replace_in_file "$file"
-  done < <(find app -type f -name "*.json" -print0 2>/dev/null)
-
-  # Static files (webmanifest, etc)
-  while IFS= read -r -d '' file; do
-    replace_in_file "$file"
-  done < <(find app/static -type f -print0 2>/dev/null)
-
-  # .env.example in app
-  replace_in_file "app/.env.example"
 fi
 
-# Deploy folder
-if [[ -d "deploy" ]]; then
-  print_info "Updating deploy files..."
-  while IFS= read -r -d '' file; do
-    replace_in_file "$file"
-  done < <(find deploy -type f -print0 2>/dev/null)
-fi
+print_info "Updating all project files..."
 
-# Scripts folder
-if [[ -d "scripts" ]]; then
-  print_info "Updating scripts..."
-  while IFS= read -r -d '' file; do
-    replace_in_file "$file"
-  done < <(find scripts -type f -print0 2>/dev/null)
-fi
+# Helper function to process files of a given pattern
+process_files() {
+  local pattern="$1"
+  find . -type f -name "$pattern" ! -path "./.git/*" ! -path "./vendor/*" ! -path "./node_modules/*" 2>/dev/null | while IFS= read -r file; do
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      sed -i '' "s/${OLD_NAME_PROPER}/${NEW_NAME_PROPER}/g" "$file" 2>/dev/null || true
+      sed -i '' "s/${OLD_NAME}/${NEW_NAME}/g" "$file" 2>/dev/null || true
+    else
+      sed -i "s/${OLD_NAME_PROPER}/${NEW_NAME_PROPER}/g" "$file" 2>/dev/null || true
+      sed -i "s/${OLD_NAME}/${NEW_NAME}/g" "$file" 2>/dev/null || true
+    fi
+  done
+}
+
+# Process each file type separately (most reliable)
+process_files "*.go"
+process_files "*.api"
+process_files "*.yaml"
+process_files "*.yml"
+process_files "*.md"
+process_files "*.sql"
+process_files "*.ts"
+process_files "*.svelte"
+process_files "*.css"
+process_files "*.json"
+process_files "*.toml"
+process_files "*.sh"
+process_files "*.webmanifest"
+process_files "*.example"
+process_files "Makefile"
+process_files "Dockerfile"
+process_files "go.mod"
+process_files "go.sum"
 
 print_success "All replacements complete"
 
