@@ -399,7 +399,7 @@ fi
 print_info "Updating YAML files..."
 while IFS= read -r -d '' file; do
   replace_in_file "$file"
-done < <(find . -type f -name "*.yaml" -o -name "*.yml" -print0 2>/dev/null)
+done < <(find . -type f \( -name "*.yaml" -o -name "*.yml" \) -print0 2>/dev/null)
 
 # Markdown files (docs, README, CLAUDE.md, etc)
 print_info "Updating documentation..."
@@ -414,7 +414,7 @@ while IFS= read -r -d '' file; do
 done < <(find . -type f -name "*.sql" -print0 2>/dev/null)
 
 # Config files in root
-for file in Makefile .air.toml Dockerfile .env.example; do
+for file in Makefile .air.toml Dockerfile .env.example go.mod go.sum compose.yaml; do
   replace_in_file "$file"
 done
 
