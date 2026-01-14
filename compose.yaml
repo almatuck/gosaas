@@ -1,0 +1,56 @@
+# Development Docker Compose
+# Usage: docker compose up
+# For production, see deploy/compose.yaml
+
+services:
+  # Go Backend with hot reload
+  backend:
+    build:
+      context: .
+      target: development
+    container_name: gosaas_backend
+    ports:
+      - "8888:8888"
+    environment:
+      - TZ=UTC
+      - PRODUCTION_MODE=false
+      - SQLITE_PATH=/app/data/gosaas.db
+      - ACCESS_SECRET=${ACCESS_SECRET:-dev-secret-change-in-production}
+      - APP_BASE_URL=http://localhost:5173
+      - LEVEE_ENABLED=${LEVEE_ENABLED:-false}
+      - LEVEE_API_KEY=${LEVEE_API_KEY}
+      - LEVEE_BASE_URL=${LEVEE_BASE_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    volumes:
+      - .:/app
+      - /app/tmp
+      - go-mod-cache:/go/pkg/mod
+      - ./data:/app/data
+    restart: unless-stopped
+    command: air
+
+  # SvelteKit Frontend with hot reload
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.dev
+    container_name: gosaas_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    restart: unless-stopped
+    command: pnpm dev --host
+
+volumes:
+  go-mod-cache:
+    driver: local
+
+networks:
+  default:
+    name: gosaas_network

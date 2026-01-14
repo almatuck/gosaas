@@ -1,0 +1,29 @@
+package subscription
+
+import (
+	"net/http"
+
+	"github.com/zeromicro/go-zero/rest/httpx"
+	"gosaas/internal/logic/subscription"
+	"gosaas/internal/svc"
+	"gosaas/internal/types"
+)
+
+// Create checkout session to subscribe to a plan
+func CreateCheckoutHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req types.CreateCheckoutRequest
+		if err := httpx.Parse(r, &req); err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+			return
+		}
+
+		l := subscription.NewCreateCheckoutLogic(r.Context(), svcCtx)
+		resp, err := l.CreateCheckout(&req)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
+	}
+}

@@ -1,0 +1,76 @@
+/**
+ * UI Component Layer Declarations
+ * Establishes cascade order for all UI component styles
+ * Each component uses @layer components.<name> in its <style> block
+ */
+
+@layer components {
+	@layer
+		/* Core */
+		alert,
+		alert-dialog,
+		avatar,
+		badge,
+		breadcrumb,
+		button,
+		button-group,
+		card,
+
+		/* Forms */
+		checkbox,
+		input,
+		radio,
+		select,
+		slider,
+		textarea,
+		toggle,
+		validated-input,
+		tag-input,
+		search-input,
+		dynamic-form-field,
+		form,
+
+		/* Data Display */
+		chart,
+		sparkline,
+		metric-card,
+		data-table,
+		table,
+		code-block,
+		status-badge,
+		progress-bar,
+
+		/* Feedback */
+		modal,
+		drawer,
+		sheet,
+		toast,
+		tooltip,
+		dropdown,
+		dropdown-menu,
+
+		/* Navigation */
+		tabs,
+
+		/* Layout */
+		collapsible,
+		collapsible-card,
+		divider,
+		separator,
+		page,
+		page-header,
+		scroll-area,
+		gradient-background,
+
+		/* Misc */
+		campaign-selector,
+		date-range-picker,
+		discord-icon,
+		empty-state,
+		loading-spinner,
+		markdown,
+		model-selector,
+		skeleton,
+		spinner,
+		theme-toggle;
+}

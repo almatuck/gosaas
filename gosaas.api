@@ -1,0 +1,346 @@
+syntax = "v1"
+
+info (
+	title:   "gosaas API"
+	desc:    "Full-stack SaaS boilerplate with Levee integration"
+	author:  "Your Team"
+	version: "1.0.0"
+)
+
+// =====================================================
+// COMMON TYPES
+// =====================================================
+type Empty {}
+
+type HealthResponse {
+	Status    string `json:"status"`
+	Version   string `json:"version"`
+	Timestamp string `json:"timestamp"`
+}
+
+type MessageResponse {
+	Message string `json:"message"`
+}
+
+// =====================================================
+// AUTH TYPES
+// =====================================================
+type LoginRequest {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresAt    int64  `json:"expiresAt"`
+	CheckoutUrl  string `json:"checkoutUrl,optional"`
+}
+
+type RegisterRequest {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Name     string `json:"name"`
+	Plan     string `json:"plan,optional"`
+}
+
+type RefreshTokenRequest {
+	RefreshToken string `json:"refreshToken"`
+}
+
+type RefreshTokenResponse {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresAt    int64  `json:"expiresAt"`
+}
+
+type EmailVerificationRequest {
+	Token string `json:"token"`
+}
+
+type ResendVerificationRequest {
+	Email string `json:"email"`
+}
+
+type ForgotPasswordRequest {
+	Email string `json:"email"`
+}
+
+type ResetPasswordRequest {
+	Token       string `json:"token"`
+	NewPassword string `json:"newPassword"`
+}
+
+// =====================================================
+// USER TYPES
+// =====================================================
+type User {
+	Id            string `json:"id"`
+	Email         string `json:"email"`
+	Name          string `json:"name"`
+	AvatarUrl     string `json:"avatarUrl,omitempty"`
+	EmailVerified bool   `json:"emailVerified"`
+	CreatedAt     string `json:"createdAt"`
+	UpdatedAt     string `json:"updatedAt"`
+}
+
+type GetUserResponse {
+	User User `json:"user"`
+}
+
+type UpdateUserRequest {
+	Name      string `json:"name,optional"`
+	AvatarUrl string `json:"avatarUrl,optional"`
+}
+
+type ChangePasswordRequest {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
+type DeleteAccountRequest {
+	Password string `json:"password"`
+}
+
+type UserPreferences {
+	EmailNotifications bool   `json:"emailNotifications"`
+	MarketingEmails    bool   `json:"marketingEmails"`
+	Timezone           string `json:"timezone"`
+	Language           string `json:"language"`
+	Theme              string `json:"theme"`
+}
+
+type GetPreferencesResponse {
+	Preferences UserPreferences `json:"preferences"`
+}
+
+type UpdatePreferencesRequest {
+	EmailNotifications bool   `json:"emailNotifications,optional"`
+	MarketingEmails    bool   `json:"marketingEmails,optional"`
+	Timezone           string `json:"timezone,optional"`
+	Language           string `json:"language,optional"`
+	Theme              string `json:"theme,optional"`
+}
+
+// =====================================================
+// SUBSCRIPTION TYPES
+// =====================================================
+type SubscriptionPlan {
+	Id          string   `json:"id"`
+	Name        string   `json:"name"`
+	DisplayName string   `json:"displayName"`
+	Description string   `json:"description"`
+	Price       int      `json:"price"`
+	Currency    string   `json:"currency"`
+	Interval    string   `json:"interval"`
+	Features    []string `json:"features"`
+}
+
+type ListPlansResponse {
+	Plans []SubscriptionPlan `json:"plans"`
+}
+
+type UserSubscription {
+	Id                 string `json:"id"`
+	PlanId             string `json:"planId"`
+	PlanName           string `json:"planName"`
+	Status             string `json:"status"`
+	BillingCycle       string `json:"billingCycle"`
+	CurrentPeriodStart string `json:"currentPeriodStart,omitempty"`
+	CurrentPeriodEnd   string `json:"currentPeriodEnd,omitempty"`
+	TrialEnd           string `json:"trialEnd,omitempty"`
+	CancelAtPeriodEnd  bool   `json:"cancelAtPeriodEnd"`
+}
+
+type GetSubscriptionResponse {
+	Subscription UserSubscription `json:"subscription"`
+	Plan         SubscriptionPlan `json:"plan"`
+}
+
+type CreateCheckoutRequest {
+	PlanName     string `json:"planName"`
+	BillingCycle string `json:"billingCycle,optional"`
+}
+
+type CreateCheckoutResponse {
+	CheckoutUrl string `json:"checkoutUrl"`
+}
+
+type CreateBillingPortalResponse {
+	PortalUrl string `json:"portalUrl"`
+}
+
+type CancelSubscriptionRequest {
+	CancelAtPeriodEnd bool `json:"cancelAtPeriodEnd,optional"`
+}
+
+type CancelSubscriptionResponse {
+	Message     string `json:"message"`
+	CancelledAt string `json:"cancelledAt,omitempty"`
+	EffectiveAt string `json:"effectiveAt,omitempty"`
+}
+
+type CheckFeatureRequest {
+	Feature string `json:"feature"`
+}
+
+type CheckFeatureResponse {
+	HasAccess bool   `json:"hasAccess"`
+	Feature   string `json:"feature"`
+	PlanName  string `json:"planName"`
+	Message   string `json:"message,omitempty"`
+}
+
+type UsageStats {
+	PeriodStart string         `json:"periodStart"`
+	PeriodEnd   string         `json:"periodEnd"`
+	Meters      map[string]int `json:"meters"`
+}
+
+type GetUsageStatsResponse {
+	Stats UsageStats `json:"stats"`
+}
+
+type BillingRecord {
+	Id               string `json:"id"`
+	Amount           int    `json:"amount"`
+	Currency         string `json:"currency"`
+	Status           string `json:"status"`
+	Description      string `json:"description,omitempty"`
+	InvoiceDate      string `json:"invoiceDate"`
+	PaidAt           string `json:"paidAt,omitempty"`
+	InvoicePdfUrl    string `json:"invoicePdfUrl,omitempty"`
+	HostedInvoiceUrl string `json:"hostedInvoiceUrl,omitempty"`
+}
+
+type ListBillingHistoryRequest {
+	Page     int `form:"page,optional"`
+	PageSize int `form:"pageSize,optional"`
+}
+
+type ListBillingHistoryResponse {
+	Records    []BillingRecord `json:"records"`
+	TotalCount int             `json:"totalCount"`
+	Page       int             `json:"page"`
+	PageSize   int             `json:"pageSize"`
+}
+
+// =====================================================
+// SERVICES
+// =====================================================
+service gosaas {
+	@doc "Health check endpoint"
+	@handler HealthCheck
+	get /health returns (HealthResponse)
+}
+
+@server (
+	prefix: /api/v1
+	group:  auth
+)
+service gosaas {
+	@doc "User login"
+	@handler Login
+	post /auth/login (LoginRequest) returns (LoginResponse)
+
+	@doc "Register new user"
+	@handler Register
+	post /auth/register (RegisterRequest) returns (LoginResponse)
+
+	@doc "Refresh authentication token"
+	@handler RefreshToken
+	post /auth/refresh (RefreshTokenRequest) returns (RefreshTokenResponse)
+
+	@doc "Request password reset"
+	@handler ForgotPassword
+	post /auth/forgot-password (ForgotPasswordRequest) returns (MessageResponse)
+
+	@doc "Reset password with token"
+	@handler ResetPassword
+	post /auth/reset-password (ResetPasswordRequest) returns (MessageResponse)
+
+	@doc "Verify email address with token"
+	@handler VerifyEmail
+	post /auth/verify-email (EmailVerificationRequest) returns (MessageResponse)
+
+	@doc "Resend email verification"
+	@handler ResendVerification
+	post /auth/resend-verification (ResendVerificationRequest) returns (MessageResponse)
+}
+
+@server (
+	prefix: /api/v1
+	group:  subscription
+)
+service gosaas {
+	@doc "List all available subscription plans"
+	@handler ListPlans
+	get /subscription/plans returns (ListPlansResponse)
+}
+
+@server (
+	prefix: /api/v1
+	group:  user
+	jwt:    Auth
+)
+service gosaas {
+	@doc "Get current user profile"
+	@handler GetCurrentUser
+	get /user/me returns (GetUserResponse)
+
+	@doc "Update current user profile"
+	@handler UpdateCurrentUser
+	put /user/me (UpdateUserRequest) returns (GetUserResponse)
+
+	@doc "Delete current user account"
+	@handler DeleteAccount
+	delete /user/me (DeleteAccountRequest) returns (MessageResponse)
+
+	@doc "Change password for authenticated user"
+	@handler ChangePassword
+	post /user/me/change-password (ChangePasswordRequest) returns (MessageResponse)
+
+	@doc "Get user preferences"
+	@handler GetPreferences
+	get /user/me/preferences returns (GetPreferencesResponse)
+
+	@doc "Update user preferences"
+	@handler UpdatePreferences
+	put /user/me/preferences (UpdatePreferencesRequest) returns (GetPreferencesResponse)
+}
+
+@server (
+	prefix: /api/v1
+	group:  subscription
+	jwt:    Auth
+)
+service gosaas {
+	@doc "Get current user's subscription"
+	@handler GetSubscription
+	get /subscription returns (GetSubscriptionResponse)
+
+	@doc "Create checkout session to subscribe to a plan"
+	@handler CreateCheckout
+	post /subscription/checkout (CreateCheckoutRequest) returns (CreateCheckoutResponse)
+
+	@doc "Create billing portal session for subscription management"
+	@handler CreateBillingPortal
+	post /subscription/billing-portal returns (CreateBillingPortalResponse)
+
+	@doc "Cancel current subscription"
+	@handler CancelSubscription
+	post /subscription/cancel (CancelSubscriptionRequest) returns (CancelSubscriptionResponse)
+
+	@doc "Check if user has access to a feature"
+	@handler CheckFeature
+	post /subscription/check-feature (CheckFeatureRequest) returns (CheckFeatureResponse)
+
+	@doc "Get current usage statistics"
+	@handler GetUsageStats
+	get /subscription/usage returns (GetUsageStatsResponse)
+
+	@doc "Get billing history"
+	@handler ListBillingHistory
+	get /subscription/billing-history (ListBillingHistoryRequest) returns (ListBillingHistoryResponse)
+}
+

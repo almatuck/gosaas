@@ -1,0 +1,29 @@
+package auth
+
+import (
+	"net/http"
+
+	"github.com/zeromicro/go-zero/rest/httpx"
+	"gosaas/internal/logic/auth"
+	"gosaas/internal/svc"
+	"gosaas/internal/types"
+)
+
+// Verify email address with token
+func VerifyEmailHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req types.EmailVerificationRequest
+		if err := httpx.Parse(r, &req); err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+			return
+		}
+
+		l := auth.NewVerifyEmailLogic(r.Context(), svcCtx)
+		resp, err := l.VerifyEmail(&req)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
+	}
+}
