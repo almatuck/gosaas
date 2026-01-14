@@ -20,6 +20,7 @@ set -e
 # Configuration
 # ============================================================
 OLD_NAME="gosaas"
+OLD_NAME_PROPER="GoSaaS"
 VERSION="1.0.0"
 REPO_URL="https://github.com/almatuck/gosaas.git"
 
@@ -346,6 +347,10 @@ fi
 # ============================================================
 # Step 4: Rename Project Files
 # ============================================================
+
+# Generate proper case name (capitalize first letter)
+NEW_NAME_PROPER="$(echo "${NEW_NAME:0:1}" | tr '[:lower:]' '[:upper:]')${NEW_NAME:1}"
+
 if [[ -f "${OLD_NAME}.go" ]] || [[ -f "${OLD_NAME}.api" ]] || [[ -f "etc/${OLD_NAME}.yaml" ]]; then
   print_step "Renaming project to '$NEW_NAME'..."
 
@@ -360,80 +365,113 @@ else
 fi
 
 # ============================================================
-# Step 5: Update Go Module & Imports
+# Step 5: Replace ALL occurrences in ALL files
 # ============================================================
-print_step "Updating Go module..."
+print_step "Replacing all occurrences of 'gosaas' and 'GoSaaS'..."
 
-# go.mod
-if grep -q "module ${OLD_NAME}" go.mod 2>/dev/null; then
-  sed_inplace "s/module ${OLD_NAME}/module ${NEW_NAME}/g" go.mod
-fi
-
-# All Go imports
-while IFS= read -r -d '' file; do
-  if grep -q "\"${OLD_NAME}/" "$file" 2>/dev/null; then
-    sed_inplace "s|\"${OLD_NAME}/|\"${NEW_NAME}/|g" "$file"
-  fi
-  if grep -q "${OLD_NAME}" "$file" 2>/dev/null; then
-    sed_inplace "s/${OLD_NAME}/${NEW_NAME}/g" "$file"
-  fi
-done < <(find . -type f -name "*.go" ! -path "./vendor/*" -print0 2>/dev/null)
-
-print_success "Go module updated"
-
-# ============================================================
-# Step 6: Update Configuration Files
-# ============================================================
-print_step "Updating configuration files..."
-
-update_file() {
+# Function to replace in a single file (both lowercase and proper case)
+replace_in_file() {
   local file="$1"
-  if [[ -f "$file" ]] && grep -q "${OLD_NAME}" "$file" 2>/dev/null; then
-    sed_inplace "s/${OLD_NAME}/${NEW_NAME}/g" "$file"
-    print_info "Updated $file"
-  fi
-}
-
-update_file "Makefile"
-update_file ".air.toml"
-update_file "Dockerfile"
-update_file "compose.yaml"
-update_file "deploy/compose.yaml"
-update_file "CLAUDE.md"
-update_file "AI.md"
-
-# Special handling for yaml config
-if [[ -f "etc/${NEW_NAME}.yaml" ]]; then
-  sed_inplace "s/Name: ${OLD_NAME}/Name: ${NEW_NAME}/g" "etc/${NEW_NAME}.yaml" 2>/dev/null
-fi
-
-print_success "Configuration updated"
-
-# ============================================================
-# Step 7: Update Frontend
-# ============================================================
-if [[ -d "app" ]]; then
-  print_step "Updating frontend..."
-
-  # Rename API files
-  [[ -f "app/src/lib/api/${OLD_NAME}.ts" ]] && mv "app/src/lib/api/${OLD_NAME}.ts" "app/src/lib/api/${NEW_NAME}.ts"
-  [[ -f "app/src/lib/api/${OLD_NAME}Components.ts" ]] && mv "app/src/lib/api/${OLD_NAME}Components.ts" "app/src/lib/api/${NEW_NAME}Components.ts"
-
-  # Update all frontend files
-  while IFS= read -r -d '' file; do
+  if [[ -f "$file" ]]; then
+    # Replace GoSaaS (proper case) with NewName (proper case)
+    if grep -q "${OLD_NAME_PROPER}" "$file" 2>/dev/null; then
+      sed_inplace "s/${OLD_NAME_PROPER}/${NEW_NAME_PROPER}/g" "$file"
+    fi
+    # Replace gosaas (lowercase) with newname (lowercase)
     if grep -q "${OLD_NAME}" "$file" 2>/dev/null; then
       sed_inplace "s/${OLD_NAME}/${NEW_NAME}/g" "$file"
     fi
-  done < <(find app/src -type f \( -name "*.ts" -o -name "*.svelte" -o -name "*.js" \) -print0 2>/dev/null)
-
-  # Update package.json
-  if [[ -f "app/package.json" ]]; then
-    sed_inplace "s/\"name\": \"app\"/\"name\": \"${NEW_NAME}\"/g" app/package.json
-    sed_inplace "s/\"name\": \"${OLD_NAME}\"/\"name\": \"${NEW_NAME}\"/g" app/package.json
   fi
+}
 
-  print_success "Frontend updated"
+# Go files
+print_info "Updating Go files..."
+while IFS= read -r -d '' file; do
+  replace_in_file "$file"
+done < <(find . -type f -name "*.go" ! -path "./vendor/*" -print0 2>/dev/null)
+
+# API definition file
+if [[ -f "${NEW_NAME}.api" ]]; then
+  replace_in_file "${NEW_NAME}.api"
 fi
+
+# YAML files (config, compose, etc)
+print_info "Updating YAML files..."
+while IFS= read -r -d '' file; do
+  replace_in_file "$file"
+done < <(find . -type f -name "*.yaml" -o -name "*.yml" -print0 2>/dev/null)
+
+# Markdown files (docs, README, CLAUDE.md, etc)
+print_info "Updating documentation..."
+while IFS= read -r -d '' file; do
+  replace_in_file "$file"
+done < <(find . -type f -name "*.md" -print0 2>/dev/null)
+
+# SQL files
+print_info "Updating SQL files..."
+while IFS= read -r -d '' file; do
+  replace_in_file "$file"
+done < <(find . -type f -name "*.sql" -print0 2>/dev/null)
+
+# Config files in root
+for file in Makefile .air.toml Dockerfile .env.example; do
+  replace_in_file "$file"
+done
+
+# Frontend files
+if [[ -d "app" ]]; then
+  print_info "Updating frontend files..."
+
+  # Rename API files first
+  [[ -f "app/src/lib/api/${OLD_NAME}.ts" ]] && mv "app/src/lib/api/${OLD_NAME}.ts" "app/src/lib/api/${NEW_NAME}.ts"
+  [[ -f "app/src/lib/api/${OLD_NAME}Components.ts" ]] && mv "app/src/lib/api/${OLD_NAME}Components.ts" "app/src/lib/api/${NEW_NAME}Components.ts"
+
+  # TypeScript files
+  while IFS= read -r -d '' file; do
+    replace_in_file "$file"
+  done < <(find app -type f -name "*.ts" -print0 2>/dev/null)
+
+  # Svelte files (all of them - routes, components, layouts)
+  while IFS= read -r -d '' file; do
+    replace_in_file "$file"
+  done < <(find app -type f -name "*.svelte" -print0 2>/dev/null)
+
+  # CSS files
+  while IFS= read -r -d '' file; do
+    replace_in_file "$file"
+  done < <(find app -type f -name "*.css" -print0 2>/dev/null)
+
+  # JSON files (package.json, manifest, etc)
+  while IFS= read -r -d '' file; do
+    replace_in_file "$file"
+  done < <(find app -type f -name "*.json" -print0 2>/dev/null)
+
+  # Static files (webmanifest, etc)
+  while IFS= read -r -d '' file; do
+    replace_in_file "$file"
+  done < <(find app/static -type f -print0 2>/dev/null)
+
+  # .env.example in app
+  replace_in_file "app/.env.example"
+fi
+
+# Deploy folder
+if [[ -d "deploy" ]]; then
+  print_info "Updating deploy files..."
+  while IFS= read -r -d '' file; do
+    replace_in_file "$file"
+  done < <(find deploy -type f -print0 2>/dev/null)
+fi
+
+# Scripts folder
+if [[ -d "scripts" ]]; then
+  print_info "Updating scripts..."
+  while IFS= read -r -d '' file; do
+    replace_in_file "$file"
+  done < <(find scripts -type f -print0 2>/dev/null)
+fi
+
+print_success "All replacements complete"
 
 # ============================================================
 # Step 8: Generate .env
@@ -475,7 +513,7 @@ if [[ "$CREATE_ENV" == true ]]; then
 
     cat > .env << ENVEOF
 # ============================================================
-# GoSaaS Configuration: ${NEW_NAME}
+# ${NEW_NAME_PROPER} Configuration
 # Generated: $(date)
 # ============================================================
 
@@ -514,7 +552,7 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 # SMTP_USER=your-email@gmail.com
 # SMTP_PASS=your-app-password
 # EMAIL_FROM_ADDRESS=noreply@${NEW_NAME}.com
-# EMAIL_FROM_NAME=${NEW_NAME}
+# EMAIL_FROM_NAME=${NEW_NAME_PROPER}
 
 # ============================================================
 # Levee Mode (Optional) - Full platform features
