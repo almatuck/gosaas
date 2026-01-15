@@ -580,7 +580,7 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 # Email (Optional)
 # ============================================================
 # SMTP_HOST=smtp.gmail.com
-# SMTP_PORT=587
+SMTP_PORT=587
 # SMTP_USER=your-email@gmail.com
 # SMTP_PASS=your-app-password
 # EMAIL_FROM_ADDRESS=noreply@${NEW_NAME}.com
