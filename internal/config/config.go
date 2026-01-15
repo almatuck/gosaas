@@ -101,7 +101,7 @@ type Config struct {
 	AI struct {
 		Enabled     bool   `json:",default=true"`                     // Enable AI features
 		APIKey      string `json:",optional"`                         // Anthropic API key
-		Model       string `json:",default=claude-sonnet-4-20250514"` // Claude model to use
+		Model       string `json:",default=claude-sonnet-4-5-20250929"` // Claude model to use
 		MaxTokens   int    `json:",default=4096"`                     // Max tokens per response
 		TimeoutSecs int    `json:",default=60"`                       // Request timeout in seconds
 	}

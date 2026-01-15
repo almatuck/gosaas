@@ -418,10 +418,6 @@ print_success "All replacements complete"
 # ============================================================
 print_step "Configuring ports..."
 
-# Default ports
-BACKEND_PORT=8888
-FRONTEND_PORT=5173
-
 # Function to check if port is in use
 is_port_in_use() {
   local port=$1
@@ -435,35 +431,32 @@ is_port_in_use() {
   return 1
 }
 
-# Function to find next available port
-find_available_port() {
-  local start_port=$1
-  local port=$start_port
-  while is_port_in_use $port; do
-    port=$((port + 1))
-    # Safety limit
-    if [[ $port -gt $((start_port + 100)) ]]; then
-      echo "$start_port"
+# Function to generate random available port over 20000
+random_available_port() {
+  local port
+  local attempts=0
+  while [[ $attempts -lt 50 ]]; do
+    port=$((20000 + RANDOM % 10000))
+    if ! is_port_in_use $port; then
+      echo "$port"
       return
     fi
+    attempts=$((attempts + 1))
   done
+  # Fallback if all random attempts fail
   echo "$port"
 }
 
-# Check and assign ports
-if is_port_in_use $BACKEND_PORT; then
-  BACKEND_PORT=$(find_available_port $BACKEND_PORT)
-  print_warning "Port 8888 in use, using $BACKEND_PORT for backend"
-else
-  print_success "Backend port: $BACKEND_PORT"
-fi
+# Generate random non-sequential ports
+BACKEND_PORT=$(random_available_port)
+FRONTEND_PORT=$(random_available_port)
+# Ensure they're different
+while [[ $FRONTEND_PORT -eq $BACKEND_PORT ]]; do
+  FRONTEND_PORT=$(random_available_port)
+done
 
-if is_port_in_use $FRONTEND_PORT; then
-  FRONTEND_PORT=$(find_available_port $FRONTEND_PORT)
-  print_warning "Port 5173 in use, using $FRONTEND_PORT for frontend"
-else
-  print_success "Frontend port: $FRONTEND_PORT"
-fi
+print_success "Backend port: $BACKEND_PORT"
+print_success "Frontend port: $FRONTEND_PORT"
 
 # Update compose.yaml with selected backend port (frontend runs locally, not in Docker)
 if [[ -f "compose.yaml" ]]; then
