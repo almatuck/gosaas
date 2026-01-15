@@ -11,6 +11,8 @@ services:
     container_name: gosaas_app
     ports:
       - "8888:8888"
+    env_file:
+      - .env
     environment:
       - TZ=UTC
       - PRODUCTION_MODE=false
