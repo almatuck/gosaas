@@ -615,9 +615,11 @@ if [[ "$INSTALL_DEPS" == true ]]; then
 fi
 
 # ============================================================
-# Step 10: Create Data Directory
+# Step 10: Create Data and Build Directories
 # ============================================================
 mkdir -p data 2>/dev/null || true
+mkdir -p app/build 2>/dev/null || true
+touch app/build/.keep 2>/dev/null || true
 
 # ============================================================
 # Step 11: Initialize Git (Remote Mode)
