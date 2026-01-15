@@ -10,8 +10,8 @@ App:
 
 # Backoffice Admin (for viewing SaaS stats)
 Admin:
-  Username: ${ADMIN_USERNAME}
-  Password: ${ADMIN_PASSWORD}
+  Username: "${ADMIN_USERNAME}"
+  Password: "${ADMIN_PASSWORD}"
 
 # Authentication configuration
 Auth:

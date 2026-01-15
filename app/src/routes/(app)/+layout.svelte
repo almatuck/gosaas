@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { AppNav } from '$lib/components/navigation';
 	import { auth, isAuthenticated, subscription } from '$lib/stores';
 
 	interface Props {
@@ -33,14 +32,7 @@
 </script>
 
 {#if mounted && authenticated}
-	<div class="layout-app">
-		<AppNav />
-		<main id="main-content" class="flex-1 p-6">
-			<div class="max-w-7xl mx-auto">
-				{@render children()}
-			</div>
-		</main>
-	</div>
+	{@render children()}
 {:else}
 	<div class="layout-app flex items-center justify-center">
 		<div class="spinner"></div>

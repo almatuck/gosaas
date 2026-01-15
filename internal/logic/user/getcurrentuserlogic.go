@@ -34,6 +34,20 @@ func (l *GetCurrentUserLogic) GetCurrentUser() (resp *types.GetUserResponse, err
 		return nil, err
 	}
 
+	// Handle admin user (not in database)
+	if email == l.svcCtx.Config.Admin.Username {
+		return &types.GetUserResponse{
+			User: types.User{
+				Id:            "admin",
+				Email:         email,
+				Name:          "Admin",
+				EmailVerified: true,
+				CreatedAt:     time.Now().Format("2006-01-02T15:04:05Z"),
+				UpdatedAt:     time.Now().Format("2006-01-02T15:04:05Z"),
+			},
+		}, nil
+	}
+
 	// Use local auth when Levee is disabled
 	if l.svcCtx.UseLocal() {
 		return l.getCurrentUserLocal(email)
