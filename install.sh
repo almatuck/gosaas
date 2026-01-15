@@ -522,10 +522,14 @@ fi
 # ============================================================
 echo ""
 print_step "Admin account setup (for /backoffice access)"
+echo -e "  ${YELLOW}Note: Password is stored in plain text in .env${NC}"
+echo -e "  ${YELLOW}This is safe as long as .env remains in your docker compose env_file${NC}"
+echo -e "  ${YELLOW}and is not committed to git (already in .gitignore)${NC}"
+echo ""
 
 # Prompt for admin email if not provided via flag
 if [[ -z "$ADMIN_EMAIL" ]]; then
-  echo -e "  ${YELLOW}Note: Admin username must be a valid email address${NC}"
+  echo -e "  Admin username must be a valid email address"
   echo ""
   while true; do
     read -p "  Enter admin email: " ADMIN_EMAIL < /dev/tty
