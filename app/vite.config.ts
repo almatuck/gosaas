@@ -13,26 +13,26 @@ export default defineConfig({
 
 	server: {
 		host: '0.0.0.0',
-		port: 4291,
+		port: 5173,
 		proxy: {
 			// Proxy API requests to Go backend during development
 			'/api': {
-				target: 'http://api:8847',
+				target: 'http://localhost:8888',
 				changeOrigin: true
 			},
 			// Proxy health check
 			'/health': {
-				target: 'http://api:8847',
+				target: 'http://localhost:8888',
 				changeOrigin: true
 			},
 			// Proxy subscription plans (public endpoint)
 			'/subscription/plans': {
-				target: 'http://api:8847',
+				target: 'http://localhost:8888',
 				changeOrigin: true
 			},
 			// Proxy WebSocket connections
 			'/ws': {
-				target: 'ws://api:8847',
+				target: 'ws://localhost:8888',
 				ws: true,
 				changeOrigin: true
 			}

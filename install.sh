@@ -478,6 +478,17 @@ if [[ -f "compose.yaml" ]]; then
   fi
 fi
 
+# Update vite.config.ts with selected ports
+if [[ -f "app/vite.config.ts" ]]; then
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s/port: 5173/port: ${FRONTEND_PORT}/g" app/vite.config.ts 2>/dev/null || true
+    sed -i '' "s/localhost:8888/localhost:${BACKEND_PORT}/g" app/vite.config.ts 2>/dev/null || true
+  else
+    sed -i "s/port: 5173/port: ${FRONTEND_PORT}/g" app/vite.config.ts 2>/dev/null || true
+    sed -i "s/localhost:8888/localhost:${BACKEND_PORT}/g" app/vite.config.ts 2>/dev/null || true
+  fi
+fi
+
 # ============================================================
 # Step 8: Generate .env
 # ============================================================
