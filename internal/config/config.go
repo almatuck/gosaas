@@ -73,7 +73,7 @@ type Config struct {
 	}
 	Email struct {
 		SMTPHost    string `json:",optional"`
-		SMTPPort    int    `json:",default=587"`
+		SMTPPort    int    `json:",optional,default=587"`
 		SMTPUser    string `json:",optional"`
 		SMTPPass    string `json:",optional"`
 		FromAddress string `json:",optional"`

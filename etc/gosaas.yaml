@@ -104,6 +104,7 @@ Security:
 # Email Configuration (SMTP - works with any email provider)
 Email:
   SMTPHost: ${SMTP_HOST}
+  SMTPPort: ${SMTP_PORT}
   SMTPUser: ${SMTP_USER}
   SMTPPass: ${SMTP_PASS}
   FromAddress: ${EMAIL_FROM_ADDRESS}
