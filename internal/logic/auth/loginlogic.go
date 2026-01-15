@@ -29,6 +29,11 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, err error) {
+	// Check for admin login first (works in both modes)
+	if req.Email == l.svcCtx.Config.Admin.Username {
+		return l.loginAdmin(req)
+	}
+
 	// Use local auth when Levee is disabled
 	if l.svcCtx.UseLocal() {
 		return l.loginLocal(req)
@@ -63,11 +68,6 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, 
 
 // loginLocal handles login with local SQLite auth
 func (l *LoginLogic) loginLocal(req *types.LoginRequest) (*types.LoginResponse, error) {
-	// Check if this is an admin login
-	if req.Email == l.svcCtx.Config.Admin.Username {
-		return l.loginAdmin(req)
-	}
-
 	if l.svcCtx.Auth == nil {
 		return nil, fmt.Errorf("local auth service not configured")
 	}
