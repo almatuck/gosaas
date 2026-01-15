@@ -520,10 +520,11 @@ fi
 # ============================================================
 # Step 8: Collect Admin Credentials
 # ============================================================
+echo ""
+print_step "Admin account setup (for /backoffice access)"
+
 # Prompt for admin email if not provided via flag
 if [[ -z "$ADMIN_EMAIL" ]]; then
-  echo ""
-  print_step "Admin account setup (for /backoffice access)"
   echo -e "  ${YELLOW}Note: Admin username must be a valid email address${NC}"
   echo ""
   while true; do
@@ -532,6 +533,25 @@ if [[ -z "$ADMIN_EMAIL" ]]; then
       break
     else
       print_warning "Please enter a valid email address"
+    fi
+  done
+fi
+
+# Prompt for admin password if not provided via flag
+if [[ -z "$ADMIN_PASSWORD" ]]; then
+  while true; do
+    read -s -p "  Enter admin password (min 8 chars): " ADMIN_PASSWORD < /dev/tty
+    echo ""
+    if [[ ${#ADMIN_PASSWORD} -ge 8 ]]; then
+      read -s -p "  Confirm password: " ADMIN_PASSWORD_CONFIRM < /dev/tty
+      echo ""
+      if [[ "$ADMIN_PASSWORD" == "$ADMIN_PASSWORD_CONFIRM" ]]; then
+        break
+      else
+        print_warning "Passwords do not match"
+      fi
+    else
+      print_warning "Password must be at least 8 characters"
     fi
   done
 fi
@@ -563,19 +583,9 @@ if [[ "$CREATE_ENV" == true ]]; then
 
     ACCESS_SECRET=$(generate_secret 32)
 
-    # Only generate admin password if not provided via flag
-    if [[ -z "$ADMIN_PASSWORD" ]]; then
-      ADMIN_PASSWORD=$(generate_secret 16)
-    fi
-
     if [[ -z "$ACCESS_SECRET" ]] || [[ ${#ACCESS_SECRET} -lt 32 ]]; then
       ACCESS_SECRET="CHANGE_THIS_$(date +%s)_INSECURE_PLEASE_REGENERATE"
       print_warning "Could not generate secure JWT secret - please regenerate with: openssl rand -hex 32"
-    fi
-
-    if [[ -z "$ADMIN_PASSWORD" ]] || [[ ${#ADMIN_PASSWORD} -lt 16 ]]; then
-      ADMIN_PASSWORD="admin_$(date +%s)"
-      print_warning "Could not generate secure admin password - please change in .env"
     fi
 
     cat > .env << ENVEOF
