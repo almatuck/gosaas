@@ -624,7 +624,7 @@ mkdir -p data 2>/dev/null || true
 # ============================================================
 if [[ "$MODE" == "remote" ]]; then
   print_step "Initializing git repository..."
-  git init -q 2>/dev/null
+  git init -q -b main 2>/dev/null
   git add . 2>/dev/null
   git commit -q -m "Initial commit - ${NEW_NAME} from GoSaaS" 2>/dev/null
   print_success "Git repository initialized"
