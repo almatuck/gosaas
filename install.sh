@@ -465,15 +465,13 @@ else
   print_success "Frontend port: $FRONTEND_PORT"
 fi
 
-# Update compose.yaml with selected ports
+# Update compose.yaml with selected backend port (frontend runs locally, not in Docker)
 if [[ -f "compose.yaml" ]]; then
   if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s/8888:8888/${BACKEND_PORT}:8888/g" compose.yaml 2>/dev/null || true
-    sed -i '' "s/5173:5173/${FRONTEND_PORT}:5173/g" compose.yaml 2>/dev/null || true
     sed -i '' "s/localhost:5173/localhost:${FRONTEND_PORT}/g" compose.yaml 2>/dev/null || true
   else
     sed -i "s/8888:8888/${BACKEND_PORT}:8888/g" compose.yaml 2>/dev/null || true
-    sed -i "s/5173:5173/${FRONTEND_PORT}:5173/g" compose.yaml 2>/dev/null || true
     sed -i "s/localhost:5173/localhost:${FRONTEND_PORT}/g" compose.yaml 2>/dev/null || true
   fi
 fi
@@ -486,6 +484,28 @@ if [[ -f "app/vite.config.ts" ]]; then
   else
     sed -i "s/port: 5173/port: ${FRONTEND_PORT}/g" app/vite.config.ts 2>/dev/null || true
     sed -i "s/localhost:8888/localhost:${BACKEND_PORT}/g" app/vite.config.ts 2>/dev/null || true
+  fi
+fi
+
+# Update backend config (etc/*.yaml) with selected port
+if [[ -f "etc/${NEW_NAME}.yaml" ]]; then
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s/^Port: 8888/Port: ${BACKEND_PORT}/g" "etc/${NEW_NAME}.yaml" 2>/dev/null || true
+  else
+    sed -i "s/^Port: 8888/Port: ${BACKEND_PORT}/g" "etc/${NEW_NAME}.yaml" 2>/dev/null || true
+  fi
+fi
+
+# Update Makefile with selected ports
+if [[ -f "Makefile" ]]; then
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s/localhost:8888/localhost:${BACKEND_PORT}/g" Makefile 2>/dev/null || true
+    sed -i '' "s/localhost:5173/localhost:${FRONTEND_PORT}/g" Makefile 2>/dev/null || true
+    sed -i '' "s/-p 8888:8888/-p ${BACKEND_PORT}:${BACKEND_PORT}/g" Makefile 2>/dev/null || true
+  else
+    sed -i "s/localhost:8888/localhost:${BACKEND_PORT}/g" Makefile 2>/dev/null || true
+    sed -i "s/localhost:5173/localhost:${FRONTEND_PORT}/g" Makefile 2>/dev/null || true
+    sed -i "s/-p 8888:8888/-p ${BACKEND_PORT}:${BACKEND_PORT}/g" Makefile 2>/dev/null || true
   fi
 fi
 
