@@ -527,7 +527,23 @@ echo -e "  ${YELLOW}This is safe as long as .env remains in your docker compose 
 echo -e "  ${YELLOW}and is not committed to git (already in .gitignore)${NC}"
 echo ""
 
-# Prompt for admin email if not provided via flag
+# Validate email provided via flag
+if [[ -n "$ADMIN_EMAIL" ]]; then
+  if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+    print_warning "Invalid email format: $ADMIN_EMAIL"
+    ADMIN_EMAIL=""  # Clear to trigger interactive prompt
+  fi
+fi
+
+# Validate password provided via flag
+if [[ -n "$ADMIN_PASSWORD" ]]; then
+  if [[ ${#ADMIN_PASSWORD} -lt 8 ]]; then
+    print_warning "Password too short (min 8 chars)"
+    ADMIN_PASSWORD=""  # Clear to trigger interactive prompt
+  fi
+fi
+
+# Prompt for admin email if not provided or invalid
 if [[ -z "$ADMIN_EMAIL" ]]; then
   echo -e "  Admin username must be a valid email address"
   echo ""
@@ -541,7 +557,7 @@ if [[ -z "$ADMIN_EMAIL" ]]; then
   done
 fi
 
-# Prompt for admin password if not provided via flag
+# Prompt for admin password if not provided or invalid
 if [[ -z "$ADMIN_PASSWORD" ]]; then
   while true; do
     read -s -p "  Enter admin password (min 8 chars): " ADMIN_PASSWORD < /dev/tty
