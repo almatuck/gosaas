@@ -2,30 +2,53 @@
 
 Launch your SaaS in under 10 minutes.
 
-## The Fastest Way (One Command)
+## Recommended: Claude Code + /init
+
+We recommend using [Claude Code](https://claude.ai/code) for the best development experience:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/almatuck/gosaas.git myapp
+cd myapp
+
+# 2. Open in Claude Code, then run:
+/init
+```
+
+The `/init` command will interactively:
+1. Rename the project to your app name
+2. Prompt for admin email and password
+3. Generate secure secrets
+4. Configure ports automatically
+5. Install all dependencies
+6. Start the development environment
+
+## Alternative: One-Line Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/almatuck/gosaas/main/install.sh | bash -s -- myapp
 ```
 
 This single command:
-1. Checks you have Go, Node.js, and pnpm installed
+1. Checks you have Node.js and pnpm installed
 2. Clones the repository
 3. Renames everything from `gosaas` to `myapp`
-4. Generates a secure JWT secret
-5. Creates `.env` with working defaults
-6. Installs all dependencies
-7. Offers to start the app
+4. Prompts for admin email and password
+5. Generates a secure JWT secret
+6. Creates `.env` with working defaults
+7. Installs all dependencies
 
-**Then visit http://localhost:5173** - you're done!
+**Then visit http://localhost:YOUR_PORT** (shown after install)
 
 ## Prerequisites
 
 The installer checks for these automatically:
 
-- **Go 1.25+** - [Download](https://go.dev/dl/)
-- **Node.js 20+** - [Download](https://nodejs.org/)
+- **Docker** - [Download](https://docker.com/) (for backend development)
+- **Node.js 20+** - [Download](https://nodejs.org/) (for frontend)
 - **pnpm** - Auto-installed if npm is available
+
+**Note:** Go runs inside Docker, so you don't need it installed locally.
 
 ## Alternative: Manual Setup
 

@@ -15,7 +15,20 @@ Ship your SaaS in days, not months. A production-ready full-stack boilerplate wi
 
 ## Quick Start
 
-One command to create and run your SaaS:
+### Recommended: Use Claude Code
+
+We recommend [Claude Code](https://claude.ai/code) for the best development experience. After cloning, run `/init` to set up your project interactively.
+
+```bash
+# Clone the repository
+git clone https://github.com/almatuck/gosaas.git myapp
+cd myapp
+
+# Open in Claude Code, then run:
+/init
+```
+
+### Alternative: One-Line Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/almatuck/gosaas/main/install.sh | bash -s -- myapp
@@ -24,12 +37,12 @@ curl -fsSL https://raw.githubusercontent.com/almatuck/gosaas/main/install.sh | b
 This will:
 - Clone the repository
 - Rename everything to `myapp`
+- Prompt for admin email and password
 - Auto-generate secure JWT secret
 - Install all dependencies
 - Create `.env` with working defaults
-- Offer to start the app
 
-Then visit **http://localhost:5173**
+Then visit **http://localhost:YOUR_PORT** (shown after install)
 
 ### Already Cloned?
 
