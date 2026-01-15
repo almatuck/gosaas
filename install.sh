@@ -480,14 +480,8 @@ if [[ -f "app/vite.config.ts" ]]; then
   fi
 fi
 
-# Update backend config (etc/*.yaml) with selected port
-if [[ -f "etc/${NEW_NAME}.yaml" ]]; then
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "s/^Port: 8888/Port: ${BACKEND_PORT}/g" "etc/${NEW_NAME}.yaml" 2>/dev/null || true
-  else
-    sed -i "s/^Port: 8888/Port: ${BACKEND_PORT}/g" "etc/${NEW_NAME}.yaml" 2>/dev/null || true
-  fi
-fi
+# NOTE: etc/*.yaml keeps Port: 8888 - that's the container's internal port
+# The external port mapping is handled by compose.yaml (BACKEND_PORT:8888)
 
 # Update Makefile with selected ports
 if [[ -f "Makefile" ]]; then
