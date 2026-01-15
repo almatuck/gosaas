@@ -496,6 +496,15 @@ if [[ -f "Makefile" ]]; then
   fi
 fi
 
+# Update config.go with selected frontend port (for email links default)
+if [[ -f "internal/config/config.go" ]]; then
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s/localhost:5173/localhost:${FRONTEND_PORT}/g" internal/config/config.go 2>/dev/null || true
+  else
+    sed -i "s/localhost:5173/localhost:${FRONTEND_PORT}/g" internal/config/config.go 2>/dev/null || true
+  fi
+fi
+
 # ============================================================
 # Step 8: Generate .env
 # ============================================================
