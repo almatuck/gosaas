@@ -527,7 +527,7 @@ if [[ -z "$ADMIN_EMAIL" ]]; then
   echo -e "  ${YELLOW}Note: Admin username must be a valid email address${NC}"
   echo ""
   while true; do
-    read -p "  Enter admin email: " ADMIN_EMAIL
+    read -p "  Enter admin email: " ADMIN_EMAIL < /dev/tty
     if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
       break
     else
