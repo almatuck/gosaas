@@ -2,209 +2,117 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**IMPORTANT: Read `AI.md` first for complete setup instructions and coding rules.**
-
-When the user runs `/init`, follow the interactive setup flow in `AI.md` which covers:
-1. Environment setup (install.sh, dependencies)
-2. Business discovery (domain, expertise, or idea)
-3. Research (optional 14-step validation via `RESEARCH-PLAN.md`)
-4. Auto-customization (site.ts, landing page, theme, pricing)
-5. Verification and launch
-
----
-
-## Project Overview
-
-**GoSaaS** - Ship your SaaS in 10 days. Full-stack boilerplate with Go-Zero, SvelteKit, and optional Levee integration.
-
-Two modes of operation:
-
-1. **Standalone Mode** (default): SQLite + direct Stripe integration - zero external dependencies
-2. **Levee Mode**: Full platform features via Levee SDK (auth, billing, email, LLM)
-
-Install via:
+## Quick Reference
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/almatuck/gosaas/main/install.sh | bash -s -- myapp
+# Development (hot reload - no restart needed)
+make air              # Backend with hot reload
+cd app && pnpm dev    # Frontend dev server
+
+# Code generation (CRITICAL: NEVER run goctl directly)
+make gen              # Regenerate handlers/types from .api file
+
+# Testing
+go test -v ./internal/logic/...                        # All Go tests
+go test -v -run TestName ./internal/logic/auth/        # Single test
+cd app && pnpm check                                   # TypeScript check
+cd app && pnpm test:unit                               # Frontend tests
+
+# Before committing
+make build && cd app && pnpm build
 ```
 
-## Build & Development Commands
+## Architecture
 
-```bash
-# Backend (Go-Zero API)
-make build           # Build the API binary
-make run             # Build and run the API (localhost:8888)
-make test            # Run all Go tests
-make air             # Run with hot reload
+**Dual-mode system** - switches between standalone (SQLite + Stripe) and Levee (managed platform):
 
-# Frontend (SvelteKit, in /app directory)
-cd app && pnpm dev   # Start dev server (localhost:5173)
-cd app && pnpm build # Production build
-cd app && pnpm check # Type checking
+```
+gosaas.api                   → API definition (routes, types) - EDIT HERE to add endpoints
+├── internal/handler/        → AUTO-GENERATED from .api (DO NOT EDIT)
+├── internal/types/          → AUTO-GENERATED from .api (DO NOT EDIT)
+├── internal/logic/          → Business logic - EDIT HERE for implementation
+├── internal/svc/            → ServiceContext with UseLocal()/UseLevee() mode check
+├── internal/db/             → SQLite (standalone mode)
+└── internal/local/          → Local auth/billing services (standalone mode)
 
-# Code Generation (CRITICAL: Never run goctl directly!)
-make gen             # Generate Go handlers/types + TypeScript API client from .api file
-
-# Project Setup
-make setup NAME=myapp  # Rename project from 'gosaas' to 'myapp'
-make deps              # Download dependencies
-make dev-setup         # Full dev environment setup
+app/src/
+├── routes/(www)/            → Marketing pages (public)
+├── routes/(auth)/           → Auth pages (login, register)
+├── routes/(app)/            → App pages (authenticated)
+├── lib/api/                 → AUTO-GENERATED TypeScript client
+├── lib/config/site.ts       → Branding/SEO (single source of truth)
+└── lib/stores/              → Svelte stores (auth, subscription)
 ```
 
-## Architecture Overview
+## Adding API Endpoints
 
-**Backend (Go-Zero):**
+1. Define in `gosaas.api`:
+```
+@server(prefix: /api/v1, jwt: Auth)
+service gosaas {
+    @handler GetWidget
+    get /widgets/:id (GetWidgetRequest) returns (GetWidgetResponse)
+}
 
-- `<appname>.api` - API definition file (routes, request/response types)
-- `<appname>.go` - Service entry point
-- `etc/<appname>.yaml` - Configuration (uses env vars: `${VAR_NAME}`)
-- `internal/handler/` - Auto-generated HTTP handlers (DO NOT EDIT DIRECTLY)
-- `internal/types/` - Auto-generated request/response types (DO NOT EDIT DIRECTLY)
-- `internal/logic/` - Business logic implementation (EDIT HERE for endpoint logic)
-- `internal/svc/` - Service context (initializes either Levee or local services)
-- `internal/db/` - SQLite database setup and migrations (standalone mode)
-- `internal/local/` - Local auth and billing services (standalone mode)
-- `internal/config/` - Configuration structs
-- `internal/middleware/` - CORS, JWT, security headers, rate limiting
+type GetWidgetRequest { Id string `path:"id"` }
+type GetWidgetResponse { Name string `json:"name"` }
+```
 
-**Frontend (SvelteKit + Svelte 5 + Tailwind v4):**
+2. Run `make gen`
 
-- `app/src/routes/` - SvelteKit file-based routing
-- `app/src/lib/api/` - Auto-generated TypeScript API client
-- `app/src/lib/` - Shared components and utilities
-
-## Dual-Mode Architecture
-
-### Standalone Mode (LEVEE_ENABLED=false)
-
-Default mode - no external services required.
-
-- **Database**: SQLite with WAL mode (`internal/db/sqlite.go`)
-- **Auth**: Local JWT auth with bcrypt passwords (`internal/local/auth.go`)
-- **Billing**: Direct Stripe integration (`internal/local/billing.go`)
-- **Email**: Not included (add SMTP if needed)
-
-Tables: `users`, `user_preferences`, `refresh_tokens`, `subscriptions`, `leads`
-
-### Levee Mode (LEVEE_ENABLED=true)
-
-Full platform features via Levee SDK.
-
-- **Auth**: Levee handles registration, login, password reset
-- **Billing**: Levee manages Stripe subscriptions
-- **Email**: Levee email lists and sequences
-- **LLM**: Cost-tracked AI gateway
-
-## Logic Handler Pattern
-
-All handlers support both modes via `UseLocal()` check:
-
+3. Implement in `internal/logic/getwidgetlogic.go`:
 ```go
-func (l *LoginLogic) Login(req *types.LoginRequest) (*types.LoginResponse, error) {
-    // Use local auth when Levee is disabled
+func (l *GetWidgetLogic) GetWidget(req *types.GetWidgetRequest) (*types.GetWidgetResponse, error) {
     if l.svcCtx.UseLocal() {
-        return l.loginLocal(req)
+        // SQLite implementation
     }
-
-    // Use Levee when enabled
-    if l.svcCtx.Levee == nil {
-        return nil, fmt.Errorf("auth service not configured")
-    }
-
-    // Levee implementation...
+    // Levee implementation
 }
 ```
 
-Key service context methods:
+4. Frontend types auto-available: `import { getWidget } from '$lib/api'`
 
-- `l.svcCtx.UseLocal()` - Returns true if using SQLite + direct Stripe
-- `l.svcCtx.UseLevee()` - Returns true if using Levee SDK
-- `l.svcCtx.Auth` - Local auth service (nil if using Levee)
-- `l.svcCtx.Billing` - Local billing service (nil if using Levee)
-- `l.svcCtx.DB` - SQLite database (nil if using Levee)
-- `l.svcCtx.Levee` - Levee SDK client (nil if using local)
+## Mode-Aware Logic Pattern
 
-## Environment Variables
+All handlers must support both modes:
 
-**Required (both modes):**
+```go
+func (l *LoginLogic) Login(req *types.LoginRequest) (*types.LoginResponse, error) {
+    if l.svcCtx.UseLocal() {
+        return l.loginLocal(req)  // SQLite + local JWT
+    }
+    if l.svcCtx.Levee == nil {
+        return nil, fmt.Errorf("auth service not configured")
+    }
+    // Levee SDK implementation
+}
+```
 
-- `ACCESS_SECRET` - JWT secret (generate: `openssl rand -hex 32`)
-- `APP_BASE_URL` - Frontend URL for redirects
-
-**Standalone Mode:**
-
-- `LEVEE_ENABLED=false` (default)
-- `SQLITE_PATH` - SQLite database path
-- `STRIPE_SECRET_KEY` - Stripe API key
-- `STRIPE_PUBLISHABLE_KEY` - Stripe publishable key
-- `STRIPE_WEBHOOK_SECRET` - For Stripe webhooks
-- `STRIPE_PRO_MONTHLY_PRICE_ID` - Stripe price ID for Pro plan
-
-**Levee Mode:**
-
-- `LEVEE_ENABLED=true`
-- `LEVEE_API_KEY` - API key from Levee dashboard
-- `LEVEE_BASE_URL` - Your Levee instance URL
-
-## Frontend Structure
-
-**SvelteKit Route Groups:**
-
-- `(www)` - Marketing pages (landing, pricing, privacy, terms)
-- `(auth)` - Authentication pages (login, register, reset-password)
-- `(app)` - Authenticated app pages (dashboard, account)
-
-**Stores (Svelte 5):**
-
-- `auth` - Authentication state, login/register/logout functions
-- `subscription` - Subscription state, checkout/billing functions
-- `currentUser` - Derived from auth store
-- `isAuthenticated` - Derived boolean from auth store
+Key methods: `l.svcCtx.UseLocal()`, `l.svcCtx.UseLevee()`, `l.svcCtx.DB`, `l.svcCtx.Auth`, `l.svcCtx.Billing`, `l.svcCtx.Levee`
 
 ## Critical Rules
 
-- **NEVER run goctl commands directly** - Always use `make gen`
-- **Use air for hot reloading** - No need to restart the server during development
-- **pnpm only** - Do not use npm or yarn for frontend
-- **Styles in app.css only** - Never inline styles or use `<style>` blocks in Svelte files
-- **Always build before git push** - Run `make build` and `cd app && pnpm build`
-- **Idiomatic Go** - One function with parameters, not multiple function variations
-- **Minimal changes** - Preserve existing functionality, never remove code that appears unused without asking
-- **Svelte 5 runes** - Use `$state`, `$derived`, `$props`, `$effect` (not Svelte 4 syntax)
-- **Support both modes** - When modifying logic handlers, ensure both Levee and local paths work
+- **NEVER run goctl directly** - Use `make gen`
+- **pnpm only** - Never npm or yarn
+- **Styles in app.css only** - No inline styles or `<style>` blocks
+- **Svelte 5 runes** - `$state`, `$derived`, `$props`, `$effect` (not Svelte 4 `export let`, `$:`, `<slot>`)
+- **Idiomatic Go** - One function with parameters, not multiple variations
+- **Minimal changes** - Never remove code that appears unused without asking
+- **Support both modes** - Logic handlers must work with UseLocal() and UseLevee()
 
-## Testing
-
-```bash
-# Go tests
-go test -v -run TestFunctionName ./internal/logic/auth/
-
-# Frontend tests (Vitest)
-cd app && pnpm test:unit           # Run all tests
-cd app && pnpm test:unit -- MyTest # Run specific test
-```
-
-## Deployment
-
-**Single Binary:** The app compiles to a single binary with embedded frontend. Deploy the binary + `.env` file anywhere.
-
-**Docker:** Use `docker compose up` for development, `deploy/compose.yaml` for production.
-
-**Platforms:** Works on Fly.io, Railway, DigitalOcean, any VPS.
-
----
-
-## Related Documentation
-
-Before making significant changes, read these files:
+## Configuration
 
 | File | Purpose |
 |------|---------|
-| `AI.md` | AI coding assistant rules (Go style, Svelte 5, styling) |
-| `RESEARCH-PLAN.md` | 14-step startup validation research protocol |
-| `docs/QUICK_START.md` | User-facing quick start guide |
-| `docs/CONFIGURATION.md` | All configuration options explained |
-| `docs/DEPLOYMENT.md` | Production deployment with auto-SSL |
-| `docs/STRIPE.md` | Stripe integration setup |
-| `docs/LEVEE_INTEGRATION.md` | Levee platform features |
-| `docs/CUSTOMIZATION.md` | Theming, branding, components |
+| `app/src/lib/config/site.ts` | Branding, SEO, social links |
+| `etc/gosaas.yaml` | Products, pricing, backend settings |
+| `.env` | Secrets only (API keys, JWT secret) |
+
+## /init Flow
+
+When user runs `/init`, follow the interactive setup in `AI.md`:
+1. Environment setup (install.sh)
+2. Business discovery
+3. Research (optional, via `RESEARCH-PLAN.md`)
+4. Auto-customize (site.ts, landing page, theme, pricing)
+5. Verify and launch
