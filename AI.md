@@ -2,6 +2,153 @@
 
 This document provides instructions for AI coding assistants working on this codebase. Follow these rules exactly.
 
+---
+
+## /init - Interactive Project Setup
+
+When the user runs `/init`, execute this complete setup flow.
+
+### Phase 1: Environment Setup
+
+1. **Run the install script** (if not already done):
+   ```bash
+   ./install.sh <project-name>
+   ```
+   This handles: project renaming, admin credentials, port configuration, dependency installation.
+
+2. **Verify the setup**:
+   - Check `.env` exists with required variables
+   - Verify `make air` can start the backend
+   - Verify `cd app && pnpm dev` can start the frontend
+
+### Phase 2: Discover the Business
+
+Ask the user ONE of these questions (use AskUserQuestion tool):
+
+**"What would you like to build?"**
+
+Options:
+- **A) I have a domain** → "I own the domain [XYZ.com]"
+- **B) I have expertise** → "My expertise is in [industry/field]"
+- **C) I have a specific idea** → "I want to build [specific product]"
+- **D) Skip research** → Proceed directly to manual configuration
+
+### Phase 3: Research (Optional but Recommended)
+
+If the user chose A, B, or C, offer to run the research process:
+
+**"Would you like me to run the startup validation research? This takes 5-10 minutes and generates a comprehensive market analysis, competitor insights, and landing page copy."**
+
+If YES:
+1. Read `RESEARCH-PLAN.md` for the complete 14-step research protocol
+2. Create `./plan/` directory
+3. Execute all 14 prompts sequentially, writing output to `./plan/01-*.md` through `./plan/14-*.md`
+4. Check for STOP conditions at steps 2, 3, 8, and 9 (see RESEARCH-PLAN.md for details)
+5. On completion, write `./plan/00-EXECUTION-COMPLETE.md`
+
+Key research outputs for customization:
+- `./plan/09-big-idea.md` - Core positioning and belief shift
+- `./plan/14-landing-page-copy.md` - Complete landing page sections
+- `./plan/04-audience-discovery.md` - Target customer profile
+- `./plan/07-positioning.md` - Unique differentiator
+
+### Phase 4: Auto-Customize the Product
+
+After research completes (or if skipped, ask these questions manually):
+
+#### 4.1 Configure site.ts
+
+Update `app/src/lib/config/site.ts` with:
+- `name` - Product name (from research or ask user)
+- `tagline` - Short value proposition (from `./plan/09-big-idea.md`)
+- `description` - SEO description (from research summary)
+- `url` - Production URL (ask user)
+- `supportEmail` - Support email (ask user)
+- `twitter` - Twitter handle (ask user, optional)
+- `social.*` - Social links (ask user, optional)
+- `legal.companyName` - Company name (ask user)
+
+#### 4.2 Update the Landing Page
+
+Edit `app/src/routes/(www)/+page.svelte` using content from `./plan/14-landing-page-copy.md`:
+
+1. **Hero Section**: Update headline, subheadline, and CTA from research
+2. **Features**: Map the top 3 benefits to feature cards with appropriate icons
+3. **How It Works**: Adapt the steps to match the product flow
+4. **What's Included**: List actual product features
+5. **Testimonial**: Replace with placeholder or real testimonial
+6. **FAQ**: Update with product-specific questions from `./plan/14-landing-page-copy.md`
+7. **CTA**: Match the final call-to-action from research
+
+#### 4.3 Theme the Design
+
+Edit `app/src/app.css` @theme section:
+
+Ask the user: **"What's your brand's primary color?"** (provide color picker or hex input)
+
+Update these CSS custom properties:
+```css
+--color-primary: #[user-choice];      /* Main brand color */
+--color-primary-light: [lighter];      /* Auto-calculate */
+--color-primary-dark: [darker];        /* Auto-calculate */
+--color-secondary: [complementary];    /* Suggest based on primary */
+```
+
+Optionally ask about:
+- Font preference (keep defaults or suggest alternatives)
+- Dark/light mode preference
+
+#### 4.4 Update README.md
+
+Replace the boilerplate README with product-specific content:
+- Product name and description
+- Quick start instructions
+- Features list
+- Tech stack (keep existing)
+- License
+
+#### 4.5 Configure Pricing (etc/gosaas.yaml)
+
+Ask the user:
+1. **"What pricing tiers do you want?"** (Free, Pro, Enterprise patterns)
+2. **"What's the Pro plan price?"** (monthly amount)
+3. **"Offer annual billing?"** (yes/no, calculate 17% discount)
+4. **"Offer a free trial?"** (yes/no, how many days)
+
+Update `etc/<appname>.yaml` Products section accordingly.
+
+### Phase 5: Verify and Launch
+
+1. **Build check**:
+   ```bash
+   make build
+   cd app && pnpm check && pnpm build
+   ```
+
+2. **Start development**:
+   ```bash
+   make dev
+   ```
+
+3. **Show the user**:
+   - Frontend URL (from .env port)
+   - Backend URL (from .env port)
+   - Admin backoffice URL
+   - Next steps (Stripe setup, deployment)
+
+### Quick Reference: Files to Customize
+
+| File | What to Change |
+|------|----------------|
+| `app/src/lib/config/site.ts` | Branding, SEO, social links |
+| `app/src/routes/(www)/+page.svelte` | Landing page content |
+| `app/src/app.css` | Colors, fonts, theme |
+| `etc/<appname>.yaml` | Products, pricing, features |
+| `README.md` | Project documentation |
+| `.env` | API keys, secrets (already done by install.sh) |
+
+---
+
 ## Project Overview
 
 **GoSaaS** is a full-stack SaaS boilerplate with:

@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**IMPORTANT: Read `AI.md` first for complete setup instructions and coding rules.**
+
+When the user runs `/init`, follow the interactive setup flow in `AI.md` which covers:
+1. Environment setup (install.sh, dependencies)
+2. Business discovery (domain, expertise, or idea)
+3. Research (optional 14-step validation via `RESEARCH-PLAN.md`)
+4. Auto-customization (site.ts, landing page, theme, pricing)
+5. Verification and launch
+
+---
+
 ## Project Overview
 
 **GoSaaS** - Ship your SaaS in 10 days. Full-stack boilerplate with Go-Zero, SvelteKit, and optional Levee integration.
@@ -180,3 +191,20 @@ cd app && pnpm test:unit -- MyTest # Run specific test
 **Docker:** Use `docker compose up` for development, `deploy/compose.yaml` for production.
 
 **Platforms:** Works on Fly.io, Railway, DigitalOcean, any VPS.
+
+---
+
+## Related Documentation
+
+Before making significant changes, read these files:
+
+| File | Purpose |
+|------|---------|
+| `AI.md` | AI coding assistant rules (Go style, Svelte 5, styling) |
+| `RESEARCH-PLAN.md` | 14-step startup validation research protocol |
+| `docs/QUICK_START.md` | User-facing quick start guide |
+| `docs/CONFIGURATION.md` | All configuration options explained |
+| `docs/DEPLOYMENT.md` | Production deployment with auto-SSL |
+| `docs/STRIPE.md` | Stripe integration setup |
+| `docs/LEVEE_INTEGRATION.md` | Levee platform features |
+| `docs/CUSTOMIZATION.md` | Theming, branding, components |
