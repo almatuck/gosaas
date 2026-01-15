@@ -414,6 +414,71 @@ process_files "go.sum"
 print_success "All replacements complete"
 
 # ============================================================
+# Step 6: Configure Available Ports
+# ============================================================
+print_step "Configuring ports..."
+
+# Default ports
+BACKEND_PORT=8888
+FRONTEND_PORT=5173
+
+# Function to check if port is in use
+is_port_in_use() {
+  local port=$1
+  if command -v lsof &> /dev/null; then
+    lsof -i :"$port" &>/dev/null && return 0
+  elif command -v netstat &> /dev/null; then
+    netstat -tuln 2>/dev/null | grep -q ":$port " && return 0
+  elif command -v ss &> /dev/null; then
+    ss -tuln 2>/dev/null | grep -q ":$port " && return 0
+  fi
+  return 1
+}
+
+# Function to find next available port
+find_available_port() {
+  local start_port=$1
+  local port=$start_port
+  while is_port_in_use $port; do
+    port=$((port + 1))
+    # Safety limit
+    if [[ $port -gt $((start_port + 100)) ]]; then
+      echo "$start_port"
+      return
+    fi
+  done
+  echo "$port"
+}
+
+# Check and assign ports
+if is_port_in_use $BACKEND_PORT; then
+  BACKEND_PORT=$(find_available_port $BACKEND_PORT)
+  print_warning "Port 8888 in use, using $BACKEND_PORT for backend"
+else
+  print_success "Backend port: $BACKEND_PORT"
+fi
+
+if is_port_in_use $FRONTEND_PORT; then
+  FRONTEND_PORT=$(find_available_port $FRONTEND_PORT)
+  print_warning "Port 5173 in use, using $FRONTEND_PORT for frontend"
+else
+  print_success "Frontend port: $FRONTEND_PORT"
+fi
+
+# Update compose.yaml with selected ports
+if [[ -f "compose.yaml" ]]; then
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s/8888:8888/${BACKEND_PORT}:8888/g" compose.yaml 2>/dev/null || true
+    sed -i '' "s/5173:5173/${FRONTEND_PORT}:5173/g" compose.yaml 2>/dev/null || true
+    sed -i '' "s/localhost:5173/localhost:${FRONTEND_PORT}/g" compose.yaml 2>/dev/null || true
+  else
+    sed -i "s/8888:8888/${BACKEND_PORT}:8888/g" compose.yaml 2>/dev/null || true
+    sed -i "s/5173:5173/${FRONTEND_PORT}:5173/g" compose.yaml 2>/dev/null || true
+    sed -i "s/localhost:5173/localhost:${FRONTEND_PORT}/g" compose.yaml 2>/dev/null || true
+  fi
+fi
+
+# ============================================================
 # Step 8: Generate .env
 # ============================================================
 if [[ "$CREATE_ENV" == true ]]; then
@@ -458,7 +523,7 @@ if [[ "$CREATE_ENV" == true ]]; then
 # ============================================================
 
 # Core Settings
-APP_BASE_URL=http://localhost:5173
+APP_BASE_URL=http://localhost:${FRONTEND_PORT}
 APP_DOMAIN=localhost
 PRODUCTION_MODE=false
 
@@ -470,7 +535,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
 # CORS
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8888
+ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT},http://localhost:${BACKEND_PORT}
 
 # ============================================================
 # Standalone Mode (Default) - SQLite + Stripe
@@ -567,10 +632,10 @@ echo ""
 echo "    make air              # Backend with hot reload"
 echo "    cd app && pnpm dev    # Frontend (another terminal)"
 echo ""
-echo -e "  ${BOLD}Then visit:${NC} http://localhost:5173"
+echo -e "  ${BOLD}Then visit:${NC} http://localhost:${FRONTEND_PORT}"
 echo ""
 echo -e "  ${BOLD}Admin Backoffice:${NC}"
-echo "    URL:      http://localhost:8888/backoffice"
+echo "    URL:      http://localhost:${BACKEND_PORT}/backoffice"
 echo "    Username: admin"
 echo "    Password: (see ADMIN_PASSWORD in .env)"
 echo ""
