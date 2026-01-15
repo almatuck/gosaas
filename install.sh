@@ -64,12 +64,14 @@ ${BOLD}ARGUMENTS:${NC}
                 Example: myapp, coolsaas, app123
 
 ${BOLD}OPTIONS:${NC}
-  --dir PATH    Install directory (remote mode only, default: current dir)
-  --no-deps     Skip installing dependencies
-  --no-env      Skip creating .env file
-  --no-start    Don't offer to start the app after setup
-  --force       Overwrite existing .env file
-  --help        Show this help message
+  --admin-email EMAIL    Admin email address (required, will prompt if not provided)
+  --admin-password PASS  Admin password (optional, generates secure one if not provided)
+  --dir PATH             Install directory (remote mode only, default: current dir)
+  --no-deps              Skip installing dependencies
+  --no-env               Skip creating .env file
+  --no-start             Don't offer to start the app after setup
+  --force                Overwrite existing .env file
+  --help                 Show this help message
 
 ${BOLD}EXAMPLES:${NC}
   # Remote: Install in ./myapp
@@ -108,11 +110,21 @@ INSTALL_DEPS=true
 CREATE_ENV=true
 FORCE_ENV=false
 OFFER_START=true
+ADMIN_EMAIL=""
+ADMIN_PASSWORD=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --help|-h)
       show_help
+      ;;
+    --admin-email)
+      ADMIN_EMAIL="$2"
+      shift 2
+      ;;
+    --admin-password)
+      ADMIN_PASSWORD="$2"
+      shift 2
       ;;
     --dir)
       INSTALL_DIR="$2"
@@ -506,7 +518,26 @@ if [[ -f "internal/config/config.go" ]]; then
 fi
 
 # ============================================================
-# Step 8: Generate .env
+# Step 8: Collect Admin Credentials
+# ============================================================
+# Prompt for admin email if not provided via flag
+if [[ -z "$ADMIN_EMAIL" ]]; then
+  echo ""
+  print_step "Admin account setup (for /backoffice access)"
+  echo -e "  ${YELLOW}Note: Admin username must be a valid email address${NC}"
+  echo ""
+  while true; do
+    read -p "  Enter admin email: " ADMIN_EMAIL
+    if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+      break
+    else
+      print_warning "Please enter a valid email address"
+    fi
+  done
+fi
+
+# ============================================================
+# Step 9: Generate .env
 # ============================================================
 if [[ "$CREATE_ENV" == true ]]; then
   print_step "Creating configuration..."
@@ -531,7 +562,11 @@ if [[ "$CREATE_ENV" == true ]]; then
     }
 
     ACCESS_SECRET=$(generate_secret 32)
-    ADMIN_PASSWORD=$(generate_secret 16)
+
+    # Only generate admin password if not provided via flag
+    if [[ -z "$ADMIN_PASSWORD" ]]; then
+      ADMIN_PASSWORD=$(generate_secret 16)
+    fi
 
     if [[ -z "$ACCESS_SECRET" ]] || [[ ${#ACCESS_SECRET} -lt 32 ]]; then
       ACCESS_SECRET="CHANGE_THIS_$(date +%s)_INSECURE_PLEASE_REGENERATE"
@@ -558,7 +593,7 @@ PRODUCTION_MODE=false
 ACCESS_SECRET=${ACCESS_SECRET}
 
 # Backoffice Admin (for SaaS metrics at /backoffice)
-ADMIN_USERNAME=admin
+ADMIN_USERNAME=${ADMIN_EMAIL}
 ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
 # CORS
@@ -599,7 +634,7 @@ ENVEOF
 fi
 
 # ============================================================
-# Step 9: Install Dependencies
+# Step 10: Install Dependencies
 # ============================================================
 if [[ "$INSTALL_DEPS" == true ]]; then
   print_step "Installing dependencies..."
@@ -624,14 +659,14 @@ if [[ "$INSTALL_DEPS" == true ]]; then
 fi
 
 # ============================================================
-# Step 10: Create Data and Build Directories
+# Step 11: Create Data and Build Directories
 # ============================================================
 mkdir -p data 2>/dev/null || true
 mkdir -p app/build 2>/dev/null || true
 touch app/build/.keep 2>/dev/null || true
 
 # ============================================================
-# Step 11: Initialize Git (Remote Mode)
+# Step 12: Initialize Git (Remote Mode)
 # ============================================================
 if [[ "$MODE" == "remote" ]]; then
   print_step "Initializing git repository..."
@@ -665,7 +700,7 @@ echo -e "  ${BOLD}Then visit:${NC} http://localhost:${FRONTEND_PORT}"
 echo ""
 echo -e "  ${BOLD}Admin Backoffice:${NC}"
 echo "    URL:      http://localhost:${BACKEND_PORT}/backoffice"
-echo "    Username: admin"
+echo "    Username: ${ADMIN_EMAIL}"
 echo "    Password: (see ADMIN_PASSWORD in .env)"
 echo ""
 echo -e "  ${BOLD}Configure payments:${NC}"
