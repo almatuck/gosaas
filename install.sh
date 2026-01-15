@@ -65,7 +65,14 @@ ${BOLD}ARGUMENTS:${NC}
 
 ${BOLD}OPTIONS:${NC}
   --admin-email EMAIL    Admin email address (required, will prompt if not provided)
-  --admin-password PASS  Admin password (optional, generates secure one if not provided)
+  --admin-password PASS  Admin password (min 8 chars, will prompt if not provided)
+  --levee                Enable Levee mode (will prompt for API key and URL)
+  --levee-key KEY        Levee API key (requires --levee)
+  --levee-url URL        Levee base URL (default: https://api.levee.sh)
+  --smtp                 Enable SMTP email (will prompt for settings)
+  --smtp-host HOST       SMTP host (e.g., smtp.gmail.com)
+  --smtp-user USER       SMTP username
+  --smtp-pass PASS       SMTP password
   --dir PATH             Install directory (remote mode only, default: current dir)
   --no-deps              Skip installing dependencies
   --no-env               Skip creating .env file
@@ -112,6 +119,14 @@ FORCE_ENV=false
 OFFER_START=true
 ADMIN_EMAIL=""
 ADMIN_PASSWORD=""
+USE_LEVEE=false
+LEVEE_API_KEY=""
+LEVEE_BASE_URL="https://api.levee.sh"
+USE_SMTP=false
+SMTP_HOST=""
+SMTP_PORT="587"
+SMTP_USER=""
+SMTP_PASS=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -124,6 +139,37 @@ while [[ $# -gt 0 ]]; do
       ;;
     --admin-password)
       ADMIN_PASSWORD="$2"
+      shift 2
+      ;;
+    --levee)
+      USE_LEVEE=true
+      shift
+      ;;
+    --levee-key)
+      LEVEE_API_KEY="$2"
+      shift 2
+      ;;
+    --levee-url)
+      LEVEE_BASE_URL="$2"
+      shift 2
+      ;;
+    --smtp)
+      USE_SMTP=true
+      shift
+      ;;
+    --smtp-host)
+      SMTP_HOST="$2"
+      USE_SMTP=true
+      shift 2
+      ;;
+    --smtp-user)
+      SMTP_USER="$2"
+      USE_SMTP=true
+      shift 2
+      ;;
+    --smtp-pass)
+      SMTP_PASS="$2"
+      USE_SMTP=true
       shift 2
       ;;
     --dir)
@@ -228,7 +274,170 @@ echo -e "  ${BOLD}Mode:${NC}     $MODE"
 echo ""
 
 # ============================================================
-# Step 1: Check Prerequisites
+# Step 1: Collect Admin Credentials (before any file operations)
+# ============================================================
+# Collect these FIRST so user can Ctrl+C and retry without cleanup
+if [[ "$CREATE_ENV" == true ]]; then
+  print_step "Admin account setup (for /backoffice access)"
+  echo -e "  ${YELLOW}Note: Password is stored in plain text in .env${NC}"
+  echo -e "  ${YELLOW}This is safe as long as .env remains in your docker compose env_file${NC}"
+  echo -e "  ${YELLOW}and is not committed to git (already in .gitignore)${NC}"
+  echo ""
+
+  # Validate email provided via flag
+  if [[ -n "$ADMIN_EMAIL" ]]; then
+    if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+      print_warning "Invalid email format: $ADMIN_EMAIL"
+      ADMIN_EMAIL=""  # Clear to trigger interactive prompt
+    fi
+  fi
+
+  # Validate password provided via flag
+  if [[ -n "$ADMIN_PASSWORD" ]]; then
+    if [[ ${#ADMIN_PASSWORD} -lt 8 ]]; then
+      print_warning "Password too short (min 8 chars)"
+      ADMIN_PASSWORD=""  # Clear to trigger interactive prompt
+    fi
+  fi
+
+  # Prompt for admin email if not provided or invalid
+  if [[ -z "$ADMIN_EMAIL" ]]; then
+    echo -e "  Admin username must be a valid email address"
+    echo ""
+    while true; do
+      read -p "  Enter admin email: " ADMIN_EMAIL < /dev/tty
+      if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        break
+      else
+        print_warning "Please enter a valid email address"
+      fi
+    done
+  fi
+
+  # Prompt for admin password if not provided or invalid
+  if [[ -z "$ADMIN_PASSWORD" ]]; then
+    while true; do
+      read -s -p "  Enter admin password (min 8 chars): " ADMIN_PASSWORD < /dev/tty
+      echo ""
+      if [[ ${#ADMIN_PASSWORD} -ge 8 ]]; then
+        read -s -p "  Confirm password: " ADMIN_PASSWORD_CONFIRM < /dev/tty
+        echo ""
+        if [[ "$ADMIN_PASSWORD" == "$ADMIN_PASSWORD_CONFIRM" ]]; then
+          break
+        else
+          print_warning "Passwords do not match"
+        fi
+      else
+        print_warning "Password must be at least 8 characters"
+      fi
+    done
+  fi
+
+  print_success "Admin credentials collected"
+  echo ""
+
+  # Ask about Levee mode
+  if [[ "$USE_LEVEE" != true ]]; then
+    echo -e "  ${BOLD}Mode selection:${NC}"
+    echo -e "  • ${GREEN}Standalone${NC} (default): SQLite + direct Stripe - zero dependencies"
+    echo -e "  • ${BLUE}Levee${NC}: Managed auth, billing, email, AI gateway"
+    echo ""
+    read -p "  Enable Levee mode? [y/N] " LEVEE_CHOICE < /dev/tty
+    if [[ "$LEVEE_CHOICE" =~ ^[Yy]$ ]]; then
+      USE_LEVEE=true
+    fi
+  fi
+
+  # If using Levee, collect API key
+  if [[ "$USE_LEVEE" == true ]]; then
+    echo ""
+    print_step "Levee configuration"
+    echo -e "  Get your API key from ${BLUE}https://dashboard.levee.sh${NC}"
+    echo ""
+
+    # Prompt for API key if not provided
+    if [[ -z "$LEVEE_API_KEY" ]]; then
+      while true; do
+        read -p "  Enter Levee API key (lvk_...): " LEVEE_API_KEY < /dev/tty
+        if [[ "$LEVEE_API_KEY" =~ ^lvk_ ]]; then
+          break
+        else
+          print_warning "API key should start with 'lvk_'"
+        fi
+      done
+    elif [[ ! "$LEVEE_API_KEY" =~ ^lvk_ ]]; then
+      print_warning "Invalid API key format: $LEVEE_API_KEY"
+      while true; do
+        read -p "  Enter Levee API key (lvk_...): " LEVEE_API_KEY < /dev/tty
+        if [[ "$LEVEE_API_KEY" =~ ^lvk_ ]]; then
+          break
+        else
+          print_warning "API key should start with 'lvk_'"
+        fi
+      done
+    fi
+
+    # Ask about custom URL (most users will use default)
+    read -p "  Levee URL [${LEVEE_BASE_URL}]: " LEVEE_URL_INPUT < /dev/tty
+    if [[ -n "$LEVEE_URL_INPUT" ]]; then
+      LEVEE_BASE_URL="$LEVEE_URL_INPUT"
+    fi
+
+    print_success "Levee configured"
+    echo ""
+  fi
+
+  # Ask about SMTP email (skip if using Levee - Levee handles email)
+  if [[ "$USE_LEVEE" != true ]] && [[ "$USE_SMTP" != true ]]; then
+    echo -e "  ${BOLD}Email configuration (optional):${NC}"
+    echo -e "  SMTP is needed for password reset and welcome emails"
+    echo ""
+    read -p "  Configure SMTP now? [y/N] " SMTP_CHOICE < /dev/tty
+    if [[ "$SMTP_CHOICE" =~ ^[Yy]$ ]]; then
+      USE_SMTP=true
+    fi
+  fi
+
+  if [[ "$USE_SMTP" == true ]]; then
+    echo ""
+    print_step "SMTP configuration"
+    echo -e "  ${YELLOW}Press Enter to skip any field${NC}"
+    echo ""
+
+    # SMTP Host
+    if [[ -z "$SMTP_HOST" ]]; then
+      read -p "  SMTP host (e.g., smtp.gmail.com): " SMTP_HOST < /dev/tty
+    fi
+
+    # SMTP Port
+    read -p "  SMTP port [587]: " SMTP_PORT_INPUT < /dev/tty
+    if [[ -n "$SMTP_PORT_INPUT" ]]; then
+      SMTP_PORT="$SMTP_PORT_INPUT"
+    fi
+
+    # SMTP User
+    if [[ -z "$SMTP_USER" ]]; then
+      read -p "  SMTP username: " SMTP_USER < /dev/tty
+    fi
+
+    # SMTP Password
+    if [[ -z "$SMTP_PASS" ]]; then
+      read -s -p "  SMTP password: " SMTP_PASS < /dev/tty
+      echo ""
+    fi
+
+    if [[ -n "$SMTP_HOST" ]]; then
+      print_success "SMTP configured"
+    else
+      print_warning "SMTP skipped (can configure later in .env)"
+      USE_SMTP=false
+    fi
+    echo ""
+  fi
+fi
+
+# ============================================================
+# Step 2: Check Prerequisites
 # ============================================================
 print_step "Checking prerequisites..."
 
@@ -518,66 +727,7 @@ if [[ -f "internal/config/config.go" ]]; then
 fi
 
 # ============================================================
-# Step 8: Collect Admin Credentials
-# ============================================================
-echo ""
-print_step "Admin account setup (for /backoffice access)"
-echo -e "  ${YELLOW}Note: Password is stored in plain text in .env${NC}"
-echo -e "  ${YELLOW}This is safe as long as .env remains in your docker compose env_file${NC}"
-echo -e "  ${YELLOW}and is not committed to git (already in .gitignore)${NC}"
-echo ""
-
-# Validate email provided via flag
-if [[ -n "$ADMIN_EMAIL" ]]; then
-  if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-    print_warning "Invalid email format: $ADMIN_EMAIL"
-    ADMIN_EMAIL=""  # Clear to trigger interactive prompt
-  fi
-fi
-
-# Validate password provided via flag
-if [[ -n "$ADMIN_PASSWORD" ]]; then
-  if [[ ${#ADMIN_PASSWORD} -lt 8 ]]; then
-    print_warning "Password too short (min 8 chars)"
-    ADMIN_PASSWORD=""  # Clear to trigger interactive prompt
-  fi
-fi
-
-# Prompt for admin email if not provided or invalid
-if [[ -z "$ADMIN_EMAIL" ]]; then
-  echo -e "  Admin username must be a valid email address"
-  echo ""
-  while true; do
-    read -p "  Enter admin email: " ADMIN_EMAIL < /dev/tty
-    if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-      break
-    else
-      print_warning "Please enter a valid email address"
-    fi
-  done
-fi
-
-# Prompt for admin password if not provided or invalid
-if [[ -z "$ADMIN_PASSWORD" ]]; then
-  while true; do
-    read -s -p "  Enter admin password (min 8 chars): " ADMIN_PASSWORD < /dev/tty
-    echo ""
-    if [[ ${#ADMIN_PASSWORD} -ge 8 ]]; then
-      read -s -p "  Confirm password: " ADMIN_PASSWORD_CONFIRM < /dev/tty
-      echo ""
-      if [[ "$ADMIN_PASSWORD" == "$ADMIN_PASSWORD_CONFIRM" ]]; then
-        break
-      else
-        print_warning "Passwords do not match"
-      fi
-    else
-      print_warning "Password must be at least 8 characters"
-    fi
-  done
-fi
-
-# ============================================================
-# Step 9: Generate .env
+# Step 8: Generate .env
 # ============================================================
 if [[ "$CREATE_ENV" == true ]]; then
   print_step "Creating configuration..."
@@ -608,7 +758,47 @@ if [[ "$CREATE_ENV" == true ]]; then
       print_warning "Could not generate secure JWT secret - please regenerate with: openssl rand -hex 32"
     fi
 
-    cat > .env << ENVEOF
+    # Generate .env based on mode selection
+    if [[ "$USE_LEVEE" == true ]]; then
+      cat > .env << ENVEOF
+# ============================================================
+# ${NEW_NAME_PROPER} Configuration
+# Generated: $(date)
+# ============================================================
+
+# Core Settings
+APP_BASE_URL=http://localhost:${FRONTEND_PORT}
+APP_DOMAIN=localhost
+PRODUCTION_MODE=false
+
+# JWT Secret (auto-generated - keep this safe!)
+ACCESS_SECRET=${ACCESS_SECRET}
+
+# Backoffice Admin (for SaaS metrics at /backoffice)
+ADMIN_USERNAME=${ADMIN_EMAIL}
+ADMIN_PASSWORD=${ADMIN_PASSWORD}
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:${FRONTEND_PORT},http://localhost:${BACKEND_PORT}
+
+# ============================================================
+# Levee Mode - Full platform features
+# ============================================================
+LEVEE_ENABLED=true
+LEVEE_API_KEY=${LEVEE_API_KEY}
+LEVEE_BASE_URL=${LEVEE_BASE_URL}
+
+# ============================================================
+# Standalone Mode (disabled) - Uncomment to switch
+# ============================================================
+# LEVEE_ENABLED=false
+# SQLITE_PATH=./data/${NEW_NAME}.db
+# STRIPE_SECRET_KEY=sk_test_your_key_here
+# STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+# STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+ENVEOF
+    else
+      cat > .env << ENVEOF
 # ============================================================
 # ${NEW_NAME_PROPER} Configuration
 # Generated: $(date)
@@ -641,8 +831,27 @@ STRIPE_SECRET_KEY=sk_test_your_key_here
 STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 
+ENVEOF
+
+      # Append SMTP configuration
+      if [[ "$USE_SMTP" == true ]] && [[ -n "$SMTP_HOST" ]]; then
+        cat >> .env << SMTPEOF
+
 # ============================================================
-# Email (Optional)
+# Email (SMTP Configured)
+# ============================================================
+SMTP_HOST=${SMTP_HOST}
+SMTP_PORT=${SMTP_PORT}
+SMTP_USER=${SMTP_USER}
+SMTP_PASS=${SMTP_PASS}
+EMAIL_FROM_ADDRESS=noreply@${NEW_NAME}.com
+EMAIL_FROM_NAME=${NEW_NAME_PROPER}
+SMTPEOF
+      else
+        cat >> .env << SMTPEOF
+
+# ============================================================
+# Email (Optional - not configured)
 # ============================================================
 # SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -650,6 +859,11 @@ SMTP_PORT=587
 # SMTP_PASS=your-app-password
 # EMAIL_FROM_ADDRESS=noreply@${NEW_NAME}.com
 # EMAIL_FROM_NAME=${NEW_NAME_PROPER}
+SMTPEOF
+      fi
+
+      # Append Levee section
+      cat >> .env << LEVEEEOF
 
 # ============================================================
 # Levee Mode (Optional) - Full platform features
@@ -657,7 +871,8 @@ SMTP_PORT=587
 # LEVEE_ENABLED=true
 # LEVEE_API_KEY=lvk_your_api_key
 # LEVEE_BASE_URL=https://api.levee.sh
-ENVEOF
+LEVEEEOF
+    fi
 
     print_success ".env created with secure secret"
   fi
