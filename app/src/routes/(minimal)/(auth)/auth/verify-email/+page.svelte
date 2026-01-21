@@ -40,7 +40,7 @@
 	{#if status === 'loading'}
 		<div class="py-8">
 			<Spinner size={32} class="mx-auto mb-4" />
-			<p class="text-base-300">Verifying your email...</p>
+			<p class="text-base-content/60">Verifying your email...</p>
 		</div>
 	{:else if status === 'success'}
 		<div class="py-8">
@@ -53,7 +53,7 @@
 			<Alert type="error" title="Verification Failed">
 				{errorMessage}
 			</Alert>
-			<p class="text-base-400 text-sm mt-4">
+			<p class="text-base-content/40 text-sm mt-4">
 				<a href="/auth/login" class="text-primary hover:text-primary-light"> Return to login </a>
 			</p>
 		</div>

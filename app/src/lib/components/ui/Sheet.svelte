@@ -22,27 +22,12 @@
 		onOpenChange
 	}: Props = $props();
 
-	const sideClasses = {
-		top: 'inset-x-0 top-0 border-b',
-		bottom: 'inset-x-0 bottom-0 border-t',
-		left: 'inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
-		right: 'inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm'
-	};
-
-	const slideClasses = {
-		top: 'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
-		bottom: 'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
-		left: 'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left',
-		right: 'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right'
-	};
+	// Generate unique ID for the drawer toggle
+	const sheetId = `sheet-${Math.random().toString(36).substr(2, 9)}`;
 
 	function close() {
 		open = false;
 		onOpenChange?.(false);
-	}
-
-	function handleBackdropClick() {
-		close();
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -50,32 +35,34 @@
 			close();
 		}
 	}
+
+	const sideClasses = {
+		top: 'w-full',
+		bottom: 'w-full',
+		left: 'w-80 sm:w-96 h-full',
+		right: 'w-80 sm:w-96 h-full'
+	};
+
+	const isHorizontal = $derived(side === 'left' || side === 'right');
+	const drawerClass = $derived(side === 'right' ? 'drawer-end' : '');
 </script>
 
-{#if open}
-	<div
-		class="sheet-backdrop"
-		onclick={handleBackdropClick}
-		onkeydown={handleKeydown}
-		role="button"
-		tabindex="0"
-		aria-label="Close sheet"
-	>
-		<div
-			class="sheet-panel sheet-{side}"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.key === 'Enter' && e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			tabindex="0"
-		>
+<svelte:window onkeydown={handleKeydown} />
+
+<div class="drawer {drawerClass} z-50">
+	<input id={sheetId} type="checkbox" class="drawer-toggle" bind:checked={open} />
+
+	<div class="drawer-side">
+		<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+		<label for={sheetId} aria-label="close sidebar" class="drawer-overlay" onclick={close}></label>
+		<div class="bg-base-100 text-base-content min-h-full {sideClasses[side]} p-6 relative">
 			<!-- Close button -->
 			<button
 				type="button"
 				onclick={close}
-				class="sheet-close"
+				class="btn btn-ghost btn-sm btn-circle absolute right-4 top-4"
 			>
-				<svg class="sheet-close-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 				</svg>
 				<span class="sr-only">Close</span>
@@ -83,12 +70,12 @@
 
 			<!-- Header -->
 			{#if title || description}
-				<div class="sheet-header">
+				<div class="flex flex-col space-y-2 text-center sm:text-left mb-4">
 					{#if title}
-						<h2 class="sheet-title">{title}</h2>
+						<h2 class="text-lg font-semibold">{title}</h2>
 					{/if}
 					{#if description}
-						<p class="sheet-description">{description}</p>
+						<p class="text-sm text-base-content/70">{description}</p>
 					{/if}
 				</div>
 			{/if}
@@ -99,67 +86,4 @@
 			{/if}
 		</div>
 	</div>
-{/if}
-
-<style>
-	@reference "$src/app.css";
-	@layer components.sheet {
-		.sheet-backdrop {
-			@apply fixed inset-0 z-50;
-			background: color-mix(in srgb, black 80%, transparent);
-			animation: fade-in 200ms ease-out;
-		}
-
-		.sheet-panel {
-			@apply fixed z-50 gap-4 p-6 shadow-lg transition ease-in-out;
-			background: var(--color-bg);
-			animation-duration: 500ms;
-		}
-
-		.sheet-top {
-			@apply inset-x-0 top-0;
-			border-bottom: 1px solid var(--color-border);
-		}
-
-		.sheet-bottom {
-			@apply inset-x-0 bottom-0;
-			border-top: 1px solid var(--color-border);
-		}
-
-		.sheet-left {
-			@apply inset-y-0 left-0 h-full w-3/4 sm:max-w-sm;
-			border-right: 1px solid var(--color-border);
-		}
-
-		.sheet-right {
-			@apply inset-y-0 right-0 h-full w-3/4 sm:max-w-sm;
-			border-left: 1px solid var(--color-border);
-		}
-
-		.sheet-close {
-			@apply absolute right-4 top-4 rounded-sm opacity-70 transition-opacity;
-			@apply hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2;
-			@apply disabled:pointer-events-none;
-			color: var(--color-text);
-			ring-color: var(--color-primary);
-		}
-
-		.sheet-close-icon {
-			@apply h-4 w-4;
-		}
-
-		.sheet-header {
-			@apply flex flex-col space-y-2 text-center sm:text-left;
-		}
-
-		.sheet-title {
-			@apply text-lg font-semibold;
-			color: var(--color-text);
-		}
-
-		.sheet-description {
-			@apply text-sm;
-			color: var(--color-text-secondary);
-		}
-	}
-</style>
+</div>

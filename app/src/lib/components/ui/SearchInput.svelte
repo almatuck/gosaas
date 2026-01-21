@@ -9,8 +9,11 @@
 		placeholder?: string;
 		disabled?: boolean;
 		loading?: boolean;
+		size?: 'xs' | 'sm' | 'md' | 'lg';
 		onsearch?: (value: string) => void;
 		onclear?: () => void;
+		onkeydown?: (e: KeyboardEvent) => void;
+		class?: string;
 	}
 
 	let {
@@ -18,32 +21,40 @@
 		placeholder = 'Search...',
 		disabled = false,
 		loading = false,
+		size = 'md',
 		onsearch,
-		onclear
+		onclear,
+		onkeydown,
+		class: extraClass = ''
 	}: Props = $props();
+
+	const sizeClasses: Record<string, string> = {
+		xs: 'input-xs',
+		sm: 'input-sm',
+		md: 'input-md',
+		lg: 'input-lg'
+	};
 
 	function handleInput(event: Event) {
 		const target = event.target as HTMLInputElement;
 		value = target.value;
-		if (onsearch) {
-			onsearch(value);
-		}
+		onsearch?.(value);
 	}
 
 	function handleClear() {
 		value = '';
-		if (onclear) {
-			onclear();
-		}
+		onclear?.();
 	}
 </script>
 
-<div class="relative">
-	<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+<div class="relative {extraClass}">
+	<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
 		{#if loading}
-			<div class="h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+			<span class="loading loading-spinner loading-sm"></span>
 		{:else}
-			<i class="fas fa-search text-slate-400"></i>
+			<svg class="h-4 w-4 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+			</svg>
 		{/if}
 	</div>
 	<input
@@ -52,23 +63,19 @@
 		{placeholder}
 		{disabled}
 		oninput={handleInput}
-		class="input w-full pl-11 {value ? 'pr-11' : ''} text-xs sm:text-sm md:text-base"
+		{onkeydown}
+		class="input input-bordered w-full pl-10 {value ? 'pr-10' : ''} {sizeClasses[size]}"
 	/>
 	{#if value && !disabled}
 		<button
 			type="button"
 			onclick={handleClear}
-			class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-white transition-colors"
+			class="btn btn-ghost btn-sm btn-circle absolute inset-y-0 right-1 my-auto"
 			aria-label="Clear search"
 		>
-			<i class="fas fa-times"></i>
+			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+			</svg>
 		</button>
 	{/if}
 </div>
-
-<style>
-	@reference "$src/app.css";
-	@layer components.search-input {
-		/* Search input uses utility classes and input class from app.css */
-	}
-</style>

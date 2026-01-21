@@ -207,8 +207,8 @@
 
 	function getCellClass(value: any, column: TableColumn): string {
 		if (typeof value === 'number') {
-			if (value > 0) return 'text-green-400';
-			if (value < 0) return 'text-red-400';
+			if (value > 0) return 'text-success';
+			if (value < 0) return 'text-error';
 		}
 		return '';
 	}
@@ -366,25 +366,24 @@
 
 <div
 	bind:this={containerRef}
-	class="table-chart-container rounded-lg border border-slate-700/50 bg-slate-800/20 overflow-hidden"
-	class:compact={compactMode}
+	class="card overflow-hidden {compactMode ? 'p-2' : ''}"
 >
 	<!-- Toolbar -->
 	{#if searchable || exportable || showColumnToggle}
-		<div class="table-toolbar flex items-center gap-3 p-3 border-b border-slate-700/50 bg-slate-800/40">
+		<div class="flex items-center gap-3 p-3 border-b border-base-200 bg-base-100/50">
 			<!-- Search -->
 			{#if searchable}
 				<div class="relative flex-1 max-w-xs">
-					<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+					<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-400" />
 					<input
 						type="text"
 						bind:value={searchQuery}
 						placeholder="Search all columns..."
-						class="w-full pl-9 pr-8 py-1.5 rounded-lg bg-slate-900/50 border border-slate-600/50 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+						class="input input-sm w-full pl-9 pr-8"
 					/>
 					{#if searchQuery}
 						<button
-							class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+							class="absolute right-2 top-1/2 -translate-y-1/2 text-base-400 hover:text-base-700"
 							onclick={() => (searchQuery = '')}
 						>
 							<X class="w-4 h-4" />
@@ -394,10 +393,10 @@
 			{/if}
 
 			<!-- Results count -->
-			<div class="text-xs text-slate-400">
+			<div class="text-xs text-base-500">
 				{totalRows} {totalRows === 1 ? 'row' : 'rows'}
 				{#if hasActiveFilters}
-					<span class="text-indigo-400">(filtered)</span>
+					<span class="text-primary">(filtered)</span>
 				{/if}
 			</div>
 
@@ -406,7 +405,7 @@
 			<!-- Clear filters -->
 			{#if hasActiveFilters}
 				<button
-					class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-slate-700/50 transition-colors"
+					class="btn btn-ghost btn-sm"
 					onclick={clearFilters}
 				>
 					<X class="w-3.5 h-3.5" />
@@ -416,27 +415,27 @@
 
 			<!-- Column toggle -->
 			{#if showColumnToggle}
-				<div class="relative">
+				<div class="dropdown dropdown-end">
 					<button
-						class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-slate-700/50 transition-colors border border-slate-600/50"
+						class="btn btn-ghost btn-sm"
 						onclick={() => (showColumnMenu = !showColumnMenu)}
 					>
 						<Settings2 class="w-3.5 h-3.5" />
 						Columns
 					</button>
 					{#if showColumnMenu}
-						<div class="absolute right-0 top-full mt-1 z-20 w-48 rounded-lg bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
-							<div class="p-2 border-b border-slate-700 text-xs font-medium text-slate-400">
+						<div class="dropdown-menu mt-1 w-48">
+							<div class="p-2 border-b border-base-200 text-xs font-medium text-base-500">
 								Toggle Columns
 							</div>
 							<div class="max-h-64 overflow-y-auto p-1">
 								{#each initialColumns as column}
 									<button
-										class="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left text-sm text-slate-300 hover:bg-slate-700/50 transition-colors"
+										class="dropdown-item"
 										onclick={() => toggleColumnVisibility(column.key)}
 									>
 										<div
-											class="w-4 h-4 rounded border flex items-center justify-center {visibleColumns.has(column.key) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-500'}"
+											class="w-4 h-4 rounded border flex items-center justify-center {visibleColumns.has(column.key) ? 'bg-primary border-primary' : 'border-base-400'}"
 										>
 											{#if visibleColumns.has(column.key)}
 												<Check class="w-3 h-3 text-white" />
@@ -453,20 +452,20 @@
 
 			<!-- Export -->
 			{#if exportable}
-				<div class="relative group">
-					<button class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-slate-700/50 transition-colors border border-slate-600/50">
+				<div class="dropdown dropdown-end group">
+					<button class="btn btn-ghost btn-sm">
 						<Download class="w-3.5 h-3.5" />
 						Export
 					</button>
-					<div class="absolute right-0 top-full mt-1 z-20 w-32 rounded-lg bg-slate-800 border border-slate-700 shadow-xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+					<div class="dropdown-menu mt-1 w-32 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
 						<button
-							class="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-700/50 transition-colors"
+							class="dropdown-item"
 							onclick={exportCSV}
 						>
 							Export CSV
 						</button>
 						<button
-							class="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-700/50 transition-colors"
+							class="dropdown-item"
 							onclick={exportJSON}
 						>
 							Export JSON
@@ -478,19 +477,19 @@
 	{/if}
 
 	<!-- Table -->
-	<div class="table-scroll-container overflow-auto" style={height ? `max-height: ${height}px` : ''}>
-		<table bind:this={tableRef} class="w-full border-collapse">
-			<thead class={stickyHeader ? 'sticky top-0 z-10' : ''}>
-				<tr class="bg-slate-800/80 backdrop-blur-sm">
+	<div class="overflow-auto" style={height ? `max-height: ${height}px` : ''}>
+		<table bind:this={tableRef} class="table table-zebra w-full">
+			<thead class={stickyHeader ? 'sticky top-0 z-10 bg-base-200' : 'bg-base-200'}>
+				<tr>
 					<!-- Selection checkbox -->
 					{#if selectable}
-						<th class="table-header-cell w-10 px-3">
+						<th class="w-10 px-3">
 							<input
 								type="checkbox"
 								checked={allSelected}
 								indeterminate={someSelected && !allSelected}
 								onchange={toggleSelectAll}
-								class="w-4 h-4 rounded border-slate-500 bg-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
+								class="checkbox checkbox-sm checkbox-primary"
 							/>
 						</th>
 					{/if}
@@ -498,7 +497,7 @@
 					{#each columns as column}
 						{@const width = columnWidths[column.key]}
 						<th
-							class="table-header-cell group relative select-none {column.sortable !== false ? 'cursor-pointer' : ''}"
+							class="group relative select-none {column.sortable !== false ? 'cursor-pointer hover:bg-base-300' : ''} px-4 py-3 text-left text-xs font-medium text-base-600 uppercase tracking-wider"
 							style="text-align: {column.align || 'left'}; {width ? `width: ${width}px; min-width: ${width}px;` : ''}"
 							onclick={() => handleSort(column.key, column.sortable !== false)}
 						>
@@ -510,9 +509,9 @@
 									<span class="flex-shrink-0">
 										{#if sortKey === column.key}
 											{#if sortDirection === 'asc'}
-												<ChevronUp class="w-4 h-4 text-indigo-400" />
+												<ChevronUp class="w-4 h-4 text-primary" />
 											{:else}
-												<ChevronDown class="w-4 h-4 text-indigo-400" />
+												<ChevronDown class="w-4 h-4 text-primary" />
 											{/if}
 										{:else}
 											<ChevronsUpDown class="w-4 h-4 opacity-0 group-hover:opacity-50 transition-opacity" />
@@ -522,7 +521,7 @@
 
 								<!-- Column filter -->
 								<button
-									class="flex-shrink-0 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-700/50 transition-all {columnFilters[column.key] ? 'opacity-100 text-indigo-400' : 'text-slate-400'}"
+									class="flex-shrink-0 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-base-400/20 transition-all {columnFilters[column.key] ? 'opacity-100 text-primary' : 'text-base-500'}"
 									onclick={(e) => {
 										e.stopPropagation();
 										showFilterMenu = showFilterMenu === column.key ? null : column.key;
@@ -535,7 +534,7 @@
 							<!-- Column filter dropdown -->
 							{#if showFilterMenu === column.key}
 								<div
-									class="absolute left-0 top-full mt-1 z-30 w-48 p-2 rounded-lg bg-slate-800 border border-slate-700 shadow-xl"
+									class="dropdown-menu absolute left-0 top-full mt-1 w-48 p-2"
 									onclick={(e) => e.stopPropagation()}
 									onkeydown={(e) => e.stopPropagation()}
 									role="dialog"
@@ -546,11 +545,11 @@
 										type="text"
 										bind:value={columnFilters[column.key]}
 										placeholder="Filter {column.label}..."
-										class="w-full px-2 py-1.5 rounded bg-slate-900/50 border border-slate-600/50 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+										class="input input-sm w-full"
 									/>
 									{#if columnFilters[column.key]}
 										<button
-											class="mt-2 w-full px-2 py-1 rounded text-xs text-slate-400 hover:bg-slate-700/50 transition-colors"
+											class="btn btn-ghost btn-xs w-full mt-2"
 											onclick={() => {
 												columnFilters = { ...columnFilters, [column.key]: '' };
 											}}
@@ -565,7 +564,7 @@
 							{#if resizable}
 								<button
 									type="button"
-									class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-indigo-500/50 transition-colors border-0 p-0"
+									class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-primary/50 transition-colors border-0 p-0"
 									onmousedown={(e) => startResize(e, column.key)}
 									aria-label="Resize column"
 								></button>
@@ -575,22 +574,22 @@
 				</tr>
 			</thead>
 
-			<tbody class="divide-y divide-slate-700/30">
+			<tbody>
 				{#each paginatedRows as row, rowIndex}
 					{@const globalIndex = currentPage * pageSize + rowIndex}
 					{@const isSelected = selectedRows.has(globalIndex)}
 					<tr
-						class="table-row transition-colors {striped && rowIndex % 2 === 1 ? 'bg-slate-800/10' : ''} {hoverable ? 'hover:bg-slate-700/20' : ''} {isSelected ? 'bg-indigo-900/20' : ''} {onRowClick ? 'cursor-pointer' : ''}"
+						class="transition-colors {hoverable ? 'hover:bg-base-100' : ''} {isSelected ? 'bg-primary/10' : ''} {onRowClick ? 'cursor-pointer' : ''}"
 						onclick={() => handleRowClick(row, rowIndex)}
 					>
 						<!-- Selection checkbox -->
 						{#if selectable}
-							<td class="table-cell w-10 px-3" onclick={(e) => e.stopPropagation()}>
+							<td class="w-10 px-3" onclick={(e) => e.stopPropagation()}>
 								<input
 									type="checkbox"
 									checked={isSelected}
 									onchange={() => toggleRowSelection(rowIndex)}
-									class="w-4 h-4 rounded border-slate-500 bg-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
+									class="checkbox checkbox-sm checkbox-primary"
 								/>
 							</td>
 						{/if}
@@ -599,7 +598,7 @@
 							{@const value = row[column.key]}
 							{@const width = columnWidths[column.key]}
 							<td
-								class="table-cell {getCellClass(value, column)}"
+								class="px-4 py-3 text-sm {getCellClass(value, column)}"
 								style="text-align: {column.align || 'left'}; {width ? `width: ${width}px; min-width: ${width}px;` : ''}"
 							>
 								<span class="truncate block">{formatCell(value, column)}</span>
@@ -610,14 +609,14 @@
 
 				{#if paginatedRows.length === 0}
 					<tr>
-						<td colspan={columns.length + (selectable ? 1 : 0)} class="table-empty">
-							<div class="flex flex-col items-center justify-center py-12">
-								<svg class="w-12 h-12 text-slate-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<td colspan={columns.length + (selectable ? 1 : 0)} class="text-center py-12">
+							<div class="flex flex-col items-center justify-center">
+								<svg class="w-12 h-12 text-base-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 								</svg>
-								<p class="text-slate-400 font-medium mb-1">No data found</p>
+								<p class="text-base-600 font-medium mb-1">No data found</p>
 								{#if hasActiveFilters}
-									<p class="text-slate-500 text-sm">Try adjusting your search or filters</p>
+									<p class="text-base-500 text-sm">Try adjusting your search or filters</p>
 								{/if}
 							</div>
 						</td>
@@ -629,24 +628,24 @@
 
 	<!-- Footer with pagination -->
 	{#if paginate && rows.length > 0}
-		<div class="table-footer flex items-center justify-between px-4 py-3 border-t border-slate-700/50 bg-slate-800/40">
+		<div class="flex items-center justify-between px-4 py-3 border-t border-base-200 bg-base-100/50">
 			<!-- Page size selector -->
 			<div class="flex items-center gap-2">
-				<span class="text-xs text-slate-400">Show</span>
+				<span class="text-xs text-base-500">Show</span>
 				<select
 					bind:value={pageSize}
 					onchange={() => (currentPage = 0)}
-					class="px-2 py-1 rounded bg-slate-900/50 border border-slate-600/50 text-xs text-white focus:outline-none focus:border-indigo-500"
+					class="select select-xs select-bordered"
 				>
 					{#each pageSizeOptions as option}
 						<option value={option}>{option}</option>
 					{/each}
 				</select>
-				<span class="text-xs text-slate-400">rows</span>
+				<span class="text-xs text-base-500">rows</span>
 			</div>
 
 			<!-- Results info -->
-			<div class="text-xs text-slate-400">
+			<div class="text-xs text-base-500">
 				{#if totalRows > 0}
 					{startRow}-{endRow} of {totalRows}
 				{:else}
@@ -655,9 +654,9 @@
 			</div>
 
 			<!-- Pagination controls -->
-			<div class="flex items-center gap-1">
+			<div class="join">
 				<button
-					class="p-1.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+					class="join-item btn btn-xs"
 					disabled={currentPage === 0}
 					onclick={() => goToPage(0)}
 					title="First page"
@@ -665,7 +664,7 @@
 					<ChevronsLeft class="w-4 h-4" />
 				</button>
 				<button
-					class="p-1.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+					class="join-item btn btn-xs"
 					disabled={currentPage === 0}
 					onclick={() => goToPage(currentPage - 1)}
 					title="Previous page"
@@ -675,10 +674,10 @@
 
 				{#each paginationRange as page}
 					{#if page === 'ellipsis'}
-						<span class="px-2 text-slate-500">...</span>
+						<span class="join-item btn btn-xs btn-disabled">...</span>
 					{:else}
 						<button
-							class="min-w-[28px] h-7 px-2 rounded text-xs font-medium transition-colors {currentPage === page ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'}"
+							class="join-item btn btn-xs {currentPage === page ? 'btn-primary' : ''}"
 							onclick={() => goToPage(page)}
 						>
 							{page + 1}
@@ -687,7 +686,7 @@
 				{/each}
 
 				<button
-					class="p-1.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+					class="join-item btn btn-xs"
 					disabled={currentPage >= totalPages - 1}
 					onclick={() => goToPage(currentPage + 1)}
 					title="Next page"
@@ -695,7 +694,7 @@
 					<ChevronRight class="w-4 h-4" />
 				</button>
 				<button
-					class="p-1.5 rounded hover:bg-slate-700/50 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+					class="join-item btn btn-xs"
 					disabled={currentPage >= totalPages - 1}
 					onclick={() => goToPage(totalPages - 1)}
 					title="Last page"

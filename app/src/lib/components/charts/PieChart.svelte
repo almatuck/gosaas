@@ -251,9 +251,9 @@
 	}
 </script>
 
-<div bind:this={containerRef} class="pie-chart-container flex flex-col w-full h-full relative overflow-hidden">
+<div bind:this={containerRef} class="flex flex-col w-full h-full relative overflow-hidden">
 	{#if values.length === 0}
-		<div class="empty-state flex-1 flex items-center justify-center">
+		<div class="flex-1 flex items-center justify-center">
 			<p class="text-text-muted text-sm">No data to display</p>
 		</div>
 	{:else}
@@ -265,9 +265,7 @@
 						fill={slice.color}
 						stroke="white"
 						stroke-width="2"
-						class="transition-all duration-150 cursor-pointer outline-none focus:outline-none"
-						class:chart-slice-highlight={isSliceHighlighted(i)}
-						class:chart-slice-dim={isSliceDimmed(i)}
+						class="transition-all duration-150 cursor-pointer outline-none focus:outline-none {isSliceHighlighted(i) ? 'brightness-110' : ''} {isSliceDimmed(i) ? 'opacity-40' : ''}"
 						transform={getSliceTransform(i)}
 						onmouseenter={(e) => handleSliceMouseEnter(e, slice, i)}
 						onmousemove={handleSliceMouseMove}
@@ -306,11 +304,10 @@
 
 			<!-- Legend -->
 			{#if showLegend}
-				<div class="{isNarrow ? 'legend flex-wrap justify-center' : 'legend-vertical'}">
+				<div class="{isNarrow ? 'flex flex-wrap justify-center gap-4 pt-3' : 'flex flex-col gap-2'}">
 					{#each slices as slice, i}
 						<div
-							class="legend-item cursor-pointer transition-opacity duration-150 outline-none focus:outline-none"
-							class:opacity-40={isSliceDimmed(i)}
+							class="flex items-center gap-1.5 cursor-pointer transition-opacity duration-150 outline-none focus:outline-none {isSliceDimmed(i) ? 'opacity-40' : ''}"
 							onmouseenter={() => hoveredSlice = i}
 							onmouseleave={() => hoveredSlice = null}
 							onclick={() => handleSliceClick(slice, i)}
@@ -318,10 +315,10 @@
 							tabindex="0"
 							onkeydown={(e) => e.key === 'Enter' && handleSliceClick(slice, i)}
 						>
-							<span class="legend-dot" style="background-color: {slice.color}"></span>
-							<span class="legend-label text-text-muted text-xs">{slice.label}</span>
+							<span class="w-3 h-3 rounded-full" style="background-color: {slice.color}"></span>
+							<span class="text-xs text-text-muted">{slice.label}</span>
 							{#if !isNarrow}
-								<span class="text-text text-xs ml-auto font-medium">{slice.percentage}%</span>
+								<span class="text-xs text-text ml-auto font-medium">{slice.percentage}%</span>
 							{/if}
 						</div>
 					{/each}

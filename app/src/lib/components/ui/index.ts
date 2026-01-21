@@ -21,6 +21,7 @@ export { default as ProgressBar } from './ProgressBar.svelte';
 // Form Components
 export { default as Button } from './Button.svelte';
 export { default as ButtonGroup } from './ButtonGroup.svelte';
+export { default as SaveButton } from './SaveButton.svelte';
 export { default as Input } from './Input.svelte';
 export { default as SearchInput } from './SearchInput.svelte';
 export { default as Select } from './Select.svelte';
@@ -29,27 +30,31 @@ export { default as Radio } from './Radio.svelte';
 export { default as Toggle } from './Toggle.svelte';
 export { default as Slider } from './Slider.svelte';
 export { default as DateRangePicker } from './DateRangePicker.svelte';
+export { default as DateFilterPopover } from './DateFilterPopover.svelte';
 
 // Navigation Components
 export { default as Tabs } from './Tabs.svelte';
 export { default as Breadcrumb } from './Breadcrumb.svelte';
 export { default as Dropdown } from './Dropdown.svelte';
+export { default as Steps } from './Steps.svelte';
 
 // Data Display
 export { default as Table } from './Table.svelte';
+export { default as DataTable } from './DataTable.svelte';
 export { default as MetricCard } from './MetricCard.svelte';
+export { default as Sparkline } from './Sparkline.svelte';
+export { default as Chart } from './Chart.svelte';
 export { default as Badge } from './Badge.svelte';
 export { default as Avatar } from './Avatar.svelte';
+export { default as CodeBlock } from './CodeBlock.svelte';
 
 // Overlays
 export { default as Modal } from './Modal.svelte';
 export { default as Drawer } from './Drawer.svelte';
 export { default as Tooltip } from './Tooltip.svelte';
+export { default as SlideForm } from './SlideForm.svelte';
 
-// Note: For charts, use the dedicated charts package:
-// import { BarChart, LineChart, ... } from '$lib/components/charts';
-
-// New UI Components (Svelte 5)
+// Additional UI Components (Svelte 5)
 export { default as ValidatedInput } from './ValidatedInput.svelte';
 export { default as StatusBadge } from './StatusBadge.svelte';
 export { default as TagInput } from './TagInput.svelte';
@@ -67,3 +72,4 @@ export { default as Spinner } from './Spinner.svelte';
 export { default as Collapsible } from './Collapsible.svelte';
 export { default as DropdownMenu } from './DropdownMenu.svelte';
 export { default as Textarea } from './Textarea.svelte';
+export { default as Markdown } from './Markdown.svelte';

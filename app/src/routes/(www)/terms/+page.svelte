@@ -19,13 +19,13 @@
 
 <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
 	<div class="animate-fade-in">
-		<h1 class="font-display text-4xl sm:text-5xl font-black text-white leading-tight mb-4">
+		<h1 class="font-display text-4xl sm:text-5xl font-black text-base-content leading-tight mb-4">
 			Terms of Service
 		</h1>
-		<p class="text-base-400 mb-12">Last updated: {lastUpdated}</p>
+		<p class="text-base-content/60 mb-12">Last updated: {lastUpdated}</p>
 
 		<div
-			class="prose prose-invert prose-headings:font-display prose-h2:text-xl prose-h2:font-bold max-w-none"
+			class="prose prose-invert prose-headings:font-display prose-h2:text-xl prose-h2:font-bold max-w-none prose-headings:text-base-content prose-p:text-base-content/80 prose-li:text-base-content/80"
 		>
 			<h2>1. Acceptance of Terms</h2>
 			<p>

@@ -26,6 +26,7 @@
 		type?: string;
 		placeholder?: string;
 		disabled?: boolean;
+		size?: 'xs' | 'sm' | 'md' | 'lg';
 		class?: string;
 		onBlur?: (e: FocusEvent & { currentTarget: HTMLInputElement }) => void;
 	}
@@ -39,7 +40,8 @@
 		type = 'text',
 		placeholder = '',
 		disabled = false,
-		class: className = '',
+		size = 'md',
+		class: extraClass = '',
 		onBlur
 	}: Props = $props();
 
@@ -47,6 +49,13 @@
 	let shouldShow = $state(false);
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined = $state();
 	let showTimer: ReturnType<typeof setTimeout> | undefined = $state();
+
+	const sizeClasses: Record<string, string> = {
+		xs: 'input-xs',
+		sm: 'input-sm',
+		md: 'input-md',
+		lg: 'input-lg'
+	};
 
 	// Run validation when value changes
 	$effect(() => {
@@ -104,14 +113,14 @@
 		}
 
 		if (validationResult.severity === 'warning') {
-			return 'warning';
+			return 'input-warning';
 		}
 
 		if (!validationResult.isValid) {
-			return 'invalid';
+			return 'input-error';
 		}
 
-		return '';
+		return 'input-success';
 	});
 
 	// Get the hint text to display
@@ -125,11 +134,17 @@
 		if (!validationResult) return '';
 
 		if (validationResult.severity === 'warning') {
-			return 'hint-warning';
+			return 'text-warning';
 		}
 
-		return 'hint-info';
+		if (!validationResult.isValid) {
+			return 'text-error';
+		}
+
+		return 'text-base-content/60';
 	});
+
+	const className = $derived(`input input-bordered w-full ${sizeClasses[size]} ${validationClass()} ${extraClass}`.trim());
 </script>
 
 <div class="w-full">
@@ -139,62 +154,17 @@
 		{disabled}
 		bind:value
 		onblur={handleBlur}
-		class="validated-input {validationClass()} {className}"
+		class={className}
 	/>
 
 	<!-- Validation hint -->
 	{#if hintText()}
 		<div
-			class="validated-hint {hintClass()}"
+			class="label py-1"
 			role="status"
 			aria-live="polite"
 		>
-			{hintText()}
+			<span class="label-text-alt {hintClass()}">{hintText()}</span>
 		</div>
 	{/if}
 </div>
-
-<style>
-	@reference "$src/app.css";
-	@layer components.validated-input {
-		.validated-input {
-			@apply w-full px-4 py-2 rounded-lg text-sm border transition-colors duration-150;
-			@apply focus:outline-none;
-			background: var(--color-bg);
-			color: var(--color-text);
-			border-color: var(--color-border);
-		}
-
-		.validated-input:focus {
-			border-color: var(--color-primary);
-		}
-
-		.validated-input.warning {
-			border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
-		}
-
-		.validated-input.warning:focus {
-			border-color: color-mix(in srgb, var(--color-warning) 50%, transparent);
-		}
-
-		.validated-input.invalid {
-			border-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
-		}
-
-		.validated-input.invalid:focus {
-			border-color: color-mix(in srgb, var(--color-warning) 40%, transparent);
-		}
-
-		.validated-hint {
-			@apply text-xs mt-1.5;
-		}
-
-		.hint-warning {
-			color: var(--color-warning);
-		}
-
-		.hint-info {
-			color: var(--color-text-muted);
-		}
-	}
-</style>

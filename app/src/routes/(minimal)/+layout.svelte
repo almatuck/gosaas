@@ -10,8 +10,8 @@
 		<main id="main-content">
 			{@render children()}
 		</main>
-		<p class="text-center mt-8 text-sm text-[var(--color-base-400)]">
-			<a href="/" class="hover:text-white transition-colors"> Back to home </a>
+		<p class="text-center mt-8 text-sm text-base-content/60">
+			<a href="/" class="hover:text-base-content transition-colors"> Back to home </a>
 		</p>
 	</div>
 </div>

@@ -9,55 +9,62 @@
 		placeholder = '',
 		value = $bindable(),
 		disabled = false,
+		readonly = false,
+		required = false,
 		id,
+		label,
+		min,
+		max,
+		step,
 		class: extraClass = '',
 		oninput,
-		onblur
+		onblur,
+		onfocus
 	}: {
 		type?: string;
-		size?: 'sm' | 'md' | 'lg';
+		size?: 'xs' | 'sm' | 'md' | 'lg';
 		placeholder?: string;
-		value?: string;
+		value?: string | number;
 		disabled?: boolean;
+		readonly?: boolean;
+		required?: boolean;
 		id?: string;
+		label?: string;
+		min?: string | number;
+		max?: string | number;
+		step?: string | number;
 		class?: string;
 		oninput?: (e: Event) => void;
 		onblur?: (e: Event) => void;
+		onfocus?: (e: Event) => void;
 	} = $props();
 
 	// Ensure value is never undefined
 	let safeValue = $derived(value ?? '');
 
-	const sizeClasses = {
+	const sizeClasses: Record<string, string> = {
+		xs: 'input-xs',
 		sm: 'input-sm',
 		md: 'input-md',
 		lg: 'input-lg'
 	};
 
-	const className = $derived(`input ${sizeClasses[size]} ${extraClass}`.trim());
+	const className = $derived(`input input-bordered w-full ${sizeClasses[size]} ${extraClass}`.trim());
 
 	function handleInput(e: Event) {
-		value = (e.currentTarget as HTMLInputElement).value;
+		const inputEl = e.currentTarget as HTMLInputElement;
+		if (type === 'number') {
+			value = inputEl.valueAsNumber;
+		} else {
+			value = inputEl.value;
+		}
 		oninput?.(e);
 	}
 </script>
 
-<input class={className} {type} {placeholder} value={safeValue} oninput={handleInput} onblur={onblur} {disabled} {id} />
-
-<style>
-	@reference "$src/app.css";
-	@layer components.input {
-		/* Size variants for input component */
-		.input-sm {
-			@apply h-8 px-3 py-1 text-sm;
-		}
-
-		.input-md {
-			/* Default size - inherits from .input in app.css */
-		}
-
-		.input-lg {
-			@apply h-12 px-5 py-4 text-base;
-		}
-	}
-</style>
+{#if label}
+	<label class="label" for={id}>
+		<span class="label-text">{label}</span>
+	</label>
+{/if}
+<input class={className} {type} {placeholder} value={safeValue} oninput={handleInput} onblur={onblur} onfocus={onfocus} {disabled} {readonly} {required} {id} {min} {max} {step} />

@@ -1,63 +1,84 @@
 <!--
-  Reusable Button Component
+  Reusable Button Component using DaisyUI
 -->
 
 <script lang="ts">
 	let {
 		type = 'primary',
+		variant, // alias for type
 		size = 'md',
 		disabled = false,
 		active = false,
+		outline = false,
 		onclick,
 		href,
 		external = false,
 		htmlType = 'button',
+		title,
 		children,
 		class: extraClass = ''
 	}: {
 		type?: 'primary' | 'secondary' | 'link' | 'danger' | 'ghost';
-		size?: 'sm' | 'md' | 'lg' | 'icon';
+		variant?: 'primary' | 'secondary' | 'link' | 'danger' | 'ghost';
+		size?: 'xs' | 'sm' | 'md' | 'lg' | 'icon';
 		disabled?: boolean;
 		active?: boolean;
+		outline?: boolean;
 		onclick?: () => void;
 		href?: string;
 		external?: boolean;
 		htmlType?: 'button' | 'submit' | 'reset';
+		title?: string;
 		children: any;
 		class?: string;
 	} = $props();
 
-	const typeClasses = {
+	// Support both 'type' and 'variant' props
+	const btnType = $derived(variant || type);
+
+	const typeClasses: Record<string, string> = {
 		primary: 'btn-primary',
 		secondary: 'btn-secondary',
 		link: 'btn-link',
-		danger: 'btn-danger',
+		danger: 'btn-error',
 		ghost: 'btn-ghost'
 	};
 
-	const sizeClasses = {
+	const sizeClasses: Record<string, string> = {
+		xs: 'btn-xs',
 		sm: 'btn-sm',
-		md: 'btn-md',
+		md: '',
 		lg: 'btn-lg',
-		icon: 'btn-icon'
+		icon: 'btn-square btn-sm'
 	};
 
-	const className = $derived(`${typeClasses[type]} ${sizeClasses[size]} ${active ? 'active' : ''} ${extraClass}`.trim());
+	const className = $derived(
+		[
+			'btn',
+			typeClasses[btnType],
+			sizeClasses[size],
+			outline ? 'btn-outline' : '',
+			active ? 'btn-active' : '',
+			extraClass
+		]
+			.filter(Boolean)
+			.join(' ')
+	);
 </script>
 
 {#if href}
-	<a {href} class={className} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
+	<a
+		{href}
+		{title}
+		class={className}
+		class:btn-disabled={disabled}
+		target={external ? '_blank' : undefined}
+		rel={external ? 'noopener noreferrer' : undefined}
+	>
 		{@render children()}
 	</a>
 {:else}
-	<button class={className} type={htmlType} {disabled} {onclick}>
+	<button class={className} type={htmlType} {disabled} {onclick} {title}>
 		{@render children()}
 	</button>
 {/if}
-
-<style>
-	@reference "$src/app.css";
-	@layer components.button {
-		/* Button styles are defined in app.css */
-	}
-</style>

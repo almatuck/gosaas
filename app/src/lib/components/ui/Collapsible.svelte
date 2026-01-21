@@ -1,6 +1,6 @@
 <!--
   Collapsible Component
-  Simple collapsible container (headless - you provide trigger and content)
+  Simple collapsible container using DaisyUI collapse
 -->
 
 <script lang="ts">
@@ -24,24 +24,20 @@
 	}
 </script>
 
-<div class="collapsible">
+<div class="collapse collapse-arrow bg-base-200 {open ? 'collapse-open' : 'collapse-close'}">
 	{#if trigger}
-		<div class="collapsible-trigger" onclick={toggleOpen} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && toggleOpen()}>
+		<div
+			class="collapse-title text-lg font-medium cursor-pointer"
+			onclick={toggleOpen}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => e.key === 'Enter' && toggleOpen()}
+		>
 			{@render trigger()}
 		</div>
 	{/if}
 
-	{#if open}
-		<div class="collapsible-content">
-			{@render children()}
-		</div>
-	{/if}
+	<div class="collapse-content">
+		{@render children()}
+	</div>
 </div>
-
-<style>
-@reference "$src/app.css";
-
-@layer components.collapsible {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>

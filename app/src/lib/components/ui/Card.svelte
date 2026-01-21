@@ -21,19 +21,17 @@
 	} = $props();
 
 	const isClickable = $derived(!!onclick);
-	const className = $derived(`card ${hover ? 'card-hover' : ''} ${isClickable ? 'cursor-pointer' : ''} ${extraClass}`.trim());
+	const className = $derived(`card bg-base-100 shadow-xl ${hover ? 'hover:shadow-2xl transition-shadow' : ''} ${isClickable ? 'cursor-pointer' : ''} ${extraClass}`.trim());
 </script>
 
 {#snippet cardContent()}
-	{#if title}
-		<div class="card-header">
+	<div class="card-body">
+		{#if title}
 			<h2 class="card-title">{title}</h2>
 			{#if subtitle}
-				<p class="card-subtitle">{subtitle}</p>
+				<p class="text-base-content/70">{subtitle}</p>
 			{/if}
-		</div>
-	{/if}
-	<div class="card-body">
+		{/if}
 		{@render children()}
 	</div>
 {/snippet}
@@ -47,10 +45,3 @@
 		{@render cardContent()}
 	</div>
 {/if}
-
-<style>
-	@reference "$src/app.css";
-	@layer components.card {
-		/* Card styles are defined in app.css */
-	}
-</style>

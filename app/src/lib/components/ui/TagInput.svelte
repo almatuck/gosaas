@@ -21,7 +21,7 @@
 	let {
 		value = $bindable([]),
 		placeholder = 'Type and press Enter...',
-		class: className = '',
+		class: extraClass = '',
 		disabled = false,
 		transformInput
 	}: Props = $props();
@@ -73,16 +73,16 @@
 	}
 </script>
 
-<div class="tag-input-container {disabled ? 'disabled' : ''} {className}">
+<div class="input input-bordered flex flex-wrap items-center gap-2 min-h-[2.5rem] h-auto py-1.5 {disabled ? 'opacity-50 cursor-not-allowed' : ''} {extraClass}">
 	<!-- Render existing tags -->
 	{#each tags as tag, index}
-		<div class="tag">
+		<div class="badge badge-info gap-1">
 			<span>{tag}</span>
 			{#if !disabled}
 				<button
 					type="button"
 					onclick={() => removeTag(index)}
-					class="tag-remove"
+					class="btn btn-ghost btn-xs p-0 h-auto min-h-0"
 					aria-label="Remove {tag}"
 				>
 					<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,54 +101,7 @@
 			onkeydown={handleKeyDown}
 			onblur={handleInputBlur}
 			placeholder={tags.length === 0 ? placeholder : ''}
-			class="tag-input"
+			class="flex-1 min-w-[120px] bg-transparent outline-none border-none text-sm focus:outline-none"
 		/>
 	{/if}
 </div>
-
-<style>
-	@reference "$src/app.css";
-	@layer components.tag-input {
-		.tag-input-container {
-			@apply flex flex-wrap gap-2 min-h-[42px] w-full rounded-lg border p-2 bg-transparent;
-			border-color: var(--color-border);
-		}
-
-		.tag-input-container:focus-within {
-			@apply outline-none;
-			border-color: var(--color-text-muted);
-		}
-
-		.tag-input-container.disabled {
-			@apply opacity-50 cursor-not-allowed;
-		}
-
-		.tag {
-			@apply flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-medium border transition-colors;
-			background: color-mix(in srgb, var(--color-info) 10%, transparent);
-			color: var(--color-info);
-			border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
-		}
-
-		.tag-remove {
-			@apply rounded-sm p-0.5 focus:outline-none focus:ring-1 transition-colors;
-		}
-
-		.tag-remove:hover {
-			background: color-mix(in srgb, var(--color-info) 20%, transparent);
-		}
-
-		.tag-remove:focus {
-			ring-color: var(--color-info);
-		}
-
-		.tag-input {
-			@apply flex-1 min-w-[120px] bg-transparent outline-none text-sm;
-			color: var(--color-text);
-		}
-
-		.tag-input::placeholder {
-			color: var(--color-text-muted);
-		}
-	}
-</style>

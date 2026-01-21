@@ -7,7 +7,6 @@
 		BarChart3,
 		ArrowRight,
 		Check,
-		Linkedin,
 		Quote
 	} from 'lucide-svelte';
 
@@ -111,24 +110,24 @@
 </svelte:head>
 
 <!-- Hero Section -->
-<section class="hero-section">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center">
 	<div class="animate-fade-in">
-		<span class="hero-badge">
-			<span class="hero-badge-dot"></span>
+		<span class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium mb-8 bg-primary/10 border border-primary/20 text-primary">
+			<span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
 			Now in public beta
 		</span>
 
-		<h1 class="hero-title">
+		<h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-base-content leading-tight tracking-tight mb-6">
 			Build your SaaS<br />
 			<span class="text-gradient">faster than ever</span>
 		</h1>
 
-		<p class="hero-subtitle">
+		<p class="text-lg sm:text-xl text-base-content/70 max-w-2xl mx-auto mb-10 leading-relaxed">
 			Stop reinventing the wheel. This boilerplate gives you authentication, billing, email,
 			and a polished UI so you can focus on what makes your product unique.
 		</p>
 
-		<div class="hero-cta">
+		<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
 			<Button type="primary" size="lg" href="/auth/register">
 				Get Started Free
 				<ArrowRight class="w-5 h-5" />
@@ -139,48 +138,56 @@
 </section>
 
 <!-- Features Grid -->
-<section class="section" id="features">
-	<div class="section-header">
-		<h2 class="section-title">Everything you need to launch</h2>
-		<p class="section-subtitle">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24" id="features">
+	<div class="text-center mb-12 sm:mb-16">
+		<h2 class="font-display text-3xl sm:text-4xl font-bold text-base-content mb-4">Everything you need to launch</h2>
+		<p class="text-lg text-base-content/70 max-w-2xl mx-auto">
 			Built with modern technologies and best practices so you can ship with confidence.
 		</p>
 	</div>
 
-	<div class="features-grid">
+	<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
 		{#each features as feature, i}
 			{@const FeatureIcon = feature.icon}
 			{@const delay = i + 1}
-			<div class="feature-card animate-slide-up opacity-0 stagger-delay" style:--delay={delay} style:--theme-color={feature.color}>
-				<div class="feature-icon themed-bg">
-					<FeatureIcon class="w-7 h-7 themed-color" />
+			<div
+				class="card bg-base-200/50 border border-base-300 backdrop-blur-sm animate-slide-up opacity-0 stagger-delay"
+				style:--delay={delay}
+				style:--theme-color={feature.color}
+			>
+				<div class="card-body">
+					<div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 themed-bg">
+						<FeatureIcon class="w-7 h-7 themed-color" />
+					</div>
+					<h3 class="font-display text-xl font-bold text-base-content">{feature.title}</h3>
+					<p class="text-base-content/70">{feature.description}</p>
 				</div>
-				<h3 class="feature-title">{feature.title}</h3>
-				<p class="feature-description">{feature.description}</p>
 			</div>
 		{/each}
 	</div>
 </section>
 
 <!-- How It Works -->
-<div class="section-alt">
-	<section class="section">
-		<div class="section-header">
-			<h2 class="section-title">Get started in minutes</h2>
-			<p class="section-subtitle">Three simple steps to your production-ready SaaS.</p>
+<div class="bg-base-200/50 py-16 sm:py-24">
+	<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="text-center mb-12 sm:mb-16">
+			<h2 class="font-display text-3xl sm:text-4xl font-bold text-base-content mb-4">Get started in minutes</h2>
+			<p class="text-lg text-base-content/70 max-w-2xl mx-auto">Three simple steps to your production-ready SaaS.</p>
 		</div>
 
-		<div class="steps-container">
-			<div class="steps-line"></div>
-			<div class="steps-grid">
+		<div class="relative">
+			<!-- Connecting line (desktop only) -->
+			<div class="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 -translate-y-1/2 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+
+			<div class="relative grid gap-8 md:grid-cols-3">
 				{#each steps as item, i}
 					{@const delay = i + 1}
-					<div class="step-item animate-slide-up opacity-0 stagger-delay-150" style:--delay={delay}>
-						<div class="step-number">
-							<span>{item.step}</span>
+					<div class="relative text-center animate-slide-up opacity-0 stagger-delay-150" style:--delay={delay}>
+						<div class="relative z-10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-base-100 border border-primary/30">
+							<span class="font-display text-2xl font-black text-primary">{item.step}</span>
 						</div>
-						<h3 class="step-title">{item.title}</h3>
-						<p class="step-description">{item.description}</p>
+						<h3 class="font-display text-lg font-bold text-base-content mb-2">{item.title}</h3>
+						<p class="text-sm text-base-content/60">{item.description}</p>
 					</div>
 				{/each}
 			</div>
@@ -189,15 +196,15 @@
 </div>
 
 <!-- What's Included -->
-<section class="section">
-	<div class="section-header">
-		<h2 class="section-title">What's included</h2>
-		<p class="section-subtitle">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+	<div class="text-center mb-12 sm:mb-16">
+		<h2 class="font-display text-3xl sm:text-4xl font-bold text-base-content mb-4">What's included</h2>
+		<p class="text-lg text-base-content/70 max-w-2xl mx-auto">
 			A complete foundation for your SaaS business, ready to customize.
 		</p>
 	</div>
 
-	<div class="features-grid">
+	<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
 		{#each [
 			{ title: 'User Authentication', items: ['Email/password login', 'Password reset flow', 'Email verification', 'Session management'] },
 			{ title: 'Stripe Billing', items: ['Subscription management', 'Customer portal', 'Usage-based pricing', 'Webhook handling'] },
@@ -207,36 +214,42 @@
 			{ title: 'Production Ready', items: ['Security headers', 'Rate limiting', 'Error handling', 'Logging & monitoring'] }
 		] as section, i}
 			{@const delay = i + 1}
-			<div class="feature-card animate-slide-up opacity-0 stagger-delay-80" style:--delay={delay}>
-				<h3 class="feature-title">{section.title}</h3>
-				<ul class="mt-4 space-y-2">
-					{#each section.items as item}
-						<li class="flex items-center gap-2 text-base-300 text-sm">
-							<Check class="w-4 h-4 text-success flex-shrink-0" />
-							<span>{item}</span>
-						</li>
-					{/each}
-				</ul>
+			<div class="card bg-base-200/50 border border-base-300 backdrop-blur-sm animate-slide-up opacity-0 stagger-delay-80" style:--delay={delay}>
+				<div class="card-body">
+					<h3 class="font-display text-xl font-bold text-base-content">{section.title}</h3>
+					<ul class="mt-4 space-y-2">
+						{#each section.items as item}
+							<li class="flex items-center gap-2 text-base-content/70 text-sm">
+								<Check class="w-4 h-4 text-success flex-shrink-0" />
+								<span>{item}</span>
+							</li>
+						{/each}
+					</ul>
+				</div>
 			</div>
 		{/each}
 	</div>
 </section>
 
 <!-- Testimonial -->
-<div class="section-alt">
-	<section class="section">
+<div class="bg-base-200/50 py-16 sm:py-24">
+	<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="max-w-3xl mx-auto">
-			<div class="quote-card">
-				<Quote class="w-8 h-8 text-primary mb-4" />
-				<p class="quote-text">
-					"This boilerplate saved us months of development time. We launched our MVP in under two weeks
-					and have been iterating on customer feedback ever since."
-				</p>
-				<div class="quote-author">
-					<div class="quote-avatar">JD</div>
-					<div>
-						<p class="quote-name">Jane Doe</p>
-						<p class="quote-role">Founder, Example Startup</p>
+			<div class="card bg-base-200/80 border border-base-300 backdrop-blur-sm">
+				<div class="card-body p-8 lg:p-12">
+					<Quote class="w-8 h-8 text-primary mb-4" />
+					<p class="text-lg text-base-content italic leading-relaxed mb-6">
+						"This boilerplate saved us months of development time. We launched our MVP in under two weeks
+						and have been iterating on customer feedback ever since."
+					</p>
+					<div class="flex items-center gap-4">
+						<div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-primary to-secondary">
+							JD
+						</div>
+						<div>
+							<p class="font-semibold text-base-content">Jane Doe</p>
+							<p class="text-sm text-base-content/60">Founder, Example Startup</p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -245,30 +258,30 @@
 </div>
 
 <!-- FAQ Section -->
-<section class="section" id="faq">
-	<div class="section-header">
-		<h2 class="section-title">Frequently Asked Questions</h2>
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24" id="faq">
+	<div class="text-center mb-12 sm:mb-16">
+		<h2 class="font-display text-3xl sm:text-4xl font-bold text-base-content mb-4">Frequently Asked Questions</h2>
 	</div>
 
-	<div class="max-w-3xl mx-auto">
-		<div class="faq-list">
-			{#each faqs as faq}
-				<div class="faq-item">
-					<h3 class="faq-question">{faq.question}</h3>
-					<p class="faq-answer">{faq.answer}</p>
+	<div class="max-w-3xl mx-auto space-y-6">
+		{#each faqs as faq}
+			<div class="card bg-base-200/50 border border-base-300 backdrop-blur-sm">
+				<div class="card-body p-6">
+					<h3 class="font-display text-lg font-semibold text-base-content mb-2">{faq.question}</h3>
+					<p class="text-base-content/70 leading-relaxed">{faq.answer}</p>
 				</div>
-			{/each}
-		</div>
+			</div>
+		{/each}
 	</div>
 </section>
 
 <!-- CTA Section -->
-<div class="section-alt">
-	<section class="cta-section">
-		<h2 class="cta-title">
+<div class="bg-base-200/50 py-16 sm:py-24">
+	<section class="text-center max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+		<h2 class="font-display text-3xl sm:text-4xl font-bold text-base-content mb-6">
 			Ready to build your SaaS?
 		</h2>
-		<p class="cta-subtitle">
+		<p class="text-xl text-base-content/70 mb-10 max-w-2xl mx-auto">
 			Start with a solid foundation and focus on what makes your product unique.
 		</p>
 		<Button type="primary" size="lg" href="/auth/register">

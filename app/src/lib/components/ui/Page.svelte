@@ -47,11 +47,3 @@
 <div class="mx-auto w-full {maxWidthClasses[maxWidth]} px-6 py-6 pb-8">
 	{@render children()}
 </div>
-
-<style>
-@reference "$src/app.css";
-
-@layer components.page {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>

@@ -1,6 +1,6 @@
 <!--
   Separator Component
-  Horizontal or vertical divider line
+  Horizontal or vertical divider line using DaisyUI
 -->
 
 <script lang="ts">
@@ -15,23 +15,18 @@
 		decorative = true,
 		class: className = ''
 	}: Props = $props();
-
-	const orientationClasses = {
-		horizontal: 'h-[1px] w-full',
-		vertical: 'h-full w-[1px]'
-	};
 </script>
 
-<div
-	class="shrink-0 bg-slate-200 dark:bg-slate-700 {orientationClasses[orientation]} {className}"
-	role={decorative ? 'presentation' : 'separator'}
-	aria-orientation={orientation}
-></div>
-
-<style>
-@reference "$src/app.css";
-
-@layer components.separator {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>
+{#if orientation === 'horizontal'}
+	<div
+		class="divider my-0 {className}"
+		role={decorative ? 'presentation' : 'separator'}
+		aria-orientation={orientation}
+	></div>
+{:else}
+	<div
+		class="divider divider-horizontal mx-0 {className}"
+		role={decorative ? 'presentation' : 'separator'}
+		aria-orientation={orientation}
+	></div>
+{/if}

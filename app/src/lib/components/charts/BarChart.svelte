@@ -380,10 +380,10 @@
 	}
 </script>
 
-<div bind:this={containerRef} class="bar-chart-container flex flex-col w-full h-full relative">
+<div bind:this={containerRef} class="flex flex-col w-full h-full relative">
 	{#if labels.length === 0 || datasets.length === 0}
-		<div class="empty-state flex-1 flex items-center justify-center">
-			<p class="text-slate-500 text-sm">No data to display</p>
+		<div class="flex-1 flex items-center justify-center">
+			<p class="text-base-500 text-sm">No data to display</p>
 		</div>
 	{:else}
 		<svg viewBox="0 0 {viewBoxWidth} {viewBoxHeight}" preserveAspectRatio="none" class="flex-1 w-full">
@@ -455,9 +455,7 @@
 								height={Math.max(geom.height, 0)}
 								fill={getBarColor(datasetIndex, labelIndex, dataset)}
 								rx="2"
-								class="transition-all duration-150 cursor-pointer outline-none focus:outline-none"
-								class:chart-bar-highlight={isBarHighlighted(labelIndex, datasetIndex)}
-								class:chart-bar-dim={isBarDimmed(labelIndex, datasetIndex)}
+								class="transition-all duration-150 cursor-pointer outline-none focus:outline-none {isBarHighlighted(labelIndex, datasetIndex) ? 'brightness-110' : ''} {isBarDimmed(labelIndex, datasetIndex) ? 'opacity-40' : ''}"
 								onmouseenter={(e) => handleBarMouseEnter(e, labelIndex, datasetIndex, dataset)}
 								onmousemove={handleBarMouseMove}
 								onmouseleave={handleBarMouseLeave}
@@ -480,9 +478,7 @@
 								height={Math.max(geom.height, 0)}
 								fill={getBarColor(datasetIndex, labelIndex, dataset)}
 								rx="2"
-								class="transition-all duration-150 cursor-pointer outline-none focus:outline-none"
-								class:chart-bar-highlight={isBarHighlighted(labelIndex, datasetIndex)}
-								class:chart-bar-dim={isBarDimmed(labelIndex, datasetIndex)}
+								class="transition-all duration-150 cursor-pointer outline-none focus:outline-none {isBarHighlighted(labelIndex, datasetIndex) ? 'brightness-110' : ''} {isBarDimmed(labelIndex, datasetIndex) ? 'opacity-40' : ''}"
 								onmouseenter={(e) => handleBarMouseEnter(e, labelIndex, datasetIndex, dataset)}
 								onmousemove={handleBarMouseMove}
 								onmouseleave={handleBarMouseLeave}
@@ -567,11 +563,11 @@
 
 		<!-- Legend -->
 		{#if showLegend && datasets.length > 1}
-			<div class="legend">
+			<div class="flex flex-wrap justify-center gap-4 pt-3">
 				{#each datasets as dataset, i}
-					<div class="legend-item">
-						<span class="legend-dot" style="background-color: {getBarColor(i, 0, dataset)}"></span>
-						<span class="legend-label">{dataset.label || `Series ${i + 1}`}</span>
+					<div class="flex items-center gap-1.5">
+						<span class="w-3 h-3 rounded-full" style="background-color: {getBarColor(i, 0, dataset)}"></span>
+						<span class="text-xs text-text-muted">{dataset.label || `Series ${i + 1}`}</span>
 					</div>
 				{/each}
 			</div>

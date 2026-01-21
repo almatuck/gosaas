@@ -64,12 +64,12 @@
 	});
 
 	const trendColor = $derived.by(() => {
-		if (trendDirection === 'neutral') return 'text-slate-500';
-		return trendDirection === 'up' ? 'text-green-400' : 'text-red-400';
+		if (trendDirection === 'neutral') return 'text-base-500';
+		return trendDirection === 'up' ? 'text-success' : 'text-error';
 	});
 
 	const colorClasses = $derived.by(() => {
-		const colors = {
+		const colors: Record<string, string> = {
 			indigo: 'from-indigo-600 to-indigo-500',
 			purple: 'from-purple-600 to-purple-500',
 			pink: 'from-pink-600 to-pink-500',
@@ -79,21 +79,7 @@
 			red: 'from-red-600 to-red-500',
 			yellow: 'from-yellow-600 to-yellow-500'
 		};
-		return colors[color as keyof typeof colors] || colors.indigo;
-	});
-
-	const iconBgColor = $derived.by(() => {
-		const colors = {
-			indigo: 'rgba(99, 102, 241, 0.15)',
-			purple: 'rgba(168, 85, 247, 0.15)',
-			pink: 'rgba(236, 72, 153, 0.15)',
-			orange: 'rgba(251, 146, 60, 0.15)',
-			green: 'rgba(34, 197, 94, 0.15)',
-			blue: 'rgba(59, 130, 246, 0.15)',
-			red: 'rgba(239, 68, 68, 0.15)',
-			yellow: 'rgba(234, 179, 8, 0.15)'
-		};
-		return colors[color as keyof typeof colors] || colors.indigo;
+		return colors[color] || colors.indigo;
 	});
 </script>
 
@@ -103,7 +89,7 @@
 
 	<!-- Value -->
 	{#if loading}
-		<div class="h-9 w-24 bg-surface-hover rounded animate-pulse mb-1"></div>
+		<div class="skeleton h-9 w-24 mb-1"></div>
 	{:else}
 		<p class="text-3xl font-bold text-text transition-all duration-500 group-hover:scale-105 origin-left">
 			{formattedValue}
@@ -141,4 +127,3 @@
 	<!-- Decorative gradient border on hover -->
 	<div class="absolute inset-0 rounded-xl bg-gradient-to-r {colorClasses} opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"></div>
 </div>
-

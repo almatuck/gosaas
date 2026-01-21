@@ -169,7 +169,7 @@
 <div bind:this={containerRef} class="gantt-chart-container w-full overflow-x-auto">
 	{#if tasks.length === 0}
 		<div class="empty-state flex items-center justify-center" style="height: {effectiveHeight}px;">
-			<p class="text-slate-500 text-sm">No tasks to display</p>
+			<p class="text-base-content/60 text-sm">No tasks to display</p>
 		</div>
 	{:else}
 		<svg width={containerWidth} height={effectiveHeight}>
@@ -190,7 +190,7 @@
 						x={tick.x}
 						y="25"
 						text-anchor="middle"
-						class="text-xs fill-slate-400"
+						class="text-xs fill-base-content/60"
 					>
 						{tick.label}
 					</text>
@@ -204,7 +204,7 @@
 						x="10"
 						y={50 + i * rowHeight + rowHeight / 2}
 						dominant-baseline="middle"
-						class="text-sm fill-slate-300"
+						class="text-sm fill-base-content/70"
 					>
 						{task.label.length > 18 ? task.label.slice(0, 18) + '..' : task.label}
 					</text>

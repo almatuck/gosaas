@@ -26,17 +26,17 @@
 	};
 </script>
 
-<footer class="bg-[var(--color-base-900)] border-t border-white/10">
+<footer class="bg-base-200 border-t border-base-content/10">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
 			<!-- Brand -->
 			<div class="col-span-2">
 				<a href="/" class="inline-block">
-					<span class="font-display text-2xl font-black text-white tracking-tight">
+					<span class="font-display text-2xl font-black text-base-content tracking-tight">
 						{site.name}
 					</span>
 				</a>
-				<p class="mt-4 text-sm text-white/60 max-w-xs leading-relaxed">
+				<p class="mt-4 text-sm text-base-content/60 max-w-xs leading-relaxed">
 					{site.description}
 				</p>
 				<!-- Social Links -->
@@ -47,7 +47,7 @@
 								href={social.href}
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-white/40 hover:text-white transition-colors"
+								class="text-base-content/40 hover:text-base-content transition-colors"
 								aria-label={social.label}
 							>
 								{#if social.icon === 'twitter'}
@@ -75,7 +75,7 @@
 
 			<!-- Product -->
 			<div>
-				<h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+				<h3 class="text-sm font-semibold text-base-content uppercase tracking-wider mb-4">
 					Product
 				</h3>
 				<ul class="space-y-3">
@@ -83,7 +83,7 @@
 						<li>
 							<a
 								href={link.href}
-								class="text-sm text-white/60 hover:text-white transition-colors"
+								class="text-sm text-base-content/60 hover:text-base-content transition-colors"
 							>
 								{link.label}
 							</a>
@@ -94,7 +94,7 @@
 
 			<!-- Legal -->
 			<div>
-				<h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+				<h3 class="text-sm font-semibold text-base-content uppercase tracking-wider mb-4">
 					Legal
 				</h3>
 				<ul class="space-y-3">
@@ -102,7 +102,7 @@
 						<li>
 							<a
 								href={link.href}
-								class="text-sm text-white/60 hover:text-white transition-colors"
+								class="text-sm text-base-content/60 hover:text-base-content transition-colors"
 							>
 								{link.label}
 							</a>
@@ -113,8 +113,8 @@
 		</div>
 
 		<!-- Bottom -->
-		<div class="mt-12 pt-8 border-t border-white/10">
-			<p class="text-sm text-white/40 text-center sm:text-left">
+		<div class="mt-12 pt-8 border-t border-base-content/10">
+			<p class="text-sm text-base-content/40 text-center sm:text-left">
 				&copy; {currentYear} {site.legal.companyName}. All rights reserved.
 			</p>
 		</div>

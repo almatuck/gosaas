@@ -1,10 +1,11 @@
 <!--
   AlertDialog Component
-  Alert/confirmation dialog with actions
+  Alert/confirmation dialog using DaisyUI modal
 -->
 
 <script lang="ts">
 	import { Button } from '$lib/components/ui';
+	import { X } from 'lucide-svelte';
 
 	interface Props {
 		open?: boolean;
@@ -16,6 +17,7 @@
 		children?: any;
 		onAction?: () => void;
 		onCancel?: () => void;
+		onclose?: () => void; // alias for onCancel
 		onOpenChange?: (open: boolean) => void;
 	}
 
@@ -29,8 +31,21 @@
 		children,
 		onAction,
 		onCancel,
+		onclose, // alias for onCancel
 		onOpenChange
 	}: Props = $props();
+
+	let dialogRef: HTMLDialogElement | undefined = $state();
+
+	$effect(() => {
+		if (dialogRef) {
+			if (open) {
+				dialogRef.showModal();
+			} else {
+				dialogRef.close();
+			}
+		}
+	});
 
 	function handleAction() {
 		onAction?.();
@@ -38,7 +53,7 @@
 	}
 
 	function handleCancel() {
-		onCancel?.();
+		(onCancel || onclose)?.();
 		close();
 	}
 
@@ -47,127 +62,48 @@
 		onOpenChange?.(false);
 	}
 
-	function handleBackdropClick() {
-		close();
-	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			close();
-		}
+	function handleDialogClose() {
+		open = false;
+		onOpenChange?.(false);
 	}
 </script>
 
-{#if open}
-	<div
-		class="alert-dialog-backdrop"
-		onclick={handleBackdropClick}
-		onkeydown={handleKeydown}
-		role="button"
-		tabindex="0"
-		aria-label="Close dialog"
-	>
-		<div
-			class="alert-dialog"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.key === 'Enter' && e.stopPropagation()}
-			role="alertdialog"
-			aria-modal="true"
-			tabindex="0"
-		>
-			<!-- Header -->
-			<div class="alert-dialog-header">
-				<div class="flex items-start justify-between">
-					{#if title}
-						<h3 class="alert-dialog-title">{title}</h3>
-					{/if}
-					<button
-						onclick={close}
-						class="alert-dialog-close"
-						aria-label="Close"
-					>
-						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-				</div>
-			</div>
+<dialog
+	bind:this={dialogRef}
+	class="modal"
+	onclose={handleDialogClose}
+>
+	<div class="modal-box">
+		<div class="flex items-start justify-between mb-4">
+			{#if title}
+				<h3 class="text-lg font-bold">{title}</h3>
+			{/if}
+			<button
+				onclick={close}
+				class="btn btn-sm btn-circle btn-ghost"
+				aria-label="Close"
+			>
+				<X class="h-5 w-5" />
+			</button>
+		</div>
 
-			<!-- Body -->
-			<div class="alert-dialog-body">
-				{#if description}
-					<p class="alert-dialog-description">{description}</p>
-				{/if}
-				{#if children}
-					{@render children()}
-				{/if}
-			</div>
+		{#if description}
+			<p class="text-base-content/70 mb-4">{description}</p>
+		{/if}
+		{#if children}
+			{@render children()}
+		{/if}
 
-			<!-- Footer -->
-			<div class="alert-dialog-footer">
-				<div class="flex justify-end gap-3">
-					<Button type="secondary" onclick={handleCancel}>
-						{cancelLabel}
-					</Button>
-					<Button type={actionType} onclick={handleAction}>
-						{actionLabel}
-					</Button>
-				</div>
-			</div>
+		<div class="modal-action">
+			<Button type="secondary" onclick={handleCancel}>
+				{cancelLabel}
+			</Button>
+			<Button type={actionType} onclick={handleAction}>
+				{actionLabel}
+			</Button>
 		</div>
 	</div>
-{/if}
-
-<style>
-	@reference "$src/app.css";
-	@layer components.alert-dialog {
-		.alert-dialog-backdrop {
-			@apply fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm;
-			background: color-mix(in srgb, black 50%, transparent);
-		}
-
-		.alert-dialog {
-			@apply w-full max-w-md rounded-xl backdrop-blur-sm shadow-2xl flex flex-col;
-			background: color-mix(in srgb, var(--color-base-800) 95%, transparent);
-			border: 1px solid color-mix(in srgb, var(--color-base-700) 50%, transparent);
-		}
-
-		.alert-dialog-header {
-			@apply flex-shrink-0 px-6 py-4;
-			border-bottom: 1px solid color-mix(in srgb, var(--color-base-700) 50%, transparent);
-		}
-
-		.alert-dialog-title {
-			@apply text-xl font-bold text-white;
-		}
-
-		.alert-dialog-close {
-			@apply ml-auto rounded-lg p-1.5 transition-colors;
-			color: var(--color-base-400);
-		}
-
-		.alert-dialog-close:hover {
-			@apply bg-base-700 text-white;
-		}
-
-		.alert-dialog-body {
-			@apply flex-1 p-6;
-		}
-
-		.alert-dialog-description {
-			@apply text-sm;
-			color: var(--color-base-400);
-		}
-
-		.alert-dialog-footer {
-			@apply flex-shrink-0 px-6 py-4;
-			background: color-mix(in srgb, var(--color-base-800) 40%, transparent);
-			border-top: 1px solid color-mix(in srgb, var(--color-base-700) 50%, transparent);
-		}
-	}
-</style>
+	<form method="dialog" class="modal-backdrop">
+		<button onclick={close}>close</button>
+	</form>
+</dialog>

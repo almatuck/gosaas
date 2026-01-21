@@ -57,7 +57,7 @@
 	{#if withNoise}
 		{#key key}
 			<div
-				class="absolute top-0 right-0 bottom-0 left-0 pointer-events-none z-0 noise-overlay"
+				class="absolute inset-0 pointer-events-none z-0 noise-overlay"
 				style:--noise-opacity={finalOpacity}
 				style:--noise-url="url('{noiseUrl}')"
 				aria-hidden="true"
@@ -68,11 +68,3 @@
 		{@render children()}
 	</div>
 </div>
-
-<style>
-@reference "$src/app.css";
-
-@layer components.gradient-background {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>

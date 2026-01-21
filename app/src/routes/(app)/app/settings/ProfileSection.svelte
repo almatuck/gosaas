@@ -156,8 +156,8 @@
 					<User class="w-5 h-5 text-primary" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Profile Information</h2>
-					<p class="text-sm text-base-400">Update your personal details</p>
+					<h2 class="text-lg font-semibold text-base-content">Profile Information</h2>
+					<p class="text-sm text-base-content/60">Update your personal details</p>
 				</div>
 			</div>
 
@@ -176,7 +176,7 @@
 			<form onsubmit={handleProfileSubmit} class="space-y-4">
 				<!-- Email (Read-only) -->
 				<div>
-					<label for="email" class="block text-sm font-medium text-base-300 mb-2">Email</label>
+					<label for="email" class="block text-sm font-medium text-base-content/70 mb-2">Email</label>
 					<input
 						id="email"
 						type="email"
@@ -185,12 +185,12 @@
 						readonly
 						disabled
 					/>
-					<p class="mt-1 text-xs text-base-500">Email cannot be changed</p>
+					<p class="mt-1 text-xs text-base-content/50">Email cannot be changed</p>
 				</div>
 
 				<!-- Name -->
 				<div>
-					<label for="name" class="block text-sm font-medium text-base-300 mb-2">
+					<label for="name" class="block text-sm font-medium text-base-content/70 mb-2">
 						Full Name <span class="text-error">*</span>
 					</label>
 					<input
@@ -209,9 +209,9 @@
 				</div>
 
 				<!-- Account Info -->
-				<div class="pt-4 border-t border-base-700 text-sm text-base-400 space-y-1">
-					<p>Account ID: <span class="text-base-300 font-mono">{$currentUser.id}</span></p>
-					<p>Member since: <span class="text-base-300">{formatDate($currentUser.createdAt)}</span></p>
+				<div class="pt-4 border-t border-base-content/20 text-sm text-base-content/60 space-y-1">
+					<p>Account ID: <span class="text-base-content/70 font-mono">{$currentUser.id}</span></p>
+					<p>Member since: <span class="text-base-content/70">{formatDate($currentUser.createdAt)}</span></p>
 				</div>
 
 				<div class="pt-2">
@@ -234,8 +234,8 @@
 					<Key class="w-5 h-5 text-secondary" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Change Password</h2>
-					<p class="text-sm text-base-400">Update your account password</p>
+					<h2 class="text-lg font-semibold text-base-content">Change Password</h2>
+					<p class="text-sm text-base-content/60">Update your account password</p>
 				</div>
 			</div>
 
@@ -253,7 +253,7 @@
 
 			<form onsubmit={handlePasswordSubmit} class="space-y-4">
 				<div>
-					<label for="currentPassword" class="block text-sm font-medium text-base-300 mb-2">
+					<label for="currentPassword" class="block text-sm font-medium text-base-content/70 mb-2">
 						Current Password
 					</label>
 					<input
@@ -267,7 +267,7 @@
 				</div>
 
 				<div>
-					<label for="newPassword" class="block text-sm font-medium text-base-300 mb-2">
+					<label for="newPassword" class="block text-sm font-medium text-base-content/70 mb-2">
 						New Password
 					</label>
 					<input
@@ -278,11 +278,11 @@
 						disabled={isChangingPassword}
 						autocomplete="new-password"
 					/>
-					<p class="mt-1 text-xs text-base-500">At least 8 characters</p>
+					<p class="mt-1 text-xs text-base-content/50">At least 8 characters</p>
 				</div>
 
 				<div>
-					<label for="confirmPassword" class="block text-sm font-medium text-base-300 mb-2">
+					<label for="confirmPassword" class="block text-sm font-medium text-base-content/70 mb-2">
 						Confirm New Password
 					</label>
 					<input
@@ -319,8 +319,8 @@
 					<LogOut class="w-5 h-5 text-tertiary" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Session</h2>
-					<p class="text-sm text-base-400">Sign out of your account</p>
+					<h2 class="text-lg font-semibold text-base-content">Session</h2>
+					<p class="text-sm text-base-content/60">Sign out of your account</p>
 				</div>
 			</div>
 
@@ -336,8 +336,8 @@
 					<Trash2 class="w-5 h-5 text-error" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Delete Account</h2>
-					<p class="text-sm text-base-400">Permanently delete your account and all data</p>
+					<h2 class="text-lg font-semibold text-base-content">Delete Account</h2>
+					<p class="text-sm text-base-content/60">Permanently delete your account and all data</p>
 				</div>
 			</div>
 
@@ -347,7 +347,7 @@
 				</Button>
 			{:else}
 				<div class="p-4 bg-error/10 border border-error/30 rounded-lg space-y-4">
-					<p class="text-sm text-base-300">
+					<p class="text-sm text-base-content/70">
 						This action cannot be undone. All your data will be permanently deleted.
 					</p>
 
@@ -356,7 +356,7 @@
 					{/if}
 
 					<div>
-						<label for="deletePassword" class="block text-sm font-medium text-base-300 mb-2">
+						<label for="deletePassword" class="block text-sm font-medium text-base-content/70 mb-2">
 							Enter your password to confirm
 						</label>
 						<input
@@ -393,13 +393,13 @@
 		<Card>
 			<div class="flex flex-col items-center justify-center gap-4 py-8">
 				<Spinner size={32} />
-				<p class="text-sm text-base-400">Loading profile...</p>
+				<p class="text-sm text-base-content/60">Loading profile...</p>
 			</div>
 		</Card>
 	{:else}
 		<Card>
 			<div class="flex flex-col items-center gap-4 py-8 text-center">
-				<p class="text-base-400">Unable to load profile. Please try refreshing.</p>
+				<p class="text-base-content/60">Unable to load profile. Please try refreshing.</p>
 				<Button type="secondary" onclick={() => window.location.reload()}>
 					Refresh Page
 				</Button>

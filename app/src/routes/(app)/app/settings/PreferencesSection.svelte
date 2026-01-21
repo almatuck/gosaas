@@ -108,7 +108,7 @@
 		<Card>
 			<div class="flex flex-col items-center justify-center gap-4 py-8">
 				<Spinner size={32} />
-				<p class="text-sm text-base-400">Loading preferences...</p>
+				<p class="text-sm text-base-content/60">Loading preferences...</p>
 			</div>
 		</Card>
 	{:else}
@@ -119,13 +119,13 @@
 					<Sun class="w-5 h-5 text-primary" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Appearance</h2>
-					<p class="text-sm text-base-400">Customize how the app looks</p>
+					<h2 class="text-lg font-semibold text-base-content">Appearance</h2>
+					<p class="text-sm text-base-content/60">Customize how the app looks</p>
 				</div>
 			</div>
 
 			<div>
-				<span id="theme-label" class="block text-sm font-medium text-base-300 mb-3">Theme</span>
+				<span id="theme-label" class="block text-sm font-medium text-base-content/70 mb-3">Theme</span>
 				<div class="flex gap-2" role="group" aria-labelledby="theme-label">
 					{#each themeOptions as option}
 						<button
@@ -133,7 +133,7 @@
 							class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors
 								{theme === option.id
 									? 'bg-primary/10 border-primary/30 text-primary'
-									: 'bg-base-800 border-base-700 text-base-300 hover:border-base-600'}"
+									: 'bg-base-200 border-base-content/20 text-base-content/70 hover:border-base-content/30'}"
 						>
 							<option.icon class="w-5 h-5" />
 							<span class="font-medium">{option.label}</span>
@@ -150,24 +150,24 @@
 					<Bell class="w-5 h-5 text-secondary" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Notifications</h2>
-					<p class="text-sm text-base-400">Manage your email preferences</p>
+					<h2 class="text-lg font-semibold text-base-content">Notifications</h2>
+					<p class="text-sm text-base-content/60">Manage your email preferences</p>
 				</div>
 			</div>
 
 			<div class="space-y-4">
-				<div class="flex items-center justify-between py-3 border-b border-base-700">
+				<div class="flex items-center justify-between py-3 border-b border-base-content/20">
 					<div>
-						<p class="text-sm font-medium text-white">Email Notifications</p>
-						<p class="text-xs text-base-400">Receive important account and product notifications</p>
+						<p class="text-sm font-medium text-base-content">Email Notifications</p>
+						<p class="text-xs text-base-content/60">Receive important account and product notifications</p>
 					</div>
 					<Toggle bind:checked={emailNotifications} onchange={() => { saveSuccess = false; saveError = ''; }} />
 				</div>
 
 				<div class="flex items-center justify-between py-3">
 					<div>
-						<p class="text-sm font-medium text-white">Marketing Emails</p>
-						<p class="text-xs text-base-400">Receive tips, offers, and promotional content</p>
+						<p class="text-sm font-medium text-base-content">Marketing Emails</p>
+						<p class="text-xs text-base-content/60">Receive tips, offers, and promotional content</p>
 					</div>
 					<Toggle bind:checked={marketingEmails} onchange={() => { saveSuccess = false; saveError = ''; }} />
 				</div>

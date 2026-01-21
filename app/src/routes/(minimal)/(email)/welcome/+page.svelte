@@ -34,7 +34,7 @@
 		<h1 class="font-display text-3xl sm:text-4xl font-black text-white leading-tight mb-4">
 			Email Confirmed!
 		</h1>
-		<p class="text-base-400 text-lg mb-8">
+		<p class="text-base-content/40 text-lg mb-8">
 			Thank you for confirming your email address. You're all set!
 		</p>
 		<a

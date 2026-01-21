@@ -220,7 +220,7 @@
 <div bind:this={containerRef} class="network-graph-container w-full h-full">
 	{#if nodes.length === 0}
 		<div class="empty-state flex items-center justify-center h-full">
-			<p class="text-slate-500 text-sm">No data to display</p>
+			<p class="text-base-content/60 text-sm">No data to display</p>
 		</div>
 	{:else}
 		<svg width={containerWidth} height={effectiveHeight}>
@@ -250,7 +250,7 @@
 						stroke="rgba(148, 163, 184, 0.4)"
 						stroke-width={edge.weight ? Math.min(edge.weight, 5) : 2}
 						marker-end={directed ? 'url(#arrowhead-network)' : undefined}
-						class="transition-all duration-200 hover:stroke-slate-400"
+						class="transition-all duration-200 hover:stroke-base-content/60"
 					>
 						<title>{edge.source} → {edge.target}{edge.label ? `: ${edge.label}` : ''}</title>
 					</path>
@@ -263,7 +263,7 @@
 								x={midpoint.x}
 								y={midpoint.y - 5}
 								text-anchor="middle"
-								class="text-xs fill-slate-500"
+								class="text-xs fill-base-content/60"
 								font-size="9"
 							>
 								{edge.label}
@@ -295,7 +295,7 @@
 								x={pos.x + padding}
 								y={pos.y + padding + getNodeSize(node) + 14}
 								text-anchor="middle"
-								class="text-xs fill-slate-300 pointer-events-none"
+								class="text-xs fill-base-content/70 pointer-events-none"
 								font-size="10"
 							>
 								{node.label.length > 12 ? node.label.slice(0, 12) + '..' : node.label}

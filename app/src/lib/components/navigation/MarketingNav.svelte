@@ -35,7 +35,7 @@
 	<nav class="flex items-center justify-between py-6" aria-label="Main navigation">
 		<a
 			href="/"
-			class="font-display text-2xl font-black text-white tracking-tight hover:opacity-90 transition-opacity"
+			class="font-display text-2xl font-black text-base-content tracking-tight hover:opacity-90 transition-opacity"
 		>
 			GoSaaS
 		</a>
@@ -49,8 +49,8 @@
 							<a
 								href={item.href}
 								class="text-[15px] font-medium transition-colors {currentPath === item.href
-									? 'text-white'
-									: 'text-white/70 hover:text-white'}"
+									? 'text-base-content'
+									: 'text-base-content/70 hover:text-base-content'}"
 							>
 								{item.label}
 							</a>
@@ -58,21 +58,13 @@
 					{/each}
 				</ul>
 			{/if}
-			<div class="flex items-center gap-4">
-				<a
-					href="/auth/login"
-					class="text-[15px] font-medium text-white/80 hover:text-white transition-colors"
-				>
-					Sign in
-				</a>
-				<Button type="primary" size="sm" href="/auth/register">Get Started</Button>
-			</div>
+			<Button type="primary" size="sm" href="/auth/register">Get Started</Button>
 		</div>
 
 		<!-- Mobile Menu Button -->
 		<button
 			type="button"
-			class="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+			class="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-base-content/80 hover:text-base-content hover:bg-base-content/10 transition-colors"
 			aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
 			aria-expanded={mobileMenuOpen}
 			onclick={toggleMobileMenu}
@@ -91,7 +83,7 @@
 
 	<!-- Mobile Menu -->
 	{#if mobileMenuOpen}
-		<div class="md:hidden pb-6 border-t border-white/10 pt-4 animate-fade-in">
+		<div class="md:hidden pb-6 border-t border-base-content/10 pt-4 animate-fade-in">
 			{#if items.length > 0}
 				<ul class="space-y-2 mb-6">
 					{#each items as item}
@@ -100,8 +92,8 @@
 								href={item.href}
 								class="block py-2 text-[15px] font-medium transition-colors {currentPath ===
 								item.href
-									? 'text-white'
-									: 'text-white/70 hover:text-white'}"
+									? 'text-base-content'
+									: 'text-base-content/70 hover:text-base-content'}"
 								onclick={closeMobileMenu}
 							>
 								{item.label}
@@ -110,16 +102,7 @@
 					{/each}
 				</ul>
 			{/if}
-			<div class="flex flex-col gap-3">
-				<a
-					href="/auth/login"
-					class="text-center py-2.5 text-[15px] font-medium text-white/80 hover:text-white transition-colors"
-					onclick={closeMobileMenu}
-				>
-					Sign in
-				</a>
-				<Button type="primary" href="/auth/register">Get Started</Button>
-			</div>
+			<Button type="primary" href="/auth/register">Get Started</Button>
 		</div>
 	{/if}
 </header>

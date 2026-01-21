@@ -60,12 +60,12 @@
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
-<div class="min-h-screen bg-base-900 p-6">
+<div class="min-h-screen bg-base-100 p-6">
 	<div class="max-w-7xl mx-auto">
 		<div class="flex items-center justify-between mb-8">
 			<div>
-				<h1 class="font-display text-2xl font-bold text-white mb-1">Backoffice Dashboard</h1>
-				<p class="text-sm text-base-400">Your SaaS metrics at a glance</p>
+				<h1 class="font-display text-2xl font-bold text-base-content mb-1">Backoffice Dashboard</h1>
+				<p class="text-sm text-base-content/60">Your SaaS metrics at a glance</p>
 			</div>
 			<div class="flex items-center gap-3">
 				<Button type="secondary" onclick={loadAdminData} disabled={loading}>
@@ -86,9 +86,9 @@
 							<Users class="w-5 h-5 text-primary" />
 						</div>
 					</div>
-					<p class="text-sm font-medium text-base-400 mb-1">Total Users</p>
-					<p class="font-display text-2xl font-bold text-white">{stats.totalUsers}</p>
-					<div class="mt-3 pt-3 border-t border-base-700 text-xs text-base-500">
+					<p class="text-sm font-medium text-base-content/60 mb-1">Total Users</p>
+					<p class="font-display text-2xl font-bold text-base-content">{stats.totalUsers}</p>
+					<div class="mt-3 pt-3 border-t border-base-300 text-xs text-base-content/40">
 						+{stats.newUsersToday} today
 					</div>
 				</Card>
@@ -99,9 +99,9 @@
 							<CreditCard class="w-5 h-5 text-secondary" />
 						</div>
 					</div>
-					<p class="text-sm font-medium text-base-400 mb-1">Active Subscriptions</p>
-					<p class="font-display text-2xl font-bold text-white">{stats.activeSubscriptions}</p>
-					<div class="mt-3 pt-3 border-t border-base-700 text-xs text-base-500">
+					<p class="text-sm font-medium text-base-content/60 mb-1">Active Subscriptions</p>
+					<p class="font-display text-2xl font-bold text-base-content">{stats.activeSubscriptions}</p>
+					<div class="mt-3 pt-3 border-t border-base-300 text-xs text-base-content/40">
 						{stats.trialSubscriptions} on trial
 					</div>
 				</Card>
@@ -112,9 +112,9 @@
 							<TrendingUp class="w-5 h-5 text-tertiary" />
 						</div>
 					</div>
-					<p class="text-sm font-medium text-base-400 mb-1">This Week</p>
-					<p class="font-display text-2xl font-bold text-white">+{stats.newUsersThisWeek}</p>
-					<div class="mt-3 pt-3 border-t border-base-700 text-xs text-base-500">
+					<p class="text-sm font-medium text-base-content/60 mb-1">This Week</p>
+					<p class="font-display text-2xl font-bold text-base-content">+{stats.newUsersThisWeek}</p>
+					<div class="mt-3 pt-3 border-t border-base-300 text-xs text-base-content/40">
 						New users this week
 					</div>
 				</Card>
@@ -125,9 +125,9 @@
 							<Calendar class="w-5 h-5 text-success" />
 						</div>
 					</div>
-					<p class="text-sm font-medium text-base-400 mb-1">This Month</p>
-					<p class="font-display text-2xl font-bold text-white">+{stats.newUsersThisMonth}</p>
-					<div class="mt-3 pt-3 border-t border-base-700 text-xs text-base-500">
+					<p class="text-sm font-medium text-base-content/60 mb-1">This Month</p>
+					<p class="font-display text-2xl font-bold text-base-content">+{stats.newUsersThisMonth}</p>
+					<div class="mt-3 pt-3 border-t border-base-300 text-xs text-base-content/40">
 						New users this month
 					</div>
 				</Card>
@@ -136,26 +136,26 @@
 
 		{#if recentUsers.length > 0}
 			<Card>
-				<h2 class="font-display text-lg font-bold text-white mb-4">Recent Users</h2>
+				<h2 class="font-display text-lg font-bold text-base-content mb-4">Recent Users</h2>
 				<div class="overflow-x-auto">
 					<table class="w-full">
 						<thead>
-							<tr class="border-b border-base-700">
-								<th class="text-left py-3 px-2 text-sm font-medium text-base-400">Email</th>
-								<th class="text-left py-3 px-2 text-sm font-medium text-base-400">Name</th>
-								<th class="text-left py-3 px-2 text-sm font-medium text-base-400">Plan</th>
-								<th class="text-left py-3 px-2 text-sm font-medium text-base-400">Status</th>
-								<th class="text-left py-3 px-2 text-sm font-medium text-base-400">Joined</th>
+							<tr class="border-b border-base-300">
+								<th class="text-left py-3 px-2 text-sm font-medium text-base-content/60">Email</th>
+								<th class="text-left py-3 px-2 text-sm font-medium text-base-content/60">Name</th>
+								<th class="text-left py-3 px-2 text-sm font-medium text-base-content/60">Plan</th>
+								<th class="text-left py-3 px-2 text-sm font-medium text-base-content/60">Status</th>
+								<th class="text-left py-3 px-2 text-sm font-medium text-base-content/60">Joined</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each recentUsers as user}
-								<tr class="border-b border-base-700/50 hover:bg-base-800/50">
-									<td class="py-3 px-2 text-sm text-white">{user.email}</td>
-									<td class="py-3 px-2 text-sm text-base-300">{user.name || '-'}</td>
+								<tr class="border-b border-base-content/10 hover:bg-base-200">
+									<td class="py-3 px-2 text-sm text-base-content">{user.email}</td>
+									<td class="py-3 px-2 text-sm text-base-content/70">{user.name || '-'}</td>
 									<td class="py-3 px-2 text-sm">
 										<span class="px-2 py-0.5 rounded-full text-xs font-medium capitalize
-											{user.plan === 'free' ? 'bg-base-700 text-base-300' :
+											{user.plan === 'free' ? 'bg-base-300 text-base-content/70' :
 											 user.plan === 'pro' ? 'bg-primary/20 text-primary' :
 											 'bg-secondary/20 text-secondary'}">
 											{user.plan}
@@ -165,11 +165,11 @@
 										<span class="px-2 py-0.5 rounded-full text-xs font-medium capitalize
 											{user.status === 'active' ? 'bg-success/20 text-success' :
 											 user.status === 'trialing' ? 'bg-warning/20 text-warning' :
-											 'bg-base-700 text-base-400'}">
+											 'bg-base-300 text-base-content/60'}">
 											{user.status}
 										</span>
 									</td>
-									<td class="py-3 px-2 text-sm text-base-400">{formatDate(user.createdAt)}</td>
+									<td class="py-3 px-2 text-sm text-base-content/60">{formatDate(user.createdAt)}</td>
 								</tr>
 							{/each}
 						</tbody>

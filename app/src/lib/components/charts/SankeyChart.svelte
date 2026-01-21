@@ -215,7 +215,7 @@
 <div bind:this={containerRef} class="sankey-chart-container w-full h-full">
 	{#if nodes.length === 0 || links.length === 0}
 		<div class="empty-state flex items-center justify-center h-full">
-			<p class="text-slate-500 text-sm">No data to display</p>
+			<p class="text-base-content/60 text-sm">No data to display</p>
 		</div>
 	{:else}
 		<svg width={containerWidth} height={effectiveHeight}>
@@ -254,7 +254,7 @@
 							y={node.position.y + node.position.height / 2}
 							text-anchor={node.position.x < chartWidth / 2 ? 'end' : 'start'}
 							dominant-baseline="middle"
-							class="text-xs fill-slate-300"
+							class="text-xs fill-base-content/70"
 						>
 							{node.label}
 						</text>

@@ -15,7 +15,7 @@
 
 	// Map product index to icon
 	const icons = [Zap, Rocket, Building2];
-	const colors = ['var(--color-base-500)', 'var(--color-accent-primary)', 'var(--color-accent-secondary)'];
+	const colors = ['var(--color-base-500)', 'var(--color-primary)', 'var(--color-secondary)'];
 
 	// Format price from cents
 	function formatPrice(cents: number): string {
@@ -79,14 +79,14 @@
 </svelte:head>
 
 <!-- Hero Section -->
-<section class="hero-section">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center">
 	<div class="animate-fade-in">
-		<h1 class="hero-title">
+		<h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-base-content leading-tight tracking-tight mb-6">
 			Simple, Transparent<br />
 			<span class="text-gradient">Pricing</span>
 		</h1>
 
-		<p class="hero-subtitle">
+		<p class="text-lg sm:text-xl text-base-content/70 max-w-2xl mx-auto mb-10 leading-relaxed">
 			Start free and scale as you grow. No hidden fees, no surprises.
 			Every plan includes our core features.
 		</p>
@@ -94,7 +94,7 @@
 </section>
 
 <!-- Pricing Cards -->
-<section class="section">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
 	<div class="grid md:grid-cols-3 gap-6 lg:gap-8">
 		{#each data.products as product, i}
 			{@const price = product.prices?.[0]}
@@ -103,13 +103,13 @@
 			{@const color = colors[i] || colors[0]}
 			{@const delay = i + 1}
 			<div
-				class="relative animate-slide-up opacity-0 stagger-delay rounded-2xl border transition-all duration-300 {popular ? 'bg-gradient-to-b from-[var(--color-accent-primary)]/20 to-transparent border-[var(--color-accent-primary)]/40' : 'bg-base-800/80 border-base-600'}"
+				class="relative animate-slide-up opacity-0 stagger-delay rounded-2xl border transition-all duration-300 {popular ? 'bg-gradient-to-b from-primary/20 to-transparent border-primary/40' : 'bg-base-200/50 border-base-300'}"
 				style:--delay={delay}
 				style:--theme-color={color}
 			>
 				{#if popular}
 					<div class="absolute -top-4 left-1/2 -translate-x-1/2">
-						<span class="px-4 py-1.5 rounded-full text-xs font-bold bg-[var(--color-accent-primary)] text-base-900 uppercase tracking-wider">
+						<span class="px-4 py-1.5 rounded-full text-xs font-bold bg-primary text-primary-content uppercase tracking-wider">
 							Most Popular
 						</span>
 					</div>
@@ -120,15 +120,15 @@
 						<div class="w-10 h-10 rounded-xl flex items-center justify-center themed-bg">
 							<Icon class="w-5 h-5 themed-color" />
 						</div>
-						<h3 class="font-display text-xl font-bold text-white">{product.name}</h3>
+						<h3 class="font-display text-xl font-bold text-base-content">{product.name}</h3>
 					</div>
 
-					<p class="text-base-400 text-sm mb-6">{product.description}</p>
+					<p class="text-base-content/60 text-sm mb-6">{product.description}</p>
 
 					<div class="mb-8">
 						{#if price}
-							<span class="font-display text-4xl font-black text-white">{formatPrice(price.unitAmountCents)}</span>
-							<span class="text-base-400 text-sm">{getPeriod(price)}</span>
+							<span class="font-display text-4xl font-black text-base-content">{formatPrice(price.unitAmountCents)}</span>
+							<span class="text-base-content/60 text-sm">{getPeriod(price)}</span>
 						{/if}
 					</div>
 
@@ -147,7 +147,7 @@
 							{#each product.features as feature}
 								<li class="flex items-start gap-3 text-sm">
 									<Check class="w-4 h-4 mt-0.5 flex-shrink-0 themed-color" />
-									<span class="text-base-200">{feature}</span>
+									<span class="text-base-content/80">{feature}</span>
 								</li>
 							{/each}
 						</ul>
@@ -159,35 +159,37 @@
 </section>
 
 <!-- Enterprise Section -->
-<div class="section-alt">
-	<section class="section">
-		<div class="quote-card">
-			<div class="grid lg:grid-cols-2 gap-8 items-center">
-				<div>
-					<span class="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-secondary)]/20 bg-[var(--color-accent-secondary)]/10 px-3 py-1.5 text-xs font-medium text-[var(--color-accent-secondary)] mb-4">
-						<Building2 class="w-3.5 h-3.5" />
-						ENTERPRISE
-					</span>
-					<h2 class="font-display text-2xl sm:text-3xl font-bold text-white mb-4">
-						Need a custom solution?
-					</h2>
-					<p class="text-base-300 leading-relaxed mb-6">
-						For large organizations with specific requirements, we offer custom plans with
-						dedicated support, SLA guarantees, and tailored integrations.
-					</p>
-					<ul class="space-y-2 mb-8">
-						{#each ['Custom user limits', 'SSO & SAML authentication', 'Dedicated account manager', 'Custom contracts & invoicing'] as item}
-							<li class="flex items-center gap-2 text-sm text-base-200">
-								<Check class="w-4 h-4 text-[var(--color-accent-secondary)]" />
-								{item}
-							</li>
-						{/each}
-					</ul>
-				</div>
-				<div class="text-center lg:text-right">
-					<Button type="secondary" size="lg" href="mailto:sales@example.com">
-						Contact Sales
-					</Button>
+<div class="bg-base-200/50 py-16 sm:py-24">
+	<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="card bg-base-200/80 border border-base-300 backdrop-blur-sm">
+			<div class="card-body p-8 lg:p-12">
+				<div class="grid lg:grid-cols-2 gap-8 items-center">
+					<div>
+						<span class="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1.5 text-xs font-medium text-secondary mb-4">
+							<Building2 class="w-3.5 h-3.5" />
+							ENTERPRISE
+						</span>
+						<h2 class="font-display text-2xl sm:text-3xl font-bold text-base-content mb-4">
+							Need a custom solution?
+						</h2>
+						<p class="text-base-content/70 leading-relaxed mb-6">
+							For large organizations with specific requirements, we offer custom plans with
+							dedicated support, SLA guarantees, and tailored integrations.
+						</p>
+						<ul class="space-y-2 mb-8">
+							{#each ['Custom user limits', 'SSO & SAML authentication', 'Dedicated account manager', 'Custom contracts & invoicing'] as item}
+								<li class="flex items-center gap-2 text-sm text-base-content/80">
+									<Check class="w-4 h-4 text-secondary" />
+									{item}
+								</li>
+							{/each}
+						</ul>
+					</div>
+					<div class="text-center lg:text-right">
+						<Button type="secondary" size="lg" href="mailto:sales@example.com">
+							Contact Sales
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -195,29 +197,29 @@
 </div>
 
 <!-- FAQ Section -->
-<section class="section" id="faq">
-	<div class="section-header">
-		<h2 class="section-title">Frequently Asked Questions</h2>
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24" id="faq">
+	<div class="text-center mb-12 sm:mb-16">
+		<h2 class="font-display text-3xl sm:text-4xl font-bold text-base-content mb-4">Frequently Asked Questions</h2>
 	</div>
 
-	<div class="max-w-3xl mx-auto">
-		<div class="faq-list">
-			{#each faqs as faq, i}
-				{@const delay = i + 1}
-				<div class="faq-item animate-slide-up opacity-0 stagger-delay" style:--delay={delay}>
-					<h3 class="faq-question">{faq.question}</h3>
-					<p class="faq-answer">{faq.answer}</p>
+	<div class="max-w-3xl mx-auto space-y-6">
+		{#each faqs as faq, i}
+			{@const delay = i + 1}
+			<div class="card bg-base-200/50 border border-base-300 backdrop-blur-sm animate-slide-up opacity-0 stagger-delay" style:--delay={delay}>
+				<div class="card-body p-6">
+					<h3 class="font-display text-lg font-semibold text-base-content mb-2">{faq.question}</h3>
+					<p class="text-base-content/70 leading-relaxed">{faq.answer}</p>
 				</div>
-			{/each}
-		</div>
+			</div>
+		{/each}
 	</div>
 </section>
 
 <!-- CTA Section -->
-<div class="section-alt">
-	<section class="cta-section">
-		<h2 class="cta-title">Ready to get started?</h2>
-		<p class="cta-subtitle">
+<div class="bg-base-200/50 py-16 sm:py-24">
+	<section class="text-center max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+		<h2 class="font-display text-3xl sm:text-4xl font-bold text-base-content mb-6">Ready to get started?</h2>
+		<p class="text-xl text-base-content/70 mb-10 max-w-2xl mx-auto">
 			No credit card required. Start building today.
 		</p>
 		<Button type="primary" size="lg" href="/auth/register">

@@ -5,49 +5,40 @@
 
 <script lang="ts">
 	interface Props {
+		id?: string;
 		value?: string;
 		placeholder?: string;
 		disabled?: boolean;
 		rows?: number;
+		size?: 'xs' | 'sm' | 'md' | 'lg';
 		class?: string;
 	}
 
 	let {
+		id,
 		value = $bindable(''),
 		placeholder = '',
 		disabled = false,
 		rows = 3,
-		class: className = ''
+		size = 'md',
+		class: extraClass = ''
 	}: Props = $props();
+
+	const sizeClasses: Record<string, string> = {
+		xs: 'textarea-xs',
+		sm: 'textarea-sm',
+		md: 'textarea-md',
+		lg: 'textarea-lg'
+	};
+
+	const className = $derived(`textarea textarea-bordered w-full ${sizeClasses[size]} ${extraClass}`.trim());
 </script>
 
 <textarea
+	{id}
 	bind:value
 	{placeholder}
 	{disabled}
 	{rows}
-	class="textarea {className}"
+	class={className}
 ></textarea>
-
-<style>
-	@reference "$src/app.css";
-	@layer components.textarea {
-		.textarea {
-			@apply flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm;
-			@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
-			@apply disabled:cursor-not-allowed disabled:opacity-50;
-			background: var(--color-bg);
-			color: var(--color-text);
-			border-color: var(--color-border);
-		}
-
-		.textarea::placeholder {
-			color: var(--color-text-muted);
-		}
-
-		.textarea:focus-visible {
-			@apply ring-primary;
-			ring-offset-color: var(--color-bg);
-		}
-	}
-</style>

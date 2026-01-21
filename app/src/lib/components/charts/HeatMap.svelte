@@ -126,8 +126,8 @@
 	}
 </script>
 
-<div class="heatmap-container" style="height: {height}px; overflow-x: auto;">
-	<svg width={width} height={Math.max(chartHeight, height)} class="heatmap-svg">
+<div class="relative w-full overflow-x-auto" style="height: {height}px;">
+	<svg width={width} height={Math.max(chartHeight, height)} class="block">
 		<!-- Y-axis labels -->
 		<g transform={`translate(${padding.left - 10}, ${padding.top})`}>
 			{#each yLabels as yLabel, i}
@@ -136,7 +136,7 @@
 					y={i * cellSize + cellSize / 2}
 					text-anchor="end"
 					dominant-baseline="middle"
-					class="text-sm fill-slate-400 font-medium"
+					class="text-sm fill-base-500 font-medium"
 				>
 					{yLabel}
 				</text>
@@ -152,7 +152,7 @@
 					text-anchor="end"
 					dominant-baseline="middle"
 					transform={`rotate(-45, ${i * cellSize + cellSize / 2}, 0)`}
-					class="text-sm fill-slate-400 font-medium"
+					class="text-sm fill-base-500 font-medium"
 				>
 					{xLabel}
 				</text>
@@ -218,7 +218,7 @@
 			<text
 				x="0"
 				y="-10"
-				class="text-xs fill-slate-400 font-medium"
+				class="text-xs fill-base-500 font-medium"
 			>
 				Scale
 			</text>
@@ -237,7 +237,7 @@
 					y={i * 30 + 12.5}
 					text-anchor="start"
 					dominant-baseline="middle"
-					class="text-xs fill-slate-400"
+					class="text-xs fill-base-500"
 				>
 					{formatValue(value)}
 				</text>
@@ -248,25 +248,13 @@
 	<!-- Tooltip -->
 	{#if hoveredCell}
 		<div
-			class="absolute bg-slate-900/95 text-white px-3 py-2 rounded-lg shadow-xl border border-slate-700 pointer-events-none z-10"
-			style="top: 10px; right: 10px;"
+			class="absolute bg-base-900/95 text-white px-3 py-2 rounded-lg shadow-xl border border-base-700 pointer-events-none z-10 top-2.5 right-2.5"
 		>
-			<div class="text-xs text-slate-400">{hoveredCell.x} × {hoveredCell.y}</div>
+			<div class="text-xs text-base-400">{hoveredCell.x} x {hoveredCell.y}</div>
 			<div class="text-sm font-semibold">{formatValue(hoveredCell.value)}</div>
 			{#if hoveredCell.label}
-				<div class="text-xs text-slate-300 mt-1">{hoveredCell.label}</div>
+				<div class="text-xs text-base-300 mt-1">{hoveredCell.label}</div>
 			{/if}
 		</div>
 	{/if}
 </div>
-
-<style>
-	.heatmap-container {
-		position: relative;
-		width: 100%;
-	}
-
-	.heatmap-svg {
-		display: block;
-	}
-</style>

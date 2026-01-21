@@ -76,7 +76,7 @@
 {/if}
 
 <div
-	class="chart-card-wrapper card {className} {isFullscreen ? 'fullscreen-card' : ''}"
+	class="card relative transition-all duration-300 {className} {isFullscreen ? 'fixed! top-4! right-4! bottom-4! left-4! z-50! flex! flex-col! shadow-2xl! animate-in zoom-in-95 duration-200' : ''}"
 >
 	<!-- Header -->
 	<div class="card-header">
@@ -87,20 +87,20 @@
 					<p class="card-subtitle truncate">{subtitle}</p>
 				{/if}
 				{#if description}
-					<p class="text-xs text-slate-500 mt-1">{description}</p>
+					<p class="text-xs text-base-500 mt-1">{description}</p>
 				{/if}
 			</div>
 
 			<div class="flex items-center gap-2 flex-shrink-0">
 				{#if lastUpdated}
-					<span class="text-xs text-slate-500 hidden sm:inline">
+					<span class="text-xs text-base-500 hidden sm:inline">
 						{formatLastUpdated(lastUpdated)}
 					</span>
 				{/if}
 
 				{#if onRefresh}
 					<button
-						class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors disabled:opacity-50"
+						class="btn btn-ghost btn-sm p-2"
 						onclick={handleRefresh}
 						disabled={isRefreshing || loading}
 						title="Refresh"
@@ -111,9 +111,9 @@
 				{/if}
 
 				{#if onExport}
-					<div class="relative">
+					<div class="dropdown dropdown-end">
 						<button
-							class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+							class="btn btn-ghost btn-sm p-2"
 							onclick={() => showExportMenu = !showExportMenu}
 							title="Export"
 							aria-label="Export chart"
@@ -122,37 +122,43 @@
 						</button>
 
 						{#if showExportMenu}
-							<div
-								class="absolute right-0 mt-2 w-36 rounded-lg bg-slate-800 border border-slate-700 shadow-xl z-10"
+							<ul
+								class="dropdown-menu mt-2 w-36"
 								onmouseleave={() => showExportMenu = false}
 								role="menu"
 								tabindex="-1"
 							>
-								<button
-									class="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white transition-colors first:rounded-t-lg"
-									onclick={() => handleExport('png')}
-								>
-									Export as PNG
-								</button>
-								<button
-									class="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white transition-colors"
-									onclick={() => handleExport('csv')}
-								>
-									Export as CSV
-								</button>
-								<button
-									class="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white transition-colors last:rounded-b-lg"
-									onclick={() => handleExport('json')}
-								>
-									Export as JSON
-								</button>
-							</div>
+								<li>
+									<button
+										class="dropdown-item"
+										onclick={() => handleExport('png')}
+									>
+										Export as PNG
+									</button>
+								</li>
+								<li>
+									<button
+										class="dropdown-item"
+										onclick={() => handleExport('csv')}
+									>
+										Export as CSV
+									</button>
+								</li>
+								<li>
+									<button
+										class="dropdown-item"
+										onclick={() => handleExport('json')}
+									>
+										Export as JSON
+									</button>
+								</li>
+							</ul>
 						{/if}
 					</div>
 				{/if}
 
 				<button
-					class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+					class="btn btn-ghost btn-sm p-2"
 					onclick={toggleFullscreen}
 					title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
 					aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
@@ -166,7 +172,7 @@
 
 				{#if isFullscreen}
 					<button
-						class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+						class="btn btn-ghost btn-sm p-2"
 						onclick={toggleFullscreen}
 						title="Close"
 						aria-label="Close fullscreen"
@@ -182,14 +188,14 @@
 	<div class="card-body {isFullscreen ? 'flex-1 overflow-auto' : ''}">
 		{#if error}
 			<div class="alert alert-error flex items-start gap-3">
-				<AlertCircle class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+				<AlertCircle class="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
 				<div class="flex-1">
-					<p class="alert-title text-red-300">Error loading chart</p>
-					<p class="alert-body text-red-400/80">{error}</p>
+					<p class="font-medium text-error">Error loading chart</p>
+					<p class="text-sm text-error/80">{error}</p>
 				</div>
 				{#if onRefresh}
 					<button
-						class="btn-secondary text-xs py-1"
+						class="btn btn-secondary btn-sm"
 						onclick={handleRefresh}
 					>
 						Retry
@@ -198,42 +204,11 @@
 			</div>
 		{:else if loading}
 			<div class="flex flex-col items-center justify-center py-12">
-				<div class="spinner-large mb-4"></div>
-				<p class="text-sm text-slate-400">Loading chart data...</p>
+				<span class="loading loading-spinner loading-lg text-primary mb-4"></span>
+				<p class="text-sm text-base-500">Loading chart data...</p>
 			</div>
 		{:else}
 			{@render children()}
 		{/if}
 	</div>
 </div>
-
-<style>
-	.chart-card-wrapper {
-		position: relative;
-		transition: all 0.3s ease;
-	}
-
-	.fullscreen-card {
-		position: fixed !important;
-		top: 1rem !important;
-		right: 1rem !important;
-		bottom: 1rem !important;
-		left: 1rem !important;
-		z-index: 50 !important;
-		display: flex !important;
-		flex-direction: column !important;
-		box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
-		animation: slideIn 0.2s ease;
-	}
-
-	@keyframes slideIn {
-		from {
-			opacity: 0;
-			transform: scale(0.95);
-		}
-		to {
-			opacity: 1;
-			transform: scale(1);
-		}
-	}
-</style>

@@ -6,115 +6,30 @@
 <script lang="ts">
 	import Tooltip from './Tooltip.svelte';
 
-	// Status config based on backend shared_models.py status definitions
+	// Status config based on backend status definitions - maps to DaisyUI badge variants
 	const statusConfig = {
 		// Collection statuses
-		"ACTIVE": {
-			color: "bg-emerald-500",
-			textColor: "text-emerald-700 dark:text-emerald-400",
-			bgColor: "bg-emerald-50 dark:bg-emerald-950/80",
-			label: "Active"
-		},
-		"active": {
-			color: "bg-emerald-500",
-			textColor: "text-emerald-700 dark:text-emerald-400",
-			bgColor: "bg-emerald-50 dark:bg-emerald-950/80",
-			label: "Active"
-		},
-		"ERROR": {
-			color: "bg-rose-500",
-			textColor: "text-rose-700 dark:text-rose-400",
-			bgColor: "bg-rose-50 dark:bg-rose-950/80",
-			label: "Error"
-		},
-		"error": {
-			color: "bg-rose-500",
-			textColor: "text-rose-700 dark:text-rose-400",
-			bgColor: "bg-rose-50 dark:bg-rose-950/80",
-			label: "Error"
-		},
-		"NEEDS SOURCE": {
-			color: "bg-slate-400",
-			textColor: "text-slate-700 dark:text-slate-400",
-			bgColor: "bg-slate-50 dark:bg-slate-800/80",
-			label: "Needs Source"
-		},
-		"needs source": {
-			color: "bg-slate-400",
-			textColor: "text-slate-700 dark:text-slate-400",
-			bgColor: "bg-slate-50 dark:bg-slate-800/80",
-			label: "Needs Source"
-		},
+		"ACTIVE": { variant: "badge-success", label: "Active" },
+		"active": { variant: "badge-success", label: "Active" },
+		"ERROR": { variant: "badge-error", label: "Error" },
+		"error": { variant: "badge-error", label: "Error" },
+		"NEEDS SOURCE": { variant: "badge-ghost", label: "Needs Source" },
+		"needs source": { variant: "badge-ghost", label: "Needs Source" },
 		// Source connection statuses
-		"IN_PROGRESS": {
-			color: "bg-blue-500",
-			textColor: "text-blue-700 dark:text-blue-400",
-			bgColor: "bg-blue-50 dark:bg-blue-950/80",
-			label: "Syncing"
-		},
-		"in_progress": {
-			color: "bg-blue-500",
-			textColor: "text-blue-700 dark:text-blue-400",
-			bgColor: "bg-blue-50 dark:bg-blue-950/80",
-			label: "In Progress"
-		},
-		"failing": {
-			color: "bg-rose-500",
-			textColor: "text-rose-700 dark:text-rose-400",
-			bgColor: "bg-rose-50 dark:bg-rose-950/80",
-			label: "Failing"
-		},
+		"IN_PROGRESS": { variant: "badge-info", label: "Syncing" },
+		"in_progress": { variant: "badge-info", label: "In Progress" },
+		"failing": { variant: "badge-error", label: "Failing" },
 		// Sync job statuses
-		"pending": {
-			color: "bg-amber-500",
-			textColor: "text-amber-700 dark:text-amber-400",
-			bgColor: "bg-amber-50 dark:bg-amber-950/80",
-			label: "Pending"
-		},
-		"completed": {
-			color: "bg-emerald-500",
-			textColor: "text-emerald-700 dark:text-emerald-400",
-			bgColor: "bg-emerald-50 dark:bg-emerald-950/80",
-			label: "Completed"
-		},
-		"failed": {
-			color: "bg-rose-500",
-			textColor: "text-rose-700 dark:text-rose-400",
-			bgColor: "bg-rose-50 dark:bg-rose-950/80",
-			label: "Failed"
-		},
-		"cancelled": {
-			color: "bg-rose-500",
-			textColor: "text-rose-700 dark:text-rose-400",
-			bgColor: "bg-rose-50 dark:bg-rose-950/80",
-			label: "Cancelled"
-		},
+		"pending": { variant: "badge-warning", label: "Pending" },
+		"completed": { variant: "badge-success", label: "Completed" },
+		"failed": { variant: "badge-error", label: "Failed" },
+		"cancelled": { variant: "badge-error", label: "Cancelled" },
 		// API Key statuses
-		"EXPIRED": {
-			color: "bg-rose-500",
-			textColor: "text-rose-700 dark:text-rose-400",
-			bgColor: "bg-rose-50 dark:bg-rose-950/80",
-			label: "Expired"
-		},
-		"EXPIRING_SOON": {
-			color: "bg-amber-500",
-			textColor: "text-amber-700 dark:text-amber-400",
-			bgColor: "bg-amber-50 dark:bg-amber-950/80",
-			label: "Expiring Soon"
-		},
-		"UNKNOWN": {
-			color: "bg-slate-400",
-			textColor: "text-slate-700 dark:text-slate-400",
-			bgColor: "bg-slate-50 dark:bg-slate-800/80",
-			label: "Unknown"
-		},
+		"EXPIRED": { variant: "badge-error", label: "Expired" },
+		"EXPIRING_SOON": { variant: "badge-warning", label: "Expiring Soon" },
+		"UNKNOWN": { variant: "badge-ghost", label: "Unknown" },
 		// Fallback for unknown statuses
-		"default": {
-			color: "bg-slate-400",
-			textColor: "text-slate-700 dark:text-slate-400",
-			bgColor: "bg-slate-50 dark:bg-slate-800/80",
-			label: "Unknown"
-		}
+		"default": { variant: "badge-ghost", label: "Unknown" }
 	};
 
 	type TooltipContext = "collection" | "apiKey";
@@ -192,25 +107,14 @@
 
 {#if showTooltip && description}
 	<Tooltip content={description}>
-		<div class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full {config.bgColor} {className}">
-			<div class="h-2 w-2 rounded-full {config.color}"></div>
-			<span class="text-xs font-medium {config.textColor}">
-				{config.label}
-			</span>
+		<div class="badge badge-sm {config.variant} gap-1.5 {className}">
+			<div class="h-2 w-2 rounded-full bg-current opacity-70"></div>
+			<span>{config.label}</span>
 		</div>
 	</Tooltip>
 {:else}
-	<div class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full {config.bgColor} {className}">
-		<div class="h-2 w-2 rounded-full {config.color}"></div>
-		<span class="text-xs font-medium {config.textColor}">
-			{config.label}
-		</span>
+	<div class="badge badge-sm {config.variant} gap-1.5 {className}">
+		<div class="h-2 w-2 rounded-full bg-current opacity-70"></div>
+		<span>{config.label}</span>
 	</div>
 {/if}
-
-<style>
-	@reference "$src/app.css";
-	@layer components.status-badge {
-		/* Status badge uses utility classes */
-	}
-</style>

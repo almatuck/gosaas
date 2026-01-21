@@ -1,29 +1,24 @@
 <!--
   Reusable Loading Spinner Component
+  Uses DaisyUI loading classes
 -->
 
 <script lang="ts">
-	let { size = 'normal' }: { size?: 'normal' | 'large' } = $props();
+	let { size = 'normal' }: { size?: 'xs' | 'sm' | 'small' | 'normal' | 'md' | 'lg' | 'large' } = $props();
 
-	const containerClasses = {
-		normal: 'loading-container',
-		large: 'loading-container-large'
+	const sizeClasses: Record<string, string> = {
+		xs: 'loading-xs',
+		sm: 'loading-sm',
+		small: 'loading-sm',
+		normal: 'loading-md',
+		md: 'loading-md',
+		lg: 'loading-lg',
+		large: 'loading-lg'
 	};
 
-	const spinnerClasses = {
-		normal: 'spinner',
-		large: 'spinner-large'
-	};
+	const sizeClass = $derived(sizeClasses[size] || 'loading-md');
 </script>
 
-<div class={containerClasses[size]}>
-	<div class={spinnerClasses[size]}></div>
+<div class="flex items-center justify-center p-4">
+	<span class="loading loading-spinner {sizeClass}"></span>
 </div>
-
-<style>
-@reference "$src/app.css";
-
-@layer components.loading-spinner {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>

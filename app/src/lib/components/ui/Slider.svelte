@@ -14,7 +14,9 @@
 		showValue?: boolean;
 		formatValue?: (value: number) => string;
 		onchange?: (value: number) => void;
+		size?: 'xs' | 'sm' | 'md' | 'lg';
 		id?: string;
+		class?: string;
 	}
 
 	let {
@@ -27,91 +29,46 @@
 		showValue = true,
 		formatValue = (v) => v.toString(),
 		onchange,
-		id
+		size = 'md',
+		id,
+		class: extraClass = ''
 	}: Props = $props();
 
 	const sliderId = $derived(id || `slider-${Math.random().toString(36).slice(2, 9)}`);
 
+	const sizeClasses: Record<string, string> = {
+		xs: 'range-xs',
+		sm: 'range-sm',
+		md: 'range-md',
+		lg: 'range-lg'
+	};
+
 	function handleChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		value = Number(target.value);
-		if (onchange) {
-			onchange(value);
-		}
+		onchange?.(value);
 	}
-
-	let percentage = $derived(((value - min) / (max - min)) * 100);
 </script>
 
 <div class="w-full">
 	{#if label}
 		<div class="mb-2 flex items-center justify-between">
-			<label for={sliderId} class="slider-label">{label}</label>
+			<label for={sliderId} class="label-text font-medium">{label}</label>
 			{#if showValue}
-				<span class="slider-value">{formatValue(value)}</span>
+				<span class="label-text-alt text-primary font-semibold">{formatValue(value)}</span>
 			{/if}
 		</div>
 	{/if}
-	<div class="relative">
-		<input
-			type="range"
-			id={sliderId}
-			bind:value
-			{min}
-			{max}
-			{step}
-			{disabled}
-			onchange={handleChange}
-			oninput={handleChange}
-			class="slider-input"
-			style:--slider-percentage="{percentage}%"
-		/>
-	</div>
+	<input
+		type="range"
+		id={sliderId}
+		bind:value
+		{min}
+		{max}
+		{step}
+		{disabled}
+		onchange={handleChange}
+		oninput={handleChange}
+		class="range range-primary w-full {sizeClasses[size]} {extraClass}"
+	/>
 </div>
-
-<style>
-	@reference "$src/app.css";
-	@layer components.slider {
-		.slider-label {
-			@apply text-base font-medium;
-			color: var(--color-text);
-		}
-
-		.slider-value {
-			@apply text-sm font-semibold;
-			color: var(--color-primary-light);
-		}
-
-		.slider-input {
-			@apply w-full h-2 rounded-lg appearance-none cursor-pointer;
-			@apply disabled:opacity-50 disabled:cursor-not-allowed;
-			background: linear-gradient(
-				to right,
-				var(--color-primary) 0%,
-				#a855f7 var(--slider-percentage),
-				var(--color-base-700) var(--slider-percentage),
-				var(--color-base-700) 100%
-			);
-		}
-
-		.slider-input::-webkit-slider-thumb {
-			@apply appearance-none w-5 h-5 rounded-full cursor-pointer transition-all;
-			@apply bg-gradient-to-r from-primary to-[#a855f7];
-			box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
-		}
-
-		.slider-input:hover::-webkit-slider-thumb {
-			box-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent);
-		}
-
-		.slider-input::-moz-range-thumb {
-			@apply appearance-none w-5 h-5 rounded-full border-0 cursor-pointer transition-all;
-			@apply bg-gradient-to-r from-primary to-[#a855f7];
-			box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
-		}
-
-		.slider-input:hover::-moz-range-thumb {
-			box-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent);
-		}
-	}
-</style>

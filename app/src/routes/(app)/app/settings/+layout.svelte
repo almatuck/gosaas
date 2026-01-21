@@ -23,8 +23,8 @@
 </svelte:head>
 
 <div class="mb-8">
-	<h1 class="font-display text-2xl font-bold text-white mb-1">Settings</h1>
-	<p class="text-sm text-base-400">Manage your account and preferences</p>
+	<h1 class="font-display text-2xl font-bold text-base-content mb-1">Settings</h1>
+	<p class="text-sm text-base-content/60">Manage your account and preferences</p>
 </div>
 
 <div class="flex flex-col lg:flex-row gap-6">
@@ -38,7 +38,7 @@
 						class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors
 							{activeTab === tab.id
 								? 'bg-primary/10 text-primary border border-primary/20'
-								: 'text-base-300 hover:bg-base-800 hover:text-white'}"
+								: 'text-base-content/70 hover:bg-base-200 hover:text-base-content'}"
 						aria-current={activeTab === tab.id ? 'page' : undefined}
 					>
 						<tab.icon class="w-5 h-5" />

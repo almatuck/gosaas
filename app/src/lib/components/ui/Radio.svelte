@@ -11,8 +11,10 @@
 		disabled?: boolean;
 		label?: string;
 		description?: string;
+		size?: 'xs' | 'sm' | 'md' | 'lg';
 		onchange?: (value: string) => void;
 		id?: string;
+		class?: string;
 	}
 
 	let {
@@ -22,21 +24,28 @@
 		disabled = false,
 		label,
 		description,
+		size = 'md',
 		onchange,
-		id
+		id,
+		class: extraClass = ''
 	}: Props = $props();
 
 	const radioId = $derived(id || `radio-${Math.random().toString(36).slice(2, 9)}`);
 
+	const sizeClasses: Record<string, string> = {
+		xs: 'radio-xs',
+		sm: 'radio-sm',
+		md: 'radio-md',
+		lg: 'radio-lg'
+	};
+
 	function handleChange() {
-		if (onchange) {
-			onchange(value);
-		}
+		onchange?.(value);
 	}
 </script>
 
-<div class="flex items-start gap-3">
-	<div class="flex h-6 items-center">
+<div class="form-control">
+	<label class="label cursor-pointer justify-start gap-3" for={radioId}>
 		<input
 			type="radio"
 			id={radioId}
@@ -45,49 +54,17 @@
 			{checked}
 			{disabled}
 			onchange={handleChange}
-			class="radio-input"
+			class="radio radio-primary {sizeClasses[size]} {extraClass}"
 		/>
-	</div>
-	{#if label}
-		<div class="flex-1">
-			<label for={radioId} class="radio-label {disabled ? 'opacity-50' : 'cursor-pointer'}">
-				{label}
-			</label>
-			{#if description}
-				<p class="radio-description {disabled ? 'opacity-50' : ''}">{description}</p>
-			{/if}
-		</div>
-	{/if}
+		{#if label || description}
+			<div class="flex flex-col">
+				{#if label}
+					<span class="label-text {disabled ? 'opacity-50' : ''}">{label}</span>
+				{/if}
+				{#if description}
+					<span class="label-text-alt text-base-content/60 {disabled ? 'opacity-50' : ''}">{description}</span>
+				{/if}
+			</div>
+		{/if}
+	</label>
 </div>
-
-<style>
-	@reference "$src/app.css";
-	@layer components.radio {
-		.radio-input {
-			@apply h-5 w-5 border-2 transition-all;
-			@apply focus:ring-2 focus:ring-offset-2;
-			@apply disabled:cursor-not-allowed disabled:opacity-50;
-			border-color: var(--color-base-600);
-			background: color-mix(in srgb, var(--color-base-800) 60%, transparent);
-			color: var(--color-primary);
-		}
-
-		.radio-input:focus {
-			@apply ring-primary ring-offset-base-900;
-		}
-
-		.radio-input:checked {
-			@apply bg-gradient-to-r from-primary to-[#a855f7] border-transparent;
-		}
-
-		.radio-label {
-			@apply text-base font-medium;
-			color: var(--color-text);
-		}
-
-		.radio-description {
-			@apply text-sm;
-			color: var(--color-text-muted);
-		}
-	}
-</style>

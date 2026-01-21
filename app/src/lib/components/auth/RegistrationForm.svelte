@@ -63,6 +63,11 @@
 		return validatePasswordConfirmation(password, confirmPassword);
 	});
 
+	const hasNameError = $derived((!nameValidation.isValid && touched.name) || !!nameError);
+	const hasEmailError = $derived((!emailValidation.isValid && touched.email) || !!emailError);
+	const hasPasswordError = $derived((!passwordValidation.isValid && touched.password) || !!passwordError);
+	const hasConfirmError = $derived((!confirmValidation.isValid && touched.confirm) || !!confirmError);
+
 	function handleNameInput() {
 		touched.name = true;
 		nameError = '';
@@ -151,217 +156,215 @@
 	}
 </script>
 
-<form class="register-form" onsubmit={handleSubmit} aria-label="Registration form">
-	<div class="form-header">
-		<h2 class="form-title">Create Account</h2>
-		<p class="form-subtitle">Create your account to get started</p>
-	</div>
-
-	{#if $authError}
-		<div id={generalErrorId} class="error-banner" role="alert" aria-live="assertive">
-			<span class="error-icon" aria-hidden="true">!</span>
-			{$authError}
-		</div>
-	{/if}
-
-	<div class="form-fields">
-		<!-- Name Field -->
-		<div class="field-group">
-			<label for={nameId} class="field-label">
-				Full Name
-				<span class="required" aria-hidden="true">*</span>
-			</label>
-			<input
-				id={nameId}
-				type="text"
-				bind:value={name}
-				bind:this={nameInputEl}
-				oninput={handleNameInput}
-				placeholder="John Doe"
-				class="input-field"
-				class:error={(!nameValidation.isValid && touched.name) || nameError}
-				disabled={$authLoading}
-				aria-describedby={(!nameValidation.isValid && touched.name) || nameError ? nameErrorId : undefined}
-				aria-invalid={(!nameValidation.isValid && touched.name) || !!nameError}
-				aria-required="true"
-				autocomplete="name"
-			/>
-			{#if (!nameValidation.isValid && touched.name) || nameError}
-				<div id={nameErrorId} class="field-error" role="alert">
-					{nameError || nameValidation.error}
-				</div>
-			{/if}
+<form class="card bg-base-200 w-full max-w-md mx-auto" onsubmit={handleSubmit} aria-label="Registration form">
+	<div class="card-body">
+		<div class="text-center mb-4">
+			<h2 class="card-title justify-center text-2xl">Create Account</h2>
+			<p class="text-base-content/60 text-sm">Create your account to get started</p>
 		</div>
 
-		<!-- Email Field -->
-		<div class="field-group">
-			<label for={emailId} class="field-label">
-				Email Address
-				<span class="required" aria-hidden="true">*</span>
-			</label>
-			<input
-				id={emailId}
-				type="email"
-				bind:value={email}
-				bind:this={emailInputEl}
-				oninput={handleEmailInput}
-				placeholder="you@example.com"
-				class="input-field"
-				class:error={(!emailValidation.isValid && touched.email) || emailError}
-				disabled={$authLoading}
-				aria-describedby={(!emailValidation.isValid && touched.email) || emailError ? emailErrorId : undefined}
-				aria-invalid={(!emailValidation.isValid && touched.email) || !!emailError}
-				aria-required="true"
-				autocomplete="email"
-			/>
-			{#if (!emailValidation.isValid && touched.email) || emailError}
-				<div id={emailErrorId} class="field-error" role="alert">
-					{emailError || emailValidation.error}
-				</div>
-			{/if}
-		</div>
+		{#if $authError}
+			<div id={generalErrorId} class="alert alert-error mb-4" role="alert" aria-live="assertive">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+				</svg>
+				<span>{$authError}</span>
+			</div>
+		{/if}
 
-		<!-- Password Field -->
-		<div class="field-group">
-			<label for={passwordId} class="field-label">
-				Password
-				<span class="required" aria-hidden="true">*</span>
-			</label>
-			<div class="password-input-wrapper">
+		<div class="space-y-4">
+			<!-- Name Field -->
+			<div class="form-control w-full">
+				<label for={nameId} class="label">
+					<span class="label-text">Full Name <span class="text-error">*</span></span>
+				</label>
 				<input
-					id={passwordId}
-					type={showPassword ? 'text' : 'password'}
-					bind:value={password}
-					bind:this={passwordInputEl}
-					oninput={handlePasswordInput}
-					placeholder="Create a strong password"
-					class="input-field"
-					class:error={(!passwordValidation.isValid && touched.password) || passwordError}
+					id={nameId}
+					type="text"
+					bind:value={name}
+					bind:this={nameInputEl}
+					oninput={handleNameInput}
+					placeholder="John Doe"
+					class="input input-bordered w-full"
+					class:input-error={hasNameError}
 					disabled={$authLoading}
-					aria-describedby={[
-						passwordHintId,
-						(!passwordValidation.isValid && touched.password) || passwordError ? passwordErrorId : ''
-					].filter(Boolean).join(' ')}
-					aria-invalid={(!passwordValidation.isValid && touched.password) || !!passwordError}
+					aria-describedby={hasNameError ? nameErrorId : undefined}
+					aria-invalid={hasNameError}
+					aria-required="true"
+					autocomplete="name"
+				/>
+				{#if hasNameError}
+					<label class="label" id={nameErrorId}>
+						<span class="label-text-alt text-error">{nameError || nameValidation.error}</span>
+					</label>
+				{/if}
+			</div>
+
+			<!-- Email Field -->
+			<div class="form-control w-full">
+				<label for={emailId} class="label">
+					<span class="label-text">Email Address <span class="text-error">*</span></span>
+				</label>
+				<input
+					id={emailId}
+					type="email"
+					bind:value={email}
+					bind:this={emailInputEl}
+					oninput={handleEmailInput}
+					placeholder="you@example.com"
+					class="input input-bordered w-full"
+					class:input-error={hasEmailError}
+					disabled={$authLoading}
+					aria-describedby={hasEmailError ? emailErrorId : undefined}
+					aria-invalid={hasEmailError}
+					aria-required="true"
+					autocomplete="email"
+				/>
+				{#if hasEmailError}
+					<label class="label" id={emailErrorId}>
+						<span class="label-text-alt text-error">{emailError || emailValidation.error}</span>
+					</label>
+				{/if}
+			</div>
+
+			<!-- Password Field -->
+			<div class="form-control w-full">
+				<label for={passwordId} class="label">
+					<span class="label-text">Password <span class="text-error">*</span></span>
+				</label>
+				<div class="relative">
+					<input
+						id={passwordId}
+						type={showPassword ? 'text' : 'password'}
+						bind:value={password}
+						bind:this={passwordInputEl}
+						oninput={handlePasswordInput}
+						placeholder="Create a strong password"
+						class="input input-bordered w-full pr-12"
+						class:input-error={hasPasswordError}
+						disabled={$authLoading}
+						aria-describedby={[passwordHintId, hasPasswordError ? passwordErrorId : ''].filter(Boolean).join(' ')}
+						aria-invalid={hasPasswordError}
+						aria-required="true"
+						autocomplete="new-password"
+					/>
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm absolute right-1 top-1/2 -translate-y-1/2"
+						onclick={togglePasswordVisibility}
+						aria-label={showPassword ? 'Hide password' : 'Show password'}
+						disabled={$authLoading}
+					>
+						{#if showPassword}
+							<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+								<line x1="1" y1="1" x2="23" y2="23"></line>
+							</svg>
+						{:else}
+							<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+								<circle cx="12" cy="12" r="3"></circle>
+							</svg>
+						{/if}
+					</button>
+				</div>
+				{#if hasPasswordError}
+					<label class="label" id={passwordErrorId}>
+						<span class="label-text-alt text-error">{passwordError || passwordValidation.error}</span>
+					</label>
+				{/if}
+
+				<!-- Password Requirements -->
+				{#if touched.password && passwordValidation.requirements}
+					<div id={passwordHintId} class="mt-2 p-3 bg-base-300 rounded-lg" aria-label="Password requirements">
+						<ul class="text-xs space-y-1">
+							<li class="flex items-center gap-2" class:text-success={passwordValidation.requirements.minLength}>
+								<span>{passwordValidation.requirements.minLength ? '✓' : '○'}</span>
+								At least 8 characters
+							</li>
+							<li class="flex items-center gap-2" class:text-success={passwordValidation.requirements.hasUppercase}>
+								<span>{passwordValidation.requirements.hasUppercase ? '✓' : '○'}</span>
+								One uppercase letter
+							</li>
+							<li class="flex items-center gap-2" class:text-success={passwordValidation.requirements.hasLowercase}>
+								<span>{passwordValidation.requirements.hasLowercase ? '✓' : '○'}</span>
+								One lowercase letter
+							</li>
+							<li class="flex items-center gap-2" class:text-success={passwordValidation.requirements.hasNumber}>
+								<span>{passwordValidation.requirements.hasNumber ? '✓' : '○'}</span>
+								One number
+							</li>
+							<li class="flex items-center gap-2 italic" class:text-success={passwordValidation.requirements.hasSpecialChar}>
+								<span>{passwordValidation.requirements.hasSpecialChar ? '✓' : '○'}</span>
+								Special character (recommended)
+							</li>
+						</ul>
+					</div>
+				{:else}
+					<p class="text-xs text-base-content/60 mt-1" id={passwordHintId}>
+						Password must be at least 8 characters with uppercase, lowercase, and numbers
+					</p>
+				{/if}
+			</div>
+
+			<!-- Confirm Password Field -->
+			<div class="form-control w-full">
+				<label for={confirmId} class="label">
+					<span class="label-text">Confirm Password <span class="text-error">*</span></span>
+				</label>
+				<input
+					id={confirmId}
+					type={showPassword ? 'text' : 'password'}
+					bind:value={confirmPassword}
+					bind:this={confirmInputEl}
+					oninput={handleConfirmInput}
+					placeholder="Confirm your password"
+					class="input input-bordered w-full"
+					class:input-error={hasConfirmError}
+					disabled={$authLoading}
+					aria-describedby={hasConfirmError ? confirmErrorId : undefined}
+					aria-invalid={hasConfirmError}
 					aria-required="true"
 					autocomplete="new-password"
 				/>
-				<button
-					type="button"
-					class="password-toggle"
-					onclick={togglePasswordVisibility}
-					aria-label={showPassword ? 'Hide password' : 'Show password'}
-					disabled={$authLoading}
-				>
-					{#if showPassword}
-						<svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-							<line x1="1" y1="1" x2="23" y2="23"></line>
-						</svg>
-					{:else}
-						<svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-							<circle cx="12" cy="12" r="3"></circle>
-						</svg>
-					{/if}
-				</button>
+				{#if hasConfirmError}
+					<label class="label" id={confirmErrorId}>
+						<span class="label-text-alt text-error">{confirmError || confirmValidation.error}</span>
+					</label>
+				{/if}
 			</div>
-			{#if (!passwordValidation.isValid && touched.password) || passwordError}
-				<div id={passwordErrorId} class="field-error" role="alert">
-					{passwordError || passwordValidation.error}
-				</div>
-			{/if}
-
-			<!-- Password Requirements -->
-			{#if touched.password && passwordValidation.requirements}
-				<div id={passwordHintId} class="password-requirements" aria-label="Password requirements">
-					<ul class="requirements-list">
-						<li class:met={passwordValidation.requirements.minLength}>
-							<span class="check-icon" aria-hidden="true">{passwordValidation.requirements.minLength ? '✓' : '○'}</span>
-							At least 8 characters
-						</li>
-						<li class:met={passwordValidation.requirements.hasUppercase}>
-							<span class="check-icon" aria-hidden="true">{passwordValidation.requirements.hasUppercase ? '✓' : '○'}</span>
-							One uppercase letter
-						</li>
-						<li class:met={passwordValidation.requirements.hasLowercase}>
-							<span class="check-icon" aria-hidden="true">{passwordValidation.requirements.hasLowercase ? '✓' : '○'}</span>
-							One lowercase letter
-						</li>
-						<li class:met={passwordValidation.requirements.hasNumber}>
-							<span class="check-icon" aria-hidden="true">{passwordValidation.requirements.hasNumber ? '✓' : '○'}</span>
-							One number
-						</li>
-						<li class:met={passwordValidation.requirements.hasSpecialChar} class="optional">
-							<span class="check-icon" aria-hidden="true">{passwordValidation.requirements.hasSpecialChar ? '✓' : '○'}</span>
-							Special character (recommended)
-						</li>
-					</ul>
-				</div>
-			{:else}
-				<div id={passwordHintId} class="password-hint">
-					Password must be at least 8 characters with uppercase, lowercase, and numbers
-				</div>
-			{/if}
 		</div>
 
-		<!-- Confirm Password Field -->
-		<div class="field-group">
-			<label for={confirmId} class="field-label">
-				Confirm Password
-				<span class="required" aria-hidden="true">*</span>
-			</label>
-			<input
-				id={confirmId}
-				type={showPassword ? 'text' : 'password'}
-				bind:value={confirmPassword}
-				bind:this={confirmInputEl}
-				oninput={handleConfirmInput}
-				placeholder="Confirm your password"
-				class="input-field"
-				class:error={(!confirmValidation.isValid && touched.confirm) || confirmError}
+		<div class="form-control mt-6">
+			<button
+				type="submit"
+				class="btn btn-primary w-full"
 				disabled={$authLoading}
-				aria-describedby={(!confirmValidation.isValid && touched.confirm) || confirmError ? confirmErrorId : undefined}
-				aria-invalid={(!confirmValidation.isValid && touched.confirm) || !!confirmError}
-				aria-required="true"
-				autocomplete="new-password"
-			/>
-			{#if (!confirmValidation.isValid && touched.confirm) || confirmError}
-				<div id={confirmErrorId} class="field-error" role="alert">
-					{confirmError || confirmValidation.error}
-				</div>
-			{/if}
+				aria-busy={$authLoading}
+			>
+				{#if $authLoading}
+					<span class="loading loading-spinner loading-sm"></span>
+					Creating account...
+				{:else}
+					Create Account
+				{/if}
+			</button>
 		</div>
-	</div>
 
-	<button
-		type="submit"
-		class="submit-button"
-		disabled={$authLoading}
-		aria-busy={$authLoading}
-	>
-		{#if $authLoading}
-			<span class="spinner" aria-hidden="true"></span>
-			<span class="visually-hidden">Please wait, </span>Creating account...
-		{:else}
-			Create Account
-		{/if}
-	</button>
+		<p class="text-center text-xs text-base-content/60 mt-4">
+			By creating an account, you agree to our
+			<a href="/terms" class="link link-primary">Terms of Service</a>
+			and
+			<a href="/privacy" class="link link-primary">Privacy Policy</a>
+		</p>
 
-	<p class="terms-text">
-		By creating an account, you agree to our
-		<a href="/terms" class="link">Terms of Service</a>
-		and
-		<a href="/privacy" class="link">Privacy Policy</a>
-	</p>
-
-	{#if onLoginClick}
-		<div class="form-footer">
-			<p class="footer-text">
+		{#if onLoginClick}
+			<div class="divider"></div>
+			<p class="text-center text-sm text-base-content/60">
 				Already have an account?
 				<button
 					type="button"
-					class="link-button"
+					class="link link-primary"
 					onclick={() => {
 						auth.clearError();
 						onLoginClick?.();
@@ -371,394 +374,6 @@
 					Sign in
 				</button>
 			</p>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </form>
-
-<style>
-	/* ===== Form Container - Mobile First ===== */
-	.register-form {
-		max-width: var(--max-width-sm, 480px);
-		margin: 0 auto;
-		padding: var(--space-6, 1.5rem);
-		background: var(--color-base-800, #1e293b);
-		border-radius: var(--radius-lg, 12px);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	/* ===== Form Header ===== */
-	.form-header {
-		text-align: center;
-		margin-bottom: var(--space-6, 1.5rem);
-	}
-
-	.form-title {
-		font-size: var(--font-size-2xl, 1.5rem);
-		font-weight: 700;
-		color: #ffffff;
-		margin: 0 0 var(--space-2, 0.5rem);
-	}
-
-	.form-subtitle {
-		font-size: var(--font-size-sm, 0.875rem);
-		color: #94a3b8;
-		margin: 0;
-	}
-
-	/* ===== Error Banner ===== */
-	.error-banner {
-		display: flex;
-		align-items: flex-start;
-		gap: var(--space-2, 0.5rem);
-		padding: var(--space-3, 0.75rem);
-		margin-bottom: var(--space-4, 1rem);
-		font-size: var(--font-size-sm, 0.875rem);
-		color: #b91c1c;
-		background: #fef2f2;
-		border-radius: var(--radius-md, 8px);
-		border-left: 4px solid #ef4444;
-	}
-
-	.error-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.25rem;
-		height: 1.25rem;
-		background: #ef4444;
-		color: #ffffff;
-		font-size: var(--font-size-xs, 0.75rem);
-		font-weight: 700;
-		border-radius: 50%;
-		flex-shrink: 0;
-	}
-
-	/* ===== Form Fields ===== */
-	.form-fields {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-4, 1rem);
-		margin-bottom: var(--space-6, 1.5rem);
-	}
-
-	.field-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1, 0.25rem);
-	}
-
-	.field-label {
-		font-size: var(--font-size-sm, 0.875rem);
-		font-weight: 500;
-		color: #e2e8f0;
-	}
-
-	.required {
-		color: #f87171;
-		margin-left: 2px;
-	}
-
-	.input-field {
-		width: 100%;
-		padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-		font-size: var(--font-size-base, 1rem);
-		color: #ffffff;
-		background: var(--color-base-700, #334155);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: var(--radius-md, 8px);
-		transition: all 0.2s ease;
-		box-sizing: border-box;
-		min-height: var(--touch-target-min, 44px);
-	}
-
-	.input-field::placeholder {
-		color: #64748b;
-	}
-
-	.input-field:focus {
-		outline: none;
-		border-color: var(--color-accent-primary, #6366f1);
-		background: var(--color-base-700, #334155);
-		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-	}
-
-	.input-field:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	.input-field.error {
-		border-color: #ef4444;
-		background: rgba(239, 68, 68, 0.1);
-	}
-
-	.input-field.error:focus {
-		box-shadow: 0 0 0 3px rgb(239 68 68 / 0.2);
-	}
-
-	.field-error {
-		font-size: var(--font-size-xs, 0.75rem);
-		color: #f87171;
-		margin-top: var(--space-1, 0.25rem);
-	}
-
-	/* ===== Password Input ===== */
-	.password-input-wrapper {
-		position: relative;
-		display: flex;
-		align-items: center;
-	}
-
-	.password-input-wrapper .input-field {
-		padding-right: 3rem;
-	}
-
-	.password-toggle {
-		position: absolute;
-		right: var(--space-2, 0.5rem);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 2.5rem;
-		height: 2.5rem;
-		background: transparent;
-		border: none;
-		cursor: pointer;
-		color: #94a3b8;
-		border-radius: var(--radius-sm, 4px);
-		transition: color 0.2s ease;
-	}
-
-	.password-toggle:hover:not(:disabled) {
-		color: #ffffff;
-	}
-
-	.password-toggle:focus-visible {
-		outline: 2px solid #3b82f6;
-		outline-offset: 2px;
-	}
-
-	.password-toggle:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.toggle-icon {
-		width: 1.25rem;
-		height: 1.25rem;
-	}
-
-	/* ===== Password Requirements ===== */
-	.password-hint {
-		font-size: var(--font-size-xs, 0.75rem);
-		color: #94a3b8;
-		margin-top: var(--space-1, 0.25rem);
-	}
-
-	.password-requirements {
-		margin-top: var(--space-2, 0.5rem);
-		padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: var(--radius-sm, 4px);
-	}
-
-	.requirements-list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		font-size: var(--font-size-xs, 0.75rem);
-		display: grid;
-		gap: var(--space-1, 0.25rem);
-	}
-
-	.requirements-list li {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2, 0.5rem);
-		color: #94a3b8;
-	}
-
-	.requirements-list li.met {
-		color: #34d399;
-	}
-
-	.requirements-list li.optional {
-		font-style: italic;
-	}
-
-	.check-icon {
-		font-size: 0.75rem;
-	}
-
-	/* ===== Submit Button ===== */
-	.submit-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-2, 0.5rem);
-		width: 100%;
-		padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-		font-size: var(--font-size-base, 1rem);
-		font-weight: 600;
-		color: #ffffff;
-		background: linear-gradient(135deg, var(--color-accent-primary, #6366f1), var(--color-accent-primary-dark, #4f46e5));
-		border: none;
-		border-radius: var(--radius-md, 8px);
-		cursor: pointer;
-		transition: all 0.2s ease;
-		min-height: var(--touch-target-comfortable, 48px);
-	}
-
-	.submit-button:hover:not(:disabled) {
-		background: linear-gradient(135deg, var(--color-accent-primary-dark, #4f46e5), #4338ca);
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-	}
-
-	.submit-button:active:not(:disabled) {
-		transform: translateY(0);
-	}
-
-	.submit-button:focus-visible {
-		outline: 3px solid #1d4ed8;
-		outline-offset: 2px;
-	}
-
-	.submit-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-		transform: none;
-	}
-
-	.spinner {
-		width: 1rem;
-		height: 1rem;
-		border: 2px solid rgb(255 255 255 / 0.3);
-		border-top-color: #ffffff;
-		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-	/* ===== Terms Text ===== */
-	.terms-text {
-		font-size: var(--font-size-xs, 0.75rem);
-		color: #94a3b8;
-		text-align: center;
-		margin: var(--space-4, 1rem) 0 0;
-	}
-
-	/* ===== Form Footer ===== */
-	.form-footer {
-		text-align: center;
-		margin-top: var(--space-4, 1rem);
-		padding-top: var(--space-4, 1rem);
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.footer-text {
-		font-size: var(--font-size-sm, 0.875rem);
-		color: #94a3b8;
-		margin: 0;
-	}
-
-	/* ===== Links ===== */
-	.link,
-	.link-button {
-		font-size: inherit;
-		font-weight: 500;
-		color: var(--color-accent-primary-light, #818cf8);
-		background: none;
-		border: none;
-		padding: 0;
-		cursor: pointer;
-		text-decoration: none;
-		transition: color 0.2s ease;
-	}
-
-	.link:hover,
-	.link-button:hover:not(:disabled) {
-		color: #a5b4fc;
-		text-decoration: underline;
-	}
-
-	.link:focus-visible,
-	.link-button:focus-visible {
-		outline: 2px solid #3b82f6;
-		outline-offset: 2px;
-		border-radius: 2px;
-	}
-
-	.link-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	/* ===== Accessibility ===== */
-	.visually-hidden {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border: 0;
-	}
-
-	/* ===== Tablets (640px+) ===== */
-	@media (min-width: 640px) {
-		.register-form {
-			padding: var(--space-8, 2rem);
-		}
-
-		.form-title {
-			font-size: var(--font-size-3xl, 1.875rem);
-		}
-	}
-
-	/* ===== Touch Device Optimizations ===== */
-	@media (hover: none) and (pointer: coarse) {
-		.input-field {
-			min-height: var(--touch-target-comfortable, 48px);
-		}
-
-		.submit-button:hover:not(:disabled) {
-			transform: none;
-			box-shadow: none;
-		}
-	}
-
-	/* ===== Reduced Motion ===== */
-	@media (prefers-reduced-motion: reduce) {
-		.input-field,
-		.submit-button,
-		.link-button,
-		.spinner {
-			transition: none;
-			animation: none;
-		}
-	}
-
-	/* ===== High Contrast Mode ===== */
-	@media (prefers-contrast: high) {
-		.register-form {
-			border: 2px solid #ffffff;
-		}
-
-		.input-field {
-			border-width: 2px;
-			border-color: #ffffff;
-		}
-
-		.submit-button {
-			border: 2px solid var(--color-accent-primary-light, #818cf8);
-		}
-	}
-</style>

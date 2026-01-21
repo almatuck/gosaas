@@ -30,10 +30,3 @@
 	/>
 </svg>
 
-<style>
-@reference "$src/app.css";
-
-@layer components.discord-icon {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>

@@ -217,7 +217,7 @@
 			x={polarToCartesian(cx, cy, radius + 15, startAngle).x}
 			y={polarToCartesian(cx, cy, radius + 15, startAngle).y + 5}
 			text-anchor="middle"
-			class="text-xs fill-slate-500"
+			class="text-xs fill-base-content/60"
 		>
 			{formatValue(min)}
 		</text>
@@ -225,7 +225,7 @@
 			x={polarToCartesian(cx, cy, radius + 15, endAngle).x}
 			y={polarToCartesian(cx, cy, radius + 15, endAngle).y + 5}
 			text-anchor="middle"
-			class="text-xs fill-slate-500"
+			class="text-xs fill-base-content/60"
 		>
 			{formatValue(max)}
 		</text>
@@ -247,7 +247,7 @@
 				x={cx}
 				y={cy + 55}
 				text-anchor="middle"
-				class="fill-slate-400 text-sm"
+				class="fill-base-content/60 text-sm"
 			>
 				{label}
 			</text>
@@ -259,7 +259,7 @@
 				x={cx}
 				y={cy + 75}
 				text-anchor="middle"
-				class="fill-slate-500 text-xs"
+				class="fill-base-content/60 text-xs"
 			>
 				Target: {formatValue(target)}{unit}
 			</text>

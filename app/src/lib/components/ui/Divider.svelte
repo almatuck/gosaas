@@ -1,6 +1,6 @@
 <!--
   Divider Component
-  Section dividers with optional labels
+  Section dividers with optional labels using DaisyUI
 -->
 
 <script lang="ts">
@@ -17,7 +17,7 @@
 	}: Props = $props();
 
 	const variantClasses = {
-		solid: 'border-solid',
+		solid: '',
 		dashed: 'border-dashed',
 		dotted: 'border-dotted'
 	};
@@ -25,25 +25,10 @@
 
 {#if orientation === 'horizontal'}
 	{#if label}
-		<div class="relative my-6">
-			<div class="absolute inset-0 flex items-center" aria-hidden="true">
-				<div class="w-full border-t border-slate-700 {variantClasses[variant]}"></div>
-			</div>
-			<div class="relative flex justify-center">
-				<span class="bg-slate-900 px-3 text-sm font-medium text-slate-400">{label}</span>
-			</div>
-		</div>
+		<div class="divider {variantClasses[variant]}">{label}</div>
 	{:else}
-		<hr class="my-6 border-t border-slate-700 {variantClasses[variant]}" />
+		<div class="divider {variantClasses[variant]}"></div>
 	{/if}
 {:else}
-	<div class="inline-block h-full w-px border-l border-slate-700 {variantClasses[variant]}"></div>
+	<div class="divider divider-horizontal {variantClasses[variant]}"></div>
 {/if}
-
-<style>
-@reference "$src/app.css";
-
-@layer components.divider {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>

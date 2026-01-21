@@ -92,7 +92,7 @@
 		<Card>
 			<div class="flex flex-col items-center justify-center gap-4 py-8">
 				<Spinner size={32} />
-				<p class="text-sm text-base-400">Loading billing information...</p>
+				<p class="text-sm text-base-content/60">Loading billing information...</p>
 			</div>
 		</Card>
 	{:else}
@@ -108,8 +108,8 @@
 						{/if}
 					</div>
 					<div>
-						<h2 class="text-lg font-semibold text-white">Current Plan</h2>
-						<p class="text-sm text-base-400">Manage your subscription</p>
+						<h2 class="text-lg font-semibold text-base-content">Current Plan</h2>
+						<p class="text-sm text-base-content/60">Manage your subscription</p>
 					</div>
 				</div>
 				<Badge variant={getStatusVariant(status)}>
@@ -124,9 +124,9 @@
 			<div class="p-4 bg-base-800/50 rounded-lg mb-6">
 				<div class="flex items-center justify-between">
 					<div>
-						<p class="text-2xl font-bold text-white">{planName}</p>
+						<p class="text-2xl font-bold text-base-content">{planName}</p>
 						{#if isPremium && periodEnd}
-							<p class="text-sm text-base-400 mt-1">
+							<p class="text-sm text-base-content/60 mt-1">
 								{#if cancelAtPeriodEnd}
 									Ends on {formatDate(periodEnd)}
 								{:else}
@@ -134,15 +134,15 @@
 								{/if}
 							</p>
 						{:else if !isPremium}
-							<p class="text-sm text-base-400 mt-1">Upgrade to unlock premium features</p>
+							<p class="text-sm text-base-content/60 mt-1">Upgrade to unlock premium features</p>
 						{/if}
 					</div>
 					{#if isPremium}
-						<p class="text-2xl font-bold text-white">
-							{billingCycle === 'yearly' ? '$290' : '$29'}<span class="text-sm text-base-400 font-normal">/{billingCycle === 'yearly' ? 'year' : 'mo'}</span>
+						<p class="text-2xl font-bold text-base-content">
+							{billingCycle === 'yearly' ? '$290' : '$29'}<span class="text-sm text-base-content/60 font-normal">/{billingCycle === 'yearly' ? 'year' : 'mo'}</span>
 						</p>
 					{:else}
-						<p class="text-2xl font-bold text-white">$0</p>
+						<p class="text-2xl font-bold text-base-content">$0</p>
 					{/if}
 				</div>
 			</div>
@@ -176,12 +176,12 @@
 						<CreditCard class="w-5 h-5 text-secondary" />
 					</div>
 					<div>
-						<h2 class="text-lg font-semibold text-white">Payment Method</h2>
-						<p class="text-sm text-base-400">Manage your payment details</p>
+						<h2 class="text-lg font-semibold text-base-content">Payment Method</h2>
+						<p class="text-sm text-base-content/60">Manage your payment details</p>
 					</div>
 				</div>
 
-				<p class="text-sm text-base-400 mb-4">
+				<p class="text-sm text-base-content/60 mb-4">
 					Update your payment method, view billing history, or download invoices from the Stripe billing portal.
 				</p>
 
@@ -205,12 +205,12 @@
 						<Receipt class="w-5 h-5 text-tertiary" />
 					</div>
 					<div>
-						<h2 class="text-lg font-semibold text-white">Invoices</h2>
-						<p class="text-sm text-base-400">View and download your invoices</p>
+						<h2 class="text-lg font-semibold text-base-content">Invoices</h2>
+						<p class="text-sm text-base-content/60">View and download your invoices</p>
 					</div>
 				</div>
 
-				<p class="text-sm text-base-400 mb-4">
+				<p class="text-sm text-base-content/60 mb-4">
 					Access your complete billing history and download invoices from the billing portal.
 				</p>
 

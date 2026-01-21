@@ -67,7 +67,7 @@
 			<button
 				type="button"
 				onclick={() => selectPreset(preset)}
-				class="btn-secondary"
+				class="btn btn-sm btn-secondary"
 			>
 				{preset.label}
 			</button>
@@ -76,32 +76,25 @@
 
 	<div class="flex space-x-4">
 		<div class="flex-1">
-			<label for="from-date" class="block text-sm font-medium text-slate-400">From</label>
+			<label for="from-date" class="label pb-1"><span class="label-text">From</span></label>
 			<input
 				type="date"
 				id="from-date"
 				bind:value={dateRange.from}
 				onchange={handleFromChange}
-				class="input mt-1 block w-full"
+				class="input input-bordered w-full"
 			/>
 		</div>
 		<div class="flex-1">
-			<label for="to-date" class="block text-sm font-medium text-slate-400">To</label>
+			<label for="to-date" class="label pb-1"><span class="label-text">To</span></label>
 			<input
 				type="date"
 				id="to-date"
 				bind:value={dateRange.to}
 				onchange={handleToChange}
-				class="input mt-1 block w-full"
+				class="input input-bordered w-full"
 			/>
 		</div>
 	</div>
 </div>
 
-<style>
-@reference "$src/app.css";
-
-@layer components.date-range-picker {
-	/* No custom styles needed - using Tailwind utilities */
-}
-</style>

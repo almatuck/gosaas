@@ -25,13 +25,6 @@
 	}
 </script>
 
-<form onsubmit={handleSubmit} class="{className}">
+<form onsubmit={handleSubmit} class={className}>
 	{@render children()}
 </form>
-
-<style>
-	@reference "$src/app.css";
-	@layer components.form {
-		/* Form uses utility classes */
-	}
-</style>

@@ -87,7 +87,7 @@
 		<div class="flex items-center gap-8">
 			<!-- Logo -->
 			<a href="/app" class="flex items-center no-underline">
-				<span class="font-display text-xl font-bold text-white tracking-tight"> GoSaaS </span>
+				<span class="font-display text-xl font-bold text-base-content tracking-tight"> GoSaaS </span>
 			</a>
 
 			<!-- Desktop Navigation -->
@@ -118,14 +118,14 @@
 			<DropdownMenu items={userMenuItems}>
 				{#snippet trigger()}
 					<div
-						class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-[var(--color-base-700)] transition-colors cursor-pointer"
+						class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-base-200 transition-colors cursor-pointer"
 					>
 						<Avatar initials={userInitials} size="sm" />
-						<span class="text-sm font-medium text-[var(--color-base-300)]">
+						<span class="text-sm font-medium text-base-content/70">
 							{$currentUser?.name ?? 'Account'}
 						</span>
 						<svg
-							class="w-4 h-4 text-[var(--color-base-500)]"
+							class="w-4 h-4 text-base-content/50"
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"
@@ -141,7 +141,7 @@
 		<!-- Mobile Menu Button -->
 		<button
 			type="button"
-			class="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg text-[var(--color-base-400)] hover:text-white hover:bg-[var(--color-base-700)] transition-colors"
+			class="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg text-base-content/60 hover:text-base-content hover:bg-base-200 transition-colors"
 			aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
 			aria-expanded={mobileMenuOpen}
 			onclick={toggleMobileMenu}
@@ -160,7 +160,7 @@
 
 	<!-- Mobile Menu -->
 	{#if mobileMenuOpen}
-		<div class="sm:hidden border-t border-[var(--color-base-700)] mt-3 pt-4 animate-fade-in">
+		<div class="sm:hidden border-t border-base-300 mt-3 pt-4 animate-fade-in">
 			<nav class="space-y-1 mb-4">
 				{#each items as item}
 					<a
@@ -186,7 +186,7 @@
 					</a>
 				{/each}
 			</nav>
-			<div class="border-t border-[var(--color-base-700)] pt-4 space-y-1">
+			<div class="border-t border-base-300 pt-4 space-y-1">
 				<a
 					href="/app/settings"
 					class="nav-link"
@@ -198,7 +198,7 @@
 				</a>
 				<button
 					type="button"
-					class="nav-link w-full text-left text-[var(--color-accent-error)]"
+					class="nav-link w-full text-left text-error"
 					onclick={() => {
 						closeMobileMenu();
 						handleLogout();
