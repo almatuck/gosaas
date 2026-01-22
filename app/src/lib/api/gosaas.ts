@@ -33,6 +33,13 @@ export function adminListUsers(params: components.AdminListUsersRequestParams) {
 }
 
 /**
+ * @description "Get auth configuration (OAuth providers enabled)"
+ */
+export function getAuthConfig() {
+	return webapi.get<components.AuthConfigResponse>(`/api/v1/auth/config`)
+}
+
+/**
  * @description "Request password reset"
  * @param req
  */
@@ -86,6 +93,198 @@ export function resetPassword(req: components.ResetPasswordRequest) {
  */
 export function verifyEmail(req: components.EmailVerificationRequest) {
 	return webapi.post<components.MessageResponse>(`/api/v1/auth/verify-email`, req)
+}
+
+/**
+ * @description "List user notifications"
+ * @param params
+ */
+export function listNotifications(params: components.ListNotificationsRequestParams) {
+	return webapi.get<components.ListNotificationsResponse>(`/api/v1/notifications`, params)
+}
+
+/**
+ * @description "Delete notification"
+ * @param params
+ */
+export function deleteNotification(params: components.DeleteNotificationRequestParams, id: string) {
+	return webapi.delete<components.MessageResponse>(`/api/v1/notifications/${id}`, params)
+}
+
+/**
+ * @description "Mark notification as read"
+ * @param params
+ */
+export function markNotificationRead(params: components.MarkNotificationReadRequestParams, id: string) {
+	return webapi.put<components.MessageResponse>(`/api/v1/notifications/${id}/read`, params)
+}
+
+/**
+ * @description "Mark all notifications as read"
+ */
+export function markAllNotificationsRead() {
+	return webapi.put<components.MessageResponse>(`/api/v1/notifications/read-all`)
+}
+
+/**
+ * @description "Get unread notification count"
+ */
+export function getUnreadCount() {
+	return webapi.get<components.GetUnreadCountResponse>(`/api/v1/notifications/unread-count`)
+}
+
+/**
+ * @description "OAuth callback - exchange code for tokens"
+ * @param params
+ * @param req
+ */
+export function oAuthCallback(params: components.OAuthLoginRequestParams, req: components.OAuthLoginRequest, provider: string) {
+	return webapi.post<components.OAuthLoginResponse>(`/api/v1/oauth/${provider}/callback`, params, req)
+}
+
+/**
+ * @description "Get OAuth authorization URL"
+ * @param params
+ */
+export function getOAuthUrl(params: components.GetOAuthUrlRequestParams, provider: string) {
+	return webapi.get<components.GetOAuthUrlResponse>(`/api/v1/oauth/${provider}/url`, params)
+}
+
+/**
+ * @description "Disconnect OAuth provider"
+ * @param params
+ */
+export function disconnectOAuth(params: components.DisconnectOAuthRequestParams, provider: string) {
+	return webapi.delete<components.MessageResponse>(`/api/v1/oauth/${provider}`, params)
+}
+
+/**
+ * @description "List connected OAuth providers"
+ */
+export function listOAuthProviders() {
+	return webapi.get<components.ListOAuthProvidersResponse>(`/api/v1/oauth/providers`)
+}
+
+/**
+ * @description "Create a new organization"
+ * @param req
+ */
+export function createOrganization(req: components.CreateOrganizationRequest) {
+	return webapi.post<components.CreateOrganizationResponse>(`/api/v1/organizations`, req)
+}
+
+/**
+ * @description "List user's organizations"
+ */
+export function listOrganizations() {
+	return webapi.get<components.ListOrganizationsResponse>(`/api/v1/organizations`)
+}
+
+/**
+ * @description "Get organization by ID"
+ * @param params
+ */
+export function getOrganization(params: components.GetOrganizationRequestParams, id: string) {
+	return webapi.get<components.GetOrganizationResponse>(`/api/v1/organizations/${id}`, params)
+}
+
+/**
+ * @description "Update organization"
+ * @param params
+ * @param req
+ */
+export function updateOrganization(params: components.UpdateOrganizationRequestParams, req: components.UpdateOrganizationRequest, id: string) {
+	return webapi.put<components.GetOrganizationResponse>(`/api/v1/organizations/${id}`, params, req)
+}
+
+/**
+ * @description "Delete organization"
+ * @param params
+ */
+export function deleteOrganization(params: components.DeleteOrganizationRequestParams, id: string) {
+	return webapi.delete<components.MessageResponse>(`/api/v1/organizations/${id}`, params)
+}
+
+/**
+ * @description "Invite member to organization"
+ * @param params
+ * @param req
+ */
+export function inviteMember(params: components.InviteMemberRequestParams, req: components.InviteMemberRequest, id: string) {
+	return webapi.post<components.InviteMemberResponse>(`/api/v1/organizations/${id}/invites`, params, req)
+}
+
+/**
+ * @description "List pending invites"
+ * @param params
+ */
+export function listInvites(params: components.ListInvitesRequestParams, id: string) {
+	return webapi.get<components.ListInvitesResponse>(`/api/v1/organizations/${id}/invites`, params)
+}
+
+/**
+ * @description "Leave organization"
+ * @param params
+ */
+export function leaveOrganization(params: components.LeaveOrganizationRequestParams, id: string) {
+	return webapi.post<components.MessageResponse>(`/api/v1/organizations/${id}/leave`, params)
+}
+
+/**
+ * @description "List organization members"
+ * @param params
+ */
+export function listMembers(params: components.ListMembersRequestParams, id: string) {
+	return webapi.get<components.ListMembersResponse>(`/api/v1/organizations/${id}/members`, params)
+}
+
+/**
+ * @description "Revoke invite"
+ * @param params
+ */
+export function revokeInvite(params: components.RevokeInviteRequestParams, orgId: string, inviteId: string) {
+	return webapi.delete<components.MessageResponse>(`/api/v1/organizations/${orgId}/invites/${inviteId}`, params)
+}
+
+/**
+ * @description "Update member role"
+ * @param params
+ * @param req
+ */
+export function updateMemberRole(params: components.UpdateMemberRoleRequestParams, req: components.UpdateMemberRoleRequest, orgId: string, userId: string) {
+	return webapi.put<components.MessageResponse>(`/api/v1/organizations/${orgId}/members/${userId}`, params, req)
+}
+
+/**
+ * @description "Remove member from organization"
+ * @param params
+ */
+export function removeMember(params: components.RemoveMemberRequestParams, orgId: string, userId: string) {
+	return webapi.delete<components.MessageResponse>(`/api/v1/organizations/${orgId}/members/${userId}`, params)
+}
+
+/**
+ * @description "Accept organization invite"
+ * @param req
+ */
+export function acceptInvite(req: components.AcceptInviteRequest) {
+	return webapi.post<components.AcceptInviteResponse>(`/api/v1/organizations/invites/accept`, req)
+}
+
+/**
+ * @description "Switch current organization"
+ * @param req
+ */
+export function switchOrganization(req: components.SwitchOrganizationRequest) {
+	return webapi.post<components.MessageResponse>(`/api/v1/organizations/switch`, req)
+}
+
+/**
+ * @description "Get invite details by token"
+ * @param params
+ */
+export function getInviteByToken(params: components.GetInviteByTokenRequestParams, token: string) {
+	return webapi.get<components.GetInviteByTokenResponse>(`/api/v1/organizations/invites/${token}`, params)
 }
 
 /**

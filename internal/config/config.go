@@ -170,6 +170,26 @@ type Config struct {
 		TrialEndingTemplate           string `json:",default=trial-ending"`
 		CostAlertTemplate             string `json:",default=cost-alert"`
 	}
+	OAuth struct {
+		// Google OAuth
+		GoogleEnabled      bool   `json:",default=false"`
+		GoogleClientID     string `json:",optional"`
+		GoogleClientSecret string `json:",optional"`
+
+		// GitHub OAuth
+		GitHubEnabled      bool   `json:",default=false"`
+		GitHubClientID     string `json:",optional"`
+		GitHubClientSecret string `json:",optional"`
+
+		// Callback URL base (defaults to App.BaseURL)
+		CallbackBaseURL string `json:",optional"`
+	}
+	Features struct {
+		// Enable/disable features
+		OrganizationsEnabled bool `json:",default=true"`
+		NotificationsEnabled bool `json:",default=true"`
+		OAuthEnabled         bool `json:",default=false"`
+	}
 }
 
 // Product defines a subscription product with its prices

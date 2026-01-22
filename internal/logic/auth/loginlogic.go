@@ -88,6 +88,7 @@ func (l *LoginLogic) loginLocal(req *types.LoginRequest) (*types.LoginResponse, 
 }
 
 // loginAdmin handles admin login using credentials from env
+// On first login, automatically creates the admin as a real user in the database
 func (l *LoginLogic) loginAdmin(req *types.LoginRequest) (*types.LoginResponse, error) {
 	// Constant-time comparison to prevent timing attacks
 	expectedPass := []byte(l.svcCtx.Config.Admin.Password)
@@ -98,7 +99,12 @@ func (l *LoginLogic) loginAdmin(req *types.LoginRequest) (*types.LoginResponse, 
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	// Generate JWT token with same structure as regular users
+	// In standalone mode, create admin as a real user on first login
+	if l.svcCtx.UseLocal() {
+		return l.ensureAdminUserAndLogin(req)
+	}
+
+	// Levee mode: generate admin-only JWT (no database user)
 	now := time.Now()
 	accessExpiry := now.Add(time.Duration(l.svcCtx.Config.Auth.AccessExpire) * time.Second)
 
@@ -122,5 +128,47 @@ func (l *LoginLogic) loginAdmin(req *types.LoginRequest) (*types.LoginResponse, 
 		Token:       accessToken,
 		ExpiresAt:   accessExpiry.UnixMilli(),
 		CheckoutUrl: "/backoffice",
+	}, nil
+}
+
+// ensureAdminUserAndLogin creates the admin user if they don't exist, then logs them in
+// The config password is the master admin password - if it validates, we trust the login
+func (l *LoginLogic) ensureAdminUserAndLogin(req *types.LoginRequest) (*types.LoginResponse, error) {
+	if l.svcCtx.Auth == nil {
+		return nil, fmt.Errorf("local auth service not configured")
+	}
+
+	// Check if admin user already exists
+	user, err := l.svcCtx.Auth.GetUserByEmail(l.ctx, req.Email)
+	if err != nil {
+		// User doesn't exist - create them
+		l.Infof("Creating admin user on first login: %s", req.Email)
+		authResp, err := l.svcCtx.Auth.Register(l.ctx, req.Email, req.Password, "Admin")
+		if err != nil {
+			l.Errorf("Failed to create admin user: %v", err)
+			return nil, fmt.Errorf("failed to create admin user: %w", err)
+		}
+
+		l.Infof("Admin user created and logged in: %s", req.Email)
+		return &types.LoginResponse{
+			Token:        authResp.Token,
+			RefreshToken: authResp.RefreshToken,
+			ExpiresAt:    authResp.ExpiresAt.UnixMilli(),
+		}, nil
+	}
+
+	// User exists - password was already validated against config, generate tokens directly
+	// This allows the config password to be the master admin password
+	authResp, err := l.svcCtx.Auth.GenerateTokensForUser(l.ctx, user.ID, user.Email)
+	if err != nil {
+		l.Errorf("Failed to generate admin tokens: %v", err)
+		return nil, err
+	}
+
+	l.Infof("Admin logged in: %s", req.Email)
+	return &types.LoginResponse{
+		Token:        authResp.Token,
+		RefreshToken: authResp.RefreshToken,
+		ExpiresAt:    authResp.ExpiresAt.UnixMilli(),
 	}, nil
 }

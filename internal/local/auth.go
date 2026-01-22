@@ -256,6 +256,11 @@ func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword stri
 	})
 }
 
+// GenerateTokensForUser creates tokens for an existing user (used for admin login bypass)
+func (s *AuthService) GenerateTokensForUser(ctx context.Context, userID, email string) (*AuthResponse, error) {
+	return s.generateTokens(ctx, userID, email)
+}
+
 // generateTokens creates access and refresh tokens for a user
 func (s *AuthService) generateTokens(ctx context.Context, userID, email string) (*AuthResponse, error) {
 	now := time.Now()

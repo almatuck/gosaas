@@ -19,9 +19,19 @@ INSERT INTO user_preferences (
 RETURNING user_id, email_notifications, marketing_emails, timezone, language, theme, updated_at
 `
 
-func (q *Queries) CreateUserPreferences(ctx context.Context, userID string) (UserPreference, error) {
+type CreateUserPreferencesRow struct {
+	UserID             string `json:"user_id"`
+	EmailNotifications int64  `json:"email_notifications"`
+	MarketingEmails    int64  `json:"marketing_emails"`
+	Timezone           string `json:"timezone"`
+	Language           string `json:"language"`
+	Theme              string `json:"theme"`
+	UpdatedAt          int64  `json:"updated_at"`
+}
+
+func (q *Queries) CreateUserPreferences(ctx context.Context, userID string) (CreateUserPreferencesRow, error) {
 	row := q.db.QueryRowContext(ctx, createUserPreferences, userID)
-	var i UserPreference
+	var i CreateUserPreferencesRow
 	err := row.Scan(
 		&i.UserID,
 		&i.EmailNotifications,
@@ -50,9 +60,19 @@ WHERE user_id = ?1
 LIMIT 1
 `
 
-func (q *Queries) GetUserPreferences(ctx context.Context, userID string) (UserPreference, error) {
+type GetUserPreferencesRow struct {
+	UserID             string `json:"user_id"`
+	EmailNotifications int64  `json:"email_notifications"`
+	MarketingEmails    int64  `json:"marketing_emails"`
+	Timezone           string `json:"timezone"`
+	Language           string `json:"language"`
+	Theme              string `json:"theme"`
+	UpdatedAt          int64  `json:"updated_at"`
+}
+
+func (q *Queries) GetUserPreferences(ctx context.Context, userID string) (GetUserPreferencesRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserPreferences, userID)
-	var i UserPreference
+	var i GetUserPreferencesRow
 	err := row.Scan(
 		&i.UserID,
 		&i.EmailNotifications,

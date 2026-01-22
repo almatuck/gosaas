@@ -21,6 +21,7 @@ import (
 	"gosaas/internal/config"
 	"gosaas/internal/handler"
 	"gosaas/internal/middleware"
+	"gosaas/internal/oauth"
 	"gosaas/internal/realtime"
 	"gosaas/internal/svc"
 	"gosaas/internal/webhook"
@@ -168,6 +169,13 @@ func main() {
 		)
 	}
 
+	// Register OAuth callback handlers directly (bypasses go-zero for browser redirects)
+	if ctx.UseLocal() && c.Features.OAuthEnabled {
+		oauthHandler := oauth.NewHandler(ctx)
+		oauthHandler.RegisterRoutes(http.DefaultServeMux)
+		fmt.Println("OAuth callbacks registered at /oauth/{provider}/callback")
+	}
+
 	// Create WebSocket hub for real-time events
 	hub := realtime.NewHub()
 	go hub.Run(context.Background())
@@ -273,6 +281,12 @@ func main() {
 
 		// Route Levee email tracking/confirmation paths to default mux
 		if strings.HasPrefix(r.URL.Path, "/e/") || r.URL.Path == "/confirm-email" {
+			http.DefaultServeMux.ServeHTTP(w, r)
+			return
+		}
+
+		// Route OAuth callbacks to default mux (browser redirects, not API calls)
+		if strings.HasPrefix(r.URL.Path, "/oauth/") {
 			http.DefaultServeMux.ServeHTTP(w, r)
 			return
 		}

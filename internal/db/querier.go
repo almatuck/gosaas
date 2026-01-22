@@ -10,31 +10,60 @@ import (
 )
 
 type Querier interface {
+	// Organization Members
+	AddOrganizationMember(ctx context.Context, arg AddOrganizationMemberParams) (OrganizationMember, error)
 	CancelSubscription(ctx context.Context, arg CancelSubscriptionParams) error
 	CheckEmailExists(ctx context.Context, email string) (int64, error)
+	CheckSlugExists(ctx context.Context, slug string) (int64, error)
 	// Admin queries
 	CountActiveSubscriptions(ctx context.Context) (int64, error)
 	CountLeads(ctx context.Context, filterStatus interface{}) (int64, error)
+	CountOrganizationMembers(ctx context.Context, organizationID string) (int64, error)
 	CountSubscriptionsFiltered(ctx context.Context, statusFilter interface{}) (int64, error)
 	CountTrialSubscriptions(ctx context.Context) (int64, error)
+	CountUnreadNotifications(ctx context.Context, userID string) (int64, error)
 	// Admin queries
 	CountUsers(ctx context.Context) (int64, error)
 	CountUsersCreatedAfter(ctx context.Context, after int64) (int64, error)
 	CreateLead(ctx context.Context, arg CreateLeadParams) (Lead, error)
+	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
+	CreateOAuthConnection(ctx context.Context, arg CreateOAuthConnectionParams) (OauthConnection, error)
+	CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (Organization, error)
+	// Organization Invites
+	CreateOrganizationInvite(ctx context.Context, arg CreateOrganizationInviteParams) (OrganizationInvite, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	CreateUserPreferences(ctx context.Context, userID string) (UserPreference, error)
+	CreateUserFromOAuth(ctx context.Context, arg CreateUserFromOAuthParams) (User, error)
+	CreateUserPreferences(ctx context.Context, userID string) (CreateUserPreferencesRow, error)
+	DeleteExpiredInvites(ctx context.Context) error
 	DeleteExpiredRefreshTokens(ctx context.Context) error
+	DeleteInvite(ctx context.Context, id string) error
+	DeleteInviteByToken(ctx context.Context, token string) error
 	DeleteLead(ctx context.Context, id string) error
+	DeleteNotification(ctx context.Context, arg DeleteNotificationParams) error
+	DeleteOAuthConnection(ctx context.Context, arg DeleteOAuthConnectionParams) error
+	DeleteOAuthConnectionByProvider(ctx context.Context, arg DeleteOAuthConnectionByProviderParams) error
+	DeleteOldNotifications(ctx context.Context, before int64) error
+	DeleteOrganization(ctx context.Context, id string) error
 	DeleteRefreshToken(ctx context.Context, tokenHash string) error
 	DeleteRefreshTokensByUserID(ctx context.Context, userID string) error
 	DeleteSubscription(ctx context.Context, userID string) error
 	DeleteUser(ctx context.Context, id string) error
 	DeleteUserPreferences(ctx context.Context, userID string) error
 	DowngradeToFree(ctx context.Context, stripeSubscriptionID sql.NullString) error
+	GetCurrentOrganization(ctx context.Context, userID string) (sql.NullString, error)
+	GetInappNotificationsSetting(ctx context.Context, userID string) (int64, error)
+	GetInviteByEmail(ctx context.Context, arg GetInviteByEmailParams) (OrganizationInvite, error)
+	GetInviteByToken(ctx context.Context, token string) (GetInviteByTokenRow, error)
 	GetLeadByEmail(ctx context.Context, email string) (Lead, error)
 	GetLeadByID(ctx context.Context, id string) (Lead, error)
+	GetNotification(ctx context.Context, arg GetNotificationParams) (Notification, error)
+	GetOAuthConnectionByProvider(ctx context.Context, arg GetOAuthConnectionByProviderParams) (OauthConnection, error)
+	GetOAuthConnectionByUserAndProvider(ctx context.Context, arg GetOAuthConnectionByUserAndProviderParams) (OauthConnection, error)
+	GetOrganizationByID(ctx context.Context, id string) (Organization, error)
+	GetOrganizationBySlug(ctx context.Context, slug string) (Organization, error)
+	GetOrganizationMember(ctx context.Context, arg GetOrganizationMemberParams) (GetOrganizationMemberRow, error)
 	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetSubscriptionByStripeCustomerID(ctx context.Context, stripeCustomerID sql.NullString) (Subscription, error)
 	GetSubscriptionByStripeSubID(ctx context.Context, stripeSubscriptionID sql.NullString) (Subscription, error)
@@ -43,14 +72,29 @@ type Querier interface {
 	GetUserByEmailVerifyToken(ctx context.Context, token sql.NullString) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 	GetUserByPasswordResetToken(ctx context.Context, token sql.NullString) (User, error)
-	GetUserPreferences(ctx context.Context, userID string) (UserPreference, error)
+	GetUserPreferences(ctx context.Context, userID string) (GetUserPreferencesRow, error)
 	ListLeads(ctx context.Context, arg ListLeadsParams) ([]Lead, error)
+	ListOrganizationInvites(ctx context.Context, organizationID string) ([]ListOrganizationInvitesRow, error)
+	ListOrganizationMembers(ctx context.Context, organizationID string) ([]ListOrganizationMembersRow, error)
 	ListSubscriptionsPaginated(ctx context.Context, arg ListSubscriptionsPaginatedParams) ([]ListSubscriptionsPaginatedRow, error)
+	ListUnreadNotifications(ctx context.Context, arg ListUnreadNotificationsParams) ([]Notification, error)
+	ListUserNotifications(ctx context.Context, arg ListUserNotificationsParams) ([]Notification, error)
+	ListUserOAuthConnections(ctx context.Context, userID string) ([]OauthConnection, error)
+	ListUserOrganizations(ctx context.Context, userID string) ([]Organization, error)
 	ListUsersPaginated(ctx context.Context, arg ListUsersPaginatedParams) ([]ListUsersPaginatedRow, error)
+	MarkAllNotificationsRead(ctx context.Context, userID string) error
+	MarkNotificationRead(ctx context.Context, arg MarkNotificationReadParams) error
+	RemoveOrganizationMember(ctx context.Context, arg RemoveOrganizationMemberParams) error
+	// User Preferences (org related)
+	SetCurrentOrganization(ctx context.Context, arg SetCurrentOrganizationParams) error
 	SetEmailVerified(ctx context.Context, id string) error
 	SetEmailVerifyToken(ctx context.Context, arg SetEmailVerifyTokenParams) error
+	SetInappNotificationsSetting(ctx context.Context, arg SetInappNotificationsSettingParams) error
 	SetPasswordResetToken(ctx context.Context, arg SetPasswordResetTokenParams) error
 	UpdateLeadStatus(ctx context.Context, arg UpdateLeadStatusParams) error
+	UpdateMemberRole(ctx context.Context, arg UpdateMemberRoleParams) error
+	UpdateOAuthConnection(ctx context.Context, arg UpdateOAuthConnectionParams) error
+	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) error
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
 	UpdateSubscriptionStripeIDs(ctx context.Context, arg UpdateSubscriptionStripeIDsParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error

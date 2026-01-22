@@ -16,6 +16,14 @@ export interface AuthState {
 }
 
 /**
+ * Session expiry state interface
+ */
+export interface SessionExpiryState {
+	showWarning: boolean;
+	secondsRemaining: number;
+}
+
+/**
  * Password reset request state
  */
 export interface PasswordResetState {
@@ -361,6 +369,33 @@ function createAuthStore() {
 			if (!state.expiresAt) return false;
 			const fiveMinutes = 5 * 60 * 1000;
 			return state.expiresAt - Date.now() < fiveMinutes;
+		},
+
+		/**
+		 * Set tokens from OAuth callback (used by /auth/callback page)
+		 */
+		async setOAuthTokens(token: string, refreshToken: string, expiresAt: number): Promise<boolean> {
+			try {
+				storeTokens(token, refreshToken, expiresAt);
+
+				update((state) => ({
+					...state,
+					token,
+					refreshToken,
+					expiresAt,
+					isLoading: false,
+					error: null
+				}));
+
+				// Fetch user profile
+				await this.fetchCurrentUser();
+
+				logger.info('OAuth login successful');
+				return true;
+			} catch (error) {
+				logger.error('OAuth token setup failed', error);
+				return false;
+			}
 		}
 	};
 }
@@ -468,3 +503,157 @@ function createPasswordResetStore() {
 }
 
 export const passwordReset = createPasswordResetStore();
+
+/**
+ * Session expiry monitoring
+ * Shows a warning modal before the session expires, giving users a chance to continue
+ */
+const SESSION_WARNING_SECONDS = 120; // Show warning 2 minutes before expiry
+const SESSION_CHECK_INTERVAL = 10000; // Check every 10 seconds
+
+let sessionMonitorInterval: ReturnType<typeof setInterval> | null = null;
+let countdownInterval: ReturnType<typeof setInterval> | null = null;
+
+function createSessionExpiryStore() {
+	const { subscribe, set, update } = writable<SessionExpiryState>({
+		showWarning: false,
+		secondsRemaining: 0
+	});
+
+	function startCountdown(secondsUntilExpiry: number) {
+		// Clear any existing countdown
+		if (countdownInterval) {
+			clearInterval(countdownInterval);
+		}
+
+		update((state) => ({
+			...state,
+			showWarning: true,
+			secondsRemaining: Math.max(0, Math.floor(secondsUntilExpiry))
+		}));
+
+		countdownInterval = setInterval(() => {
+			update((state) => {
+				const newSeconds = state.secondsRemaining - 1;
+				if (newSeconds <= 0) {
+					// Time's up - auto logout
+					if (countdownInterval) {
+						clearInterval(countdownInterval);
+						countdownInterval = null;
+					}
+					auth.logout();
+					// Redirect to login
+					if (typeof window !== 'undefined') {
+						window.location.href = '/auth/login?expired=true';
+					}
+					return { showWarning: false, secondsRemaining: 0 };
+				}
+				return { ...state, secondsRemaining: newSeconds };
+			});
+		}, 1000);
+	}
+
+	function stopCountdown() {
+		if (countdownInterval) {
+			clearInterval(countdownInterval);
+			countdownInterval = null;
+		}
+		set({ showWarning: false, secondsRemaining: 0 });
+	}
+
+	return {
+		subscribe,
+
+		/**
+		 * Start monitoring the session for expiry
+		 * Call this when the app initializes with an authenticated user
+		 */
+		startMonitoring(): void {
+			if (typeof window === 'undefined') return;
+
+			// Clear any existing monitor
+			this.stopMonitoring();
+
+			const checkSession = () => {
+				const authState = get(auth);
+				if (!authState.token || !authState.expiresAt) {
+					return;
+				}
+
+				const now = Date.now();
+				const expiresAt = authState.expiresAt;
+				const secondsUntilExpiry = Math.floor((expiresAt - now) / 1000);
+
+				// If already expired, logout
+				if (secondsUntilExpiry <= 0) {
+					auth.logout();
+					if (typeof window !== 'undefined') {
+						window.location.href = '/auth/login?expired=true';
+					}
+					return;
+				}
+
+				// If within warning window, show the modal
+				const currentState = get({ subscribe });
+				if (secondsUntilExpiry <= SESSION_WARNING_SECONDS && !currentState.showWarning) {
+					logger.info('Session expiring soon, showing warning modal');
+					startCountdown(secondsUntilExpiry);
+				}
+			};
+
+			// Check immediately
+			checkSession();
+
+			// Then check periodically
+			sessionMonitorInterval = setInterval(checkSession, SESSION_CHECK_INTERVAL);
+			logger.debug('Session monitor started');
+		},
+
+		/**
+		 * Stop monitoring the session
+		 * Call this on logout
+		 */
+		stopMonitoring(): void {
+			if (sessionMonitorInterval) {
+				clearInterval(sessionMonitorInterval);
+				sessionMonitorInterval = null;
+			}
+			stopCountdown();
+			logger.debug('Session monitor stopped');
+		},
+
+		/**
+		 * Continue the session by refreshing the token
+		 * Call this when user clicks "Continue Session"
+		 */
+		async continueSession(): Promise<boolean> {
+			stopCountdown();
+			const success = await auth.refreshAuthToken();
+			if (success) {
+				logger.info('Session continued successfully');
+				// Restart monitoring with new expiry
+				this.startMonitoring();
+			} else {
+				logger.warn('Failed to continue session, logging out');
+				auth.logout();
+				if (typeof window !== 'undefined') {
+					window.location.href = '/auth/login?expired=true';
+				}
+			}
+			return success;
+		},
+
+		/**
+		 * Dismiss the warning (user chose to logout)
+		 */
+		dismiss(): void {
+			stopCountdown();
+		}
+	};
+}
+
+export const sessionExpiry = createSessionExpiryStore();
+
+// Derived store for easy access to warning state
+export const showSessionWarning = derived(sessionExpiry, ($se) => $se.showWarning);
+export const sessionSecondsRemaining = derived(sessionExpiry, ($se) => $se.secondsRemaining);

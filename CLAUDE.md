@@ -18,6 +18,11 @@ go test -v -run TestName ./internal/logic/auth/        # Single test
 cd app && pnpm check                                   # TypeScript check
 cd app && pnpm test:unit                               # Frontend tests
 
+# Database (standalone mode)
+make migrate-up       # Run pending migrations
+make migrate-down     # Rollback last migration
+make migrate-status   # Check migration status
+
 # Before committing
 make build && cd app && pnpm build
 ```
@@ -96,6 +101,7 @@ Key methods: `l.svcCtx.UseLocal()`, `l.svcCtx.UseLevee()`, `l.svcCtx.DB`, `l.svc
 - **pnpm only** - Never npm or yarn
 - **Styles in app.css only** - No inline styles or `<style>` blocks
 - **Svelte 5 runes** - `$state`, `$derived`, `$props`, `$effect` (not Svelte 4 `export let`, `$:`, `<slot>`)
+- **DaisyUI components** - Use DaisyUI classes for UI components (btn, card, modal, etc.)
 - **Idiomatic Go** - One function with parameters, not multiple variations
 - **Minimal changes** - Never remove code that appears unused without asking
 - **Support both modes** - Logic handlers must work with UseLocal() and UseLevee()
@@ -112,7 +118,12 @@ Key methods: `l.svcCtx.UseLocal()`, `l.svcCtx.UseLevee()`, `l.svcCtx.DB`, `l.svc
 
 When user runs `/init`, follow the interactive setup in `AI.md`:
 1. Environment setup (install.sh)
-2. Business discovery
-3. Research (optional, via `RESEARCH-PLAN.md`)
-4. Auto-customize (site.ts, landing page, theme, pricing)
-5. Verify and launch
+2. Business discovery - ask what they want to build
+3. Research (optional) - run 14-step validation from `RESEARCH-PLAN.md`, outputs to `./plan/`
+4. Auto-customize - update site.ts, landing page, theme (app.css), pricing (gosaas.yaml)
+5. Verify and launch - `make build && cd app && pnpm build`
+
+## Admin Backoffice
+
+Access admin dashboard at `/admin` (requires `ADMIN_USERNAME` and `ADMIN_PASSWORD` from .env).
+Admin API routes use JWT + basic auth middleware (`internal/middleware/adminauth.go`).

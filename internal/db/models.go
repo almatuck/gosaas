@@ -18,6 +18,62 @@ type Lead struct {
 	CreatedAt int64          `json:"created_at"`
 }
 
+type Notification struct {
+	ID        string         `json:"id"`
+	UserID    string         `json:"user_id"`
+	Type      string         `json:"type"`
+	Title     string         `json:"title"`
+	Body      sql.NullString `json:"body"`
+	ActionUrl sql.NullString `json:"action_url"`
+	Icon      sql.NullString `json:"icon"`
+	ReadAt    sql.NullInt64  `json:"read_at"`
+	CreatedAt int64          `json:"created_at"`
+}
+
+type OauthConnection struct {
+	ID             string         `json:"id"`
+	UserID         string         `json:"user_id"`
+	Provider       string         `json:"provider"`
+	ProviderUserID string         `json:"provider_user_id"`
+	Email          sql.NullString `json:"email"`
+	Name           sql.NullString `json:"name"`
+	AvatarUrl      sql.NullString `json:"avatar_url"`
+	AccessToken    sql.NullString `json:"access_token"`
+	RefreshToken   sql.NullString `json:"refresh_token"`
+	ExpiresAt      sql.NullInt64  `json:"expires_at"`
+	CreatedAt      int64          `json:"created_at"`
+	UpdatedAt      int64          `json:"updated_at"`
+}
+
+type Organization struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Slug      string         `json:"slug"`
+	LogoUrl   sql.NullString `json:"logo_url"`
+	OwnerID   string         `json:"owner_id"`
+	CreatedAt int64          `json:"created_at"`
+	UpdatedAt int64          `json:"updated_at"`
+}
+
+type OrganizationInvite struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organization_id"`
+	Email          string `json:"email"`
+	Role           string `json:"role"`
+	Token          string `json:"token"`
+	InvitedBy      string `json:"invited_by"`
+	ExpiresAt      int64  `json:"expires_at"`
+	CreatedAt      int64  `json:"created_at"`
+}
+
+type OrganizationMember struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organization_id"`
+	UserID         string `json:"user_id"`
+	Role           string `json:"role"`
+	JoinedAt       int64  `json:"joined_at"`
+}
+
 type RefreshToken struct {
 	ID        string `json:"id"`
 	UserID    string `json:"user_id"`
@@ -56,11 +112,13 @@ type User struct {
 }
 
 type UserPreference struct {
-	UserID             string `json:"user_id"`
-	EmailNotifications int64  `json:"email_notifications"`
-	MarketingEmails    int64  `json:"marketing_emails"`
-	Timezone           string `json:"timezone"`
-	Language           string `json:"language"`
-	Theme              string `json:"theme"`
-	UpdatedAt          int64  `json:"updated_at"`
+	UserID                string         `json:"user_id"`
+	EmailNotifications    int64          `json:"email_notifications"`
+	MarketingEmails       int64          `json:"marketing_emails"`
+	Timezone              string         `json:"timezone"`
+	Language              string         `json:"language"`
+	Theme                 string         `json:"theme"`
+	UpdatedAt             int64          `json:"updated_at"`
+	CurrentOrganizationID sql.NullString `json:"current_organization_id"`
+	InappNotifications    int64          `json:"inapp_notifications"`
 }

@@ -71,6 +71,11 @@ type ResetPasswordRequest {
 	NewPassword string `json:"newPassword"`
 }
 
+type AuthConfigResponse {
+	GoogleEnabled bool `json:"googleEnabled"`
+	GitHubEnabled bool `json:"githubEnabled"`
+}
+
 // =====================================================
 // USER TYPES
 // =====================================================
@@ -266,6 +271,10 @@ service gosaas {
 	@doc "Resend email verification"
 	@handler ResendVerification
 	post /auth/resend-verification (ResendVerificationRequest) returns (MessageResponse)
+
+	@doc "Get auth configuration (OAuth providers enabled)"
+	@handler GetAuthConfig
+	get /auth/config returns (AuthConfigResponse)
 }
 
 @server (
@@ -423,5 +432,359 @@ service gosaas {
 	@doc "List all subscriptions (paginated)"
 	@handler AdminListSubscriptions
 	get /admin/subscriptions (AdminListSubscriptionsRequest) returns (AdminListSubscriptionsResponse)
+}
+
+// =====================================================
+// ORGANIZATION TYPES
+// =====================================================
+type Organization {
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	Slug      string `json:"slug"`
+	LogoUrl   string `json:"logoUrl,omitempty"`
+	OwnerId   string `json:"ownerId"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+type OrganizationMember {
+	Id        string `json:"id"`
+	UserId    string `json:"userId"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	AvatarUrl string `json:"avatarUrl,omitempty"`
+	Role      string `json:"role"`
+	JoinedAt  string `json:"joinedAt"`
+}
+
+type OrganizationInvite {
+	Id               string `json:"id"`
+	Email            string `json:"email"`
+	Role             string `json:"role"`
+	InviterName      string `json:"inviterName"`
+	InviterEmail     string `json:"inviterEmail"`
+	OrganizationName string `json:"organizationName,omitempty"`
+	ExpiresAt        string `json:"expiresAt"`
+	CreatedAt        string `json:"createdAt"`
+}
+
+type CreateOrganizationRequest {
+	Name    string `json:"name"`
+	Slug    string `json:"slug,optional"`
+	LogoUrl string `json:"logoUrl,optional"`
+}
+
+type CreateOrganizationResponse {
+	Organization Organization `json:"organization"`
+}
+
+type GetOrganizationResponse {
+	Organization Organization `json:"organization"`
+	Role         string       `json:"role"`
+}
+
+type ListOrganizationsResponse {
+	Organizations []Organization `json:"organizations"`
+}
+
+type UpdateOrganizationRequest {
+	Id      string `path:"id"`
+	Name    string `json:"name,optional"`
+	Slug    string `json:"slug,optional"`
+	LogoUrl string `json:"logoUrl,optional"`
+}
+
+type ListMembersResponse {
+	Members []OrganizationMember `json:"members"`
+}
+
+type InviteMemberRequest {
+	Id    string `path:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role,optional"`
+}
+
+type InviteMemberResponse {
+	Invite OrganizationInvite `json:"invite"`
+}
+
+type ListInvitesResponse {
+	Invites []OrganizationInvite `json:"invites"`
+}
+
+type UpdateMemberRoleRequest {
+	OrgId  string `path:"orgId"`
+	UserId string `path:"userId"`
+	Role   string `json:"role"`
+}
+
+type AcceptInviteRequest {
+	Token string `json:"token"`
+}
+
+type AcceptInviteResponse {
+	Organization Organization `json:"organization"`
+	Message      string       `json:"message"`
+}
+
+type GetInviteByTokenRequest {
+	Token string `path:"token"`
+}
+
+type GetInviteByTokenResponse {
+	Invite           OrganizationInvite `json:"invite"`
+	OrganizationName string             `json:"organizationName"`
+	OrganizationSlug string             `json:"organizationSlug"`
+}
+
+type SwitchOrganizationRequest {
+	OrganizationId string `json:"organizationId"`
+}
+
+type GetOrganizationRequest {
+	Id string `path:"id"`
+}
+
+type DeleteOrganizationRequest {
+	Id string `path:"id"`
+}
+
+type ListMembersRequest {
+	Id string `path:"id"`
+}
+
+type ListInvitesRequest {
+	Id string `path:"id"`
+}
+
+type LeaveOrganizationRequest {
+	Id string `path:"id"`
+}
+
+type RevokeInviteRequest {
+	OrgId    string `path:"orgId"`
+	InviteId string `path:"inviteId"`
+}
+
+type RemoveMemberRequest {
+	OrgId  string `path:"orgId"`
+	UserId string `path:"userId"`
+}
+
+// =====================================================
+// NOTIFICATION TYPES
+// =====================================================
+type Notification {
+	Id        string `json:"id"`
+	Type      string `json:"type"`
+	Title     string `json:"title"`
+	Body      string `json:"body,omitempty"`
+	ActionUrl string `json:"actionUrl,omitempty"`
+	Icon      string `json:"icon,omitempty"`
+	ReadAt    string `json:"readAt,omitempty"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type ListNotificationsRequest {
+	Page     int  `form:"page,optional"`
+	PageSize int  `form:"pageSize,optional"`
+	Unread   bool `form:"unread,optional"`
+}
+
+type ListNotificationsResponse {
+	Notifications []Notification `json:"notifications"`
+	UnreadCount   int            `json:"unreadCount"`
+	TotalCount    int            `json:"totalCount"`
+}
+
+type GetUnreadCountResponse {
+	Count int `json:"count"`
+}
+
+type MarkNotificationReadRequest {
+	Id string `path:"id"`
+}
+
+type DeleteNotificationRequest {
+	Id string `path:"id"`
+}
+
+// =====================================================
+// OAUTH TYPES
+// =====================================================
+type OAuthProvider {
+	Name      string `json:"name"`
+	Connected bool   `json:"connected"`
+	Email     string `json:"email,omitempty"`
+}
+
+type ListOAuthProvidersResponse {
+	Providers []OAuthProvider `json:"providers"`
+}
+
+type OAuthLoginRequest {
+	Provider string `path:"provider"`
+	Code     string `json:"code"`
+	State    string `json:"state,optional"`
+}
+
+type OAuthLoginResponse {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresAt    int64  `json:"expiresAt"`
+	IsNewUser    bool   `json:"isNewUser"`
+}
+
+type GetOAuthUrlRequest {
+	Provider    string `path:"provider"`
+	RedirectUrl string `form:"redirectUrl,optional"`
+}
+
+type GetOAuthUrlResponse {
+	Url   string `json:"url"`
+	State string `json:"state"`
+}
+
+type DisconnectOAuthRequest {
+	Provider string `path:"provider"`
+}
+
+// =====================================================
+// ORGANIZATION SERVICES
+// =====================================================
+@server (
+	prefix: /api/v1
+	group:  organization
+	jwt:    Auth
+)
+service gosaas {
+	@doc "Create a new organization"
+	@handler CreateOrganization
+	post /organizations (CreateOrganizationRequest) returns (CreateOrganizationResponse)
+
+	@doc "List user's organizations"
+	@handler ListOrganizations
+	get /organizations returns (ListOrganizationsResponse)
+
+	@doc "Get organization by ID"
+	@handler GetOrganization
+	get /organizations/:id (GetOrganizationRequest) returns (GetOrganizationResponse)
+
+	@doc "Update organization"
+	@handler UpdateOrganization
+	put /organizations/:id (UpdateOrganizationRequest) returns (GetOrganizationResponse)
+
+	@doc "Delete organization"
+	@handler DeleteOrganization
+	delete /organizations/:id (DeleteOrganizationRequest) returns (MessageResponse)
+
+	@doc "List organization members"
+	@handler ListMembers
+	get /organizations/:id/members (ListMembersRequest) returns (ListMembersResponse)
+
+	@doc "Invite member to organization"
+	@handler InviteMember
+	post /organizations/:id/invites (InviteMemberRequest) returns (InviteMemberResponse)
+
+	@doc "List pending invites"
+	@handler ListInvites
+	get /organizations/:id/invites (ListInvitesRequest) returns (ListInvitesResponse)
+
+	@doc "Revoke invite"
+	@handler RevokeInvite
+	delete /organizations/:orgId/invites/:inviteId (RevokeInviteRequest) returns (MessageResponse)
+
+	@doc "Update member role"
+	@handler UpdateMemberRole
+	put /organizations/:orgId/members/:userId (UpdateMemberRoleRequest) returns (MessageResponse)
+
+	@doc "Remove member from organization"
+	@handler RemoveMember
+	delete /organizations/:orgId/members/:userId (RemoveMemberRequest) returns (MessageResponse)
+
+	@doc "Leave organization"
+	@handler LeaveOrganization
+	post /organizations/:id/leave (LeaveOrganizationRequest) returns (MessageResponse)
+
+	@doc "Switch current organization"
+	@handler SwitchOrganization
+	post /organizations/switch (SwitchOrganizationRequest) returns (MessageResponse)
+
+	@doc "Accept organization invite"
+	@handler AcceptInvite
+	post /organizations/invites/accept (AcceptInviteRequest) returns (AcceptInviteResponse)
+}
+
+// Public invite endpoint (no auth required to view invite details)
+@server (
+	prefix: /api/v1
+	group:  organization
+)
+service gosaas {
+	@doc "Get invite details by token"
+	@handler GetInviteByToken
+	get /organizations/invites/:token (GetInviteByTokenRequest) returns (GetInviteByTokenResponse)
+}
+
+// =====================================================
+// NOTIFICATION SERVICES
+// =====================================================
+@server (
+	prefix: /api/v1
+	group:  notification
+	jwt:    Auth
+)
+service gosaas {
+	@doc "List user notifications"
+	@handler ListNotifications
+	get /notifications (ListNotificationsRequest) returns (ListNotificationsResponse)
+
+	@doc "Get unread notification count"
+	@handler GetUnreadCount
+	get /notifications/unread-count returns (GetUnreadCountResponse)
+
+	@doc "Mark notification as read"
+	@handler MarkNotificationRead
+	put /notifications/:id/read (MarkNotificationReadRequest) returns (MessageResponse)
+
+	@doc "Mark all notifications as read"
+	@handler MarkAllNotificationsRead
+	put /notifications/read-all returns (MessageResponse)
+
+	@doc "Delete notification"
+	@handler DeleteNotification
+	delete /notifications/:id (DeleteNotificationRequest) returns (MessageResponse)
+}
+
+// =====================================================
+// OAUTH SERVICES
+// =====================================================
+@server (
+	prefix: /api/v1
+	group:  oauth
+)
+service gosaas {
+	@doc "Get OAuth authorization URL"
+	@handler GetOAuthUrl
+	get /oauth/:provider/url (GetOAuthUrlRequest) returns (GetOAuthUrlResponse)
+
+	@doc "OAuth callback - exchange code for tokens"
+	@handler OAuthCallback
+	post /oauth/:provider/callback (OAuthLoginRequest) returns (OAuthLoginResponse)
+}
+
+@server (
+	prefix: /api/v1
+	group:  oauth
+	jwt:    Auth
+)
+service gosaas {
+	@doc "List connected OAuth providers"
+	@handler ListOAuthProviders
+	get /oauth/providers returns (ListOAuthProvidersResponse)
+
+	@doc "Disconnect OAuth provider"
+	@handler DisconnectOAuth
+	delete /oauth/:provider (DisconnectOAuthRequest) returns (MessageResponse)
 }
 

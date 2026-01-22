@@ -9,6 +9,8 @@
 export { default as Page } from './Page.svelte';
 export { default as PageHeader } from './PageHeader.svelte';
 export { default as Card } from './Card.svelte';
+export { default as Container } from './Container.svelte';
+export { default as Section } from './Section.svelte';
 export { default as Divider } from './Divider.svelte';
 
 // Feedback Components
@@ -17,6 +19,8 @@ export { default as Toast } from './Toast.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
 export { default as LoadingSpinner } from './LoadingSpinner.svelte';
 export { default as ProgressBar } from './ProgressBar.svelte';
+export { default as ErrorBoundary } from './ErrorBoundary.svelte';
+export { default as SessionExpiryModal } from './SessionExpiryModal.svelte';
 
 // Form Components
 export { default as Button } from './Button.svelte';
@@ -31,6 +35,9 @@ export { default as Toggle } from './Toggle.svelte';
 export { default as Slider } from './Slider.svelte';
 export { default as DateRangePicker } from './DateRangePicker.svelte';
 export { default as DateFilterPopover } from './DateFilterPopover.svelte';
+export { default as FormField } from './FormField.svelte';
+export { default as Autocomplete } from './Autocomplete.svelte';
+export { default as TimePicker } from './TimePicker.svelte';
 
 // Navigation Components
 export { default as Tabs } from './Tabs.svelte';
@@ -47,6 +54,7 @@ export { default as Chart } from './Chart.svelte';
 export { default as Badge } from './Badge.svelte';
 export { default as Avatar } from './Avatar.svelte';
 export { default as CodeBlock } from './CodeBlock.svelte';
+export { default as Carousel } from './Carousel.svelte';
 
 // Overlays
 export { default as Modal } from './Modal.svelte';
@@ -73,3 +81,5 @@ export { default as Collapsible } from './Collapsible.svelte';
 export { default as DropdownMenu } from './DropdownMenu.svelte';
 export { default as Textarea } from './Textarea.svelte';
 export { default as Markdown } from './Markdown.svelte';
+export { default as NotificationBell } from './NotificationBell.svelte';
+export { default as OAuthButtons } from './OAuthButtons.svelte';

@@ -73,6 +73,13 @@ ${BOLD}OPTIONS:${NC}
   --smtp-host HOST       SMTP host (e.g., smtp.gmail.com)
   --smtp-user USER       SMTP username
   --smtp-pass PASS       SMTP password
+  --oauth                Enable OAuth login (will prompt for Google/GitHub credentials)
+  --google-id ID         Google OAuth client ID
+  --google-secret SECRET Google OAuth client secret
+  --github-id ID         GitHub OAuth client ID
+  --github-secret SECRET GitHub OAuth client secret
+  --no-orgs              Disable team/organization features
+  --no-notifications     Disable in-app notifications
   --dir PATH             Install directory (remote mode only, default: current dir)
   --no-deps              Skip installing dependencies
   --no-env               Skip creating .env file
@@ -128,6 +135,17 @@ SMTP_PORT="587"
 SMTP_USER=""
 SMTP_PASS=""
 
+# OAuth settings
+USE_OAUTH=false
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+
+# Feature toggles
+ENABLE_ORGANIZATIONS=true
+ENABLE_NOTIFICATIONS=true
+
 while [[ $# -gt 0 ]]; do
   case $1 in
     --help|-h)
@@ -171,6 +189,38 @@ while [[ $# -gt 0 ]]; do
       SMTP_PASS="$2"
       USE_SMTP=true
       shift 2
+      ;;
+    --oauth)
+      USE_OAUTH=true
+      shift
+      ;;
+    --google-id)
+      GOOGLE_CLIENT_ID="$2"
+      USE_OAUTH=true
+      shift 2
+      ;;
+    --google-secret)
+      GOOGLE_CLIENT_SECRET="$2"
+      USE_OAUTH=true
+      shift 2
+      ;;
+    --github-id)
+      GITHUB_CLIENT_ID="$2"
+      USE_OAUTH=true
+      shift 2
+      ;;
+    --github-secret)
+      GITHUB_CLIENT_SECRET="$2"
+      USE_OAUTH=true
+      shift 2
+      ;;
+    --no-orgs)
+      ENABLE_ORGANIZATIONS=false
+      shift
+      ;;
+    --no-notifications)
+      ENABLE_NOTIFICATIONS=false
+      shift
       ;;
     --dir)
       INSTALL_DIR="$2"
@@ -431,6 +481,54 @@ if [[ "$CREATE_ENV" == true ]]; then
     else
       print_warning "SMTP skipped (can configure later in .env)"
       USE_SMTP=false
+    fi
+    echo ""
+  fi
+
+  # Ask about OAuth social login (skip if using Levee - Levee handles OAuth)
+  if [[ "$USE_LEVEE" != true ]] && [[ "$USE_OAUTH" != true ]]; then
+    echo -e "  ${BOLD}OAuth / Social Login (optional):${NC}"
+    echo -e "  Allow users to sign in with Google and/or GitHub"
+    echo ""
+    read -p "  Configure OAuth now? [y/N] " OAUTH_CHOICE < /dev/tty
+    if [[ "$OAUTH_CHOICE" =~ ^[Yy]$ ]]; then
+      USE_OAUTH=true
+    fi
+  fi
+
+  if [[ "$USE_OAUTH" == true ]]; then
+    echo ""
+    print_step "OAuth configuration"
+    echo -e "  ${YELLOW}Press Enter to skip any provider${NC}"
+    echo ""
+
+    # Google OAuth
+    echo -e "  ${BOLD}Google OAuth${NC} (from https://console.cloud.google.com/apis/credentials)"
+    if [[ -z "$GOOGLE_CLIENT_ID" ]]; then
+      read -p "  Google Client ID: " GOOGLE_CLIENT_ID < /dev/tty
+    fi
+    if [[ -n "$GOOGLE_CLIENT_ID" ]] && [[ -z "$GOOGLE_CLIENT_SECRET" ]]; then
+      read -s -p "  Google Client Secret: " GOOGLE_CLIENT_SECRET < /dev/tty
+      echo ""
+    fi
+
+    echo ""
+
+    # GitHub OAuth
+    echo -e "  ${BOLD}GitHub OAuth${NC} (from https://github.com/settings/developers)"
+    if [[ -z "$GITHUB_CLIENT_ID" ]]; then
+      read -p "  GitHub Client ID: " GITHUB_CLIENT_ID < /dev/tty
+    fi
+    if [[ -n "$GITHUB_CLIENT_ID" ]] && [[ -z "$GITHUB_CLIENT_SECRET" ]]; then
+      read -s -p "  GitHub Client Secret: " GITHUB_CLIENT_SECRET < /dev/tty
+      echo ""
+    fi
+
+    if [[ -n "$GOOGLE_CLIENT_ID" ]] || [[ -n "$GITHUB_CLIENT_ID" ]]; then
+      print_success "OAuth configured"
+    else
+      print_warning "OAuth skipped (can configure later in .env)"
+      USE_OAUTH=false
     fi
     echo ""
   fi
@@ -872,6 +970,67 @@ SMTPEOF
 # LEVEE_API_KEY=lvk_your_api_key
 # LEVEE_BASE_URL=https://api.levee.sh
 LEVEEEOF
+
+      # Append OAuth configuration
+      if [[ "$USE_OAUTH" == true ]] && ([[ -n "$GOOGLE_CLIENT_ID" ]] || [[ -n "$GITHUB_CLIENT_ID" ]]); then
+        cat >> .env << OAUTHEOF
+
+# ============================================================
+# OAuth / Social Login
+# ============================================================
+OAUTH_ENABLED=true
+OAUTHEOF
+        if [[ -n "$GOOGLE_CLIENT_ID" ]]; then
+          cat >> .env << GOOGLEEOF
+GOOGLE_OAUTH_ENABLED=true
+GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+GOOGLEEOF
+        else
+          cat >> .env << GOOGLEEOF
+# GOOGLE_OAUTH_ENABLED=true
+# GOOGLE_CLIENT_ID=your-google-client-id
+# GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLEEOF
+        fi
+        if [[ -n "$GITHUB_CLIENT_ID" ]]; then
+          cat >> .env << GITHUBEOF
+GITHUB_OAUTH_ENABLED=true
+GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+GITHUBEOF
+        else
+          cat >> .env << GITHUBEOF
+# GITHUB_OAUTH_ENABLED=true
+# GITHUB_CLIENT_ID=your-github-client-id
+# GITHUB_CLIENT_SECRET=your-github-client-secret
+GITHUBEOF
+        fi
+      else
+        cat >> .env << OAUTHEOF
+
+# ============================================================
+# OAuth / Social Login (Optional)
+# ============================================================
+# OAUTH_ENABLED=true
+# GOOGLE_OAUTH_ENABLED=true
+# GOOGLE_CLIENT_ID=your-google-client-id
+# GOOGLE_CLIENT_SECRET=your-google-client-secret
+# GITHUB_OAUTH_ENABLED=true
+# GITHUB_CLIENT_ID=your-github-client-id
+# GITHUB_CLIENT_SECRET=your-github-client-secret
+OAUTHEOF
+      fi
+
+      # Append Features configuration
+      cat >> .env << FEATURESEOF
+
+# ============================================================
+# Features
+# ============================================================
+ORGANIZATIONS_ENABLED=${ENABLE_ORGANIZATIONS}
+NOTIFICATIONS_ENABLED=${ENABLE_NOTIFICATIONS}
+FEATURESEOF
     fi
 
     print_success ".env created with secure secret"

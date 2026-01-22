@@ -16,8 +16,8 @@ Admin:
 # Authentication configuration
 Auth:
   AccessSecret: ${ACCESS_SECRET}
-  AccessExpire: 7200 # 2 hours in seconds
-  RefreshTokenExpire: 604800 # 7 days in seconds
+  AccessExpire: 2592000 # 30 days in seconds
+  RefreshTokenExpire: 2592000 # 30 days in seconds
 
 # Database configuration (used when Levee is disabled)
 Database:
@@ -149,3 +149,19 @@ Levee:
   SubscriptionCancelledTemplate: "subscription-cancelled"
   PaymentFailedTemplate: "payment-failed"
   TrialEndingTemplate: "trial-ending"
+
+# OAuth / Social Login
+OAuth:
+  GoogleEnabled: ${GOOGLE_OAUTH_ENABLED}
+  GoogleClientID: ${GOOGLE_CLIENT_ID}
+  GoogleClientSecret: ${GOOGLE_CLIENT_SECRET}
+  GitHubEnabled: ${GITHUB_OAUTH_ENABLED}
+  GitHubClientID: ${GITHUB_CLIENT_ID}
+  GitHubClientSecret: ${GITHUB_CLIENT_SECRET}
+  CallbackBaseURL: ${APP_BASE_URL}
+
+# Feature Toggles
+Features:
+  OrganizationsEnabled: ${ORGANIZATIONS_ENABLED}
+  NotificationsEnabled: ${NOTIFICATIONS_ENABLED}
+  OAuthEnabled: ${OAUTH_ENABLED}
