@@ -58,7 +58,10 @@
 					{/each}
 				</ul>
 			{/if}
-			<Button type="primary" size="sm" href="/auth/register">Get Started</Button>
+			<div class="flex items-center gap-3">
+				<Button type="ghost" size="sm" href="/auth/login">Login</Button>
+				<Button type="primary" size="sm" href="/auth/register">Get Started</Button>
+			</div>
 		</div>
 
 		<!-- Mobile Menu Button -->
@@ -102,7 +105,10 @@
 					{/each}
 				</ul>
 			{/if}
-			<Button type="primary" href="/auth/register">Get Started</Button>
+			<div class="flex flex-col gap-3">
+				<Button type="ghost" href="/auth/login" class="w-full">Login</Button>
+				<Button type="primary" href="/auth/register" class="w-full">Get Started</Button>
+			</div>
 		</div>
 	{/if}
 </header>

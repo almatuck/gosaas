@@ -150,8 +150,7 @@
 				{:else}
 					{#each $notifications as n}
 						<div
-							class="group relative px-4 py-3 border-b border-base-200 hover:bg-base-200/50 transition-colors cursor-pointer"
-							class:bg-base-200/30={!n.readAt}
+							class="group relative px-4 py-3 border-b border-base-200 hover:bg-base-200/50 transition-colors cursor-pointer {!n.readAt ? 'bg-base-200/30' : ''}"
 							onclick={() => handleNotificationClick(n)}
 							onkeydown={(e) => e.key === 'Enter' && handleNotificationClick(n)}
 							role="menuitem"
@@ -190,7 +189,7 @@
 									<button
 										type="button"
 										class="btn btn-ghost btn-xs btn-circle"
-										onclick|stopPropagation={() => handleMarkAsRead(n.id)}
+										onclick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id); }}
 										title="Mark as read"
 									>
 										<Check class="w-3 h-3" />
@@ -199,7 +198,7 @@
 								<button
 									type="button"
 									class="btn btn-ghost btn-xs btn-circle text-error"
-									onclick|stopPropagation={() => handleDelete(n.id)}
+									onclick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
 									title="Delete"
 								>
 									<Trash2 class="w-3 h-3" />

@@ -1012,11 +1012,12 @@ GITHUBEOF
 # ============================================================
 # OAuth / Social Login (Optional)
 # ============================================================
-# OAUTH_ENABLED=true
-# GOOGLE_OAUTH_ENABLED=true
+# To enable OAuth, set OAUTH_ENABLED=true and configure providers below
+OAUTH_ENABLED=false
+GOOGLE_OAUTH_ENABLED=false
 # GOOGLE_CLIENT_ID=your-google-client-id
 # GOOGLE_CLIENT_SECRET=your-google-client-secret
-# GITHUB_OAUTH_ENABLED=true
+GITHUB_OAUTH_ENABLED=false
 # GITHUB_CLIENT_ID=your-github-client-id
 # GITHUB_CLIENT_SECRET=your-github-client-secret
 OAUTHEOF

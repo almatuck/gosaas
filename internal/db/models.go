@@ -18,6 +18,54 @@ type Lead struct {
 	CreatedAt int64          `json:"created_at"`
 }
 
+type McpOauthClient struct {
+	ID               string         `json:"id"`
+	ClientID         string         `json:"client_id"`
+	ClientSecretHash string         `json:"client_secret_hash"`
+	Name             string         `json:"name"`
+	Description      sql.NullString `json:"description"`
+	RedirectUris     string         `json:"redirect_uris"`
+	Scopes           sql.NullString `json:"scopes"`
+	IsConfidential   sql.NullInt64  `json:"is_confidential"`
+	CreatedAt        int64          `json:"created_at"`
+	UpdatedAt        int64          `json:"updated_at"`
+}
+
+type McpOauthCode struct {
+	ID                  string         `json:"id"`
+	ClientID            string         `json:"client_id"`
+	UserID              string         `json:"user_id"`
+	CodeHash            string         `json:"code_hash"`
+	RedirectUri         string         `json:"redirect_uri"`
+	Scopes              string         `json:"scopes"`
+	CodeChallenge       sql.NullString `json:"code_challenge"`
+	CodeChallengeMethod sql.NullString `json:"code_challenge_method"`
+	ExpiresAt           string         `json:"expires_at"`
+	UsedAt              sql.NullString `json:"used_at"`
+	CreatedAt           int64          `json:"created_at"`
+}
+
+type McpOauthToken struct {
+	ID               string         `json:"id"`
+	ClientID         string         `json:"client_id"`
+	UserID           string         `json:"user_id"`
+	AccessTokenHash  string         `json:"access_token_hash"`
+	RefreshTokenHash sql.NullString `json:"refresh_token_hash"`
+	Scopes           string         `json:"scopes"`
+	ExpiresAt        string         `json:"expires_at"`
+	RefreshExpiresAt sql.NullString `json:"refresh_expires_at"`
+	RevokedAt        sql.NullString `json:"revoked_at"`
+	CreatedAt        int64          `json:"created_at"`
+}
+
+type McpSession struct {
+	SessionID string         `json:"session_id"`
+	UserID    string         `json:"user_id"`
+	OrgID     sql.NullString `json:"org_id"`
+	CreatedAt int64          `json:"created_at"`
+	UpdatedAt int64          `json:"updated_at"`
+}
+
 type Notification struct {
 	ID        string         `json:"id"`
 	UserID    string         `json:"user_id"`

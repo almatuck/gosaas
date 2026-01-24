@@ -177,10 +177,7 @@
 			{#each slides as _, index}
 				<button
 					type="button"
-					class="w-2 h-2 rounded-full transition-all duration-300"
-					class:bg-white={index === currentIndex}
-					class:w-4={index === currentIndex}
-					class:bg-white/50={index !== currentIndex}
+					class="h-2 rounded-full transition-all duration-300 {index === currentIndex ? 'w-4 bg-white' : 'w-2 bg-white/50'}"
 					onclick={() => goTo(index)}
 					aria-label="Go to slide {index + 1}"
 					aria-current={index === currentIndex ? 'true' : undefined}

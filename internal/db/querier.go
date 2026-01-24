@@ -15,6 +15,8 @@ type Querier interface {
 	CancelSubscription(ctx context.Context, arg CancelSubscriptionParams) error
 	CheckEmailExists(ctx context.Context, email string) (int64, error)
 	CheckSlugExists(ctx context.Context, slug string) (int64, error)
+	// Run periodically to clean up stale sessions (older than 7 days)
+	CleanupOldMCPSessions(ctx context.Context) error
 	// Admin queries
 	CountActiveSubscriptions(ctx context.Context) (int64, error)
 	CountLeads(ctx context.Context, filterStatus interface{}) (int64, error)
@@ -26,6 +28,19 @@ type Querier interface {
 	CountUsers(ctx context.Context) (int64, error)
 	CountUsersCreatedAfter(ctx context.Context, after int64) (int64, error)
 	CreateLead(ctx context.Context, arg CreateLeadParams) (Lead, error)
+	// MCP OAuth queries for Dynamic Client Registration and OAuth flows
+	// =============================================================================
+	// OAuth Clients
+	// =============================================================================
+	CreateMCPOAuthClient(ctx context.Context, arg CreateMCPOAuthClientParams) (McpOauthClient, error)
+	// =============================================================================
+	// OAuth Authorization Codes
+	// =============================================================================
+	CreateMCPOAuthCode(ctx context.Context, arg CreateMCPOAuthCodeParams) (McpOauthCode, error)
+	// =============================================================================
+	// OAuth Tokens
+	// =============================================================================
+	CreateMCPOAuthToken(ctx context.Context, arg CreateMCPOAuthTokenParams) (McpOauthToken, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateOAuthConnection(ctx context.Context, arg CreateOAuthConnectionParams) (OauthConnection, error)
 	CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (Organization, error)
@@ -41,6 +56,7 @@ type Querier interface {
 	DeleteInvite(ctx context.Context, id string) error
 	DeleteInviteByToken(ctx context.Context, token string) error
 	DeleteLead(ctx context.Context, id string) error
+	DeleteMCPSession(ctx context.Context, sessionID string) error
 	DeleteNotification(ctx context.Context, arg DeleteNotificationParams) error
 	DeleteOAuthConnection(ctx context.Context, arg DeleteOAuthConnectionParams) error
 	DeleteOAuthConnectionByProvider(ctx context.Context, arg DeleteOAuthConnectionByProviderParams) error
@@ -58,6 +74,15 @@ type Querier interface {
 	GetInviteByToken(ctx context.Context, token string) (GetInviteByTokenRow, error)
 	GetLeadByEmail(ctx context.Context, email string) (Lead, error)
 	GetLeadByID(ctx context.Context, id string) (Lead, error)
+	GetMCPOAuthClientByClientID(ctx context.Context, clientID string) (McpOauthClient, error)
+	GetMCPOAuthClientByID(ctx context.Context, id string) (McpOauthClient, error)
+	GetMCPOAuthCodeByHash(ctx context.Context, codeHash string) (GetMCPOAuthCodeByHashRow, error)
+	GetMCPOAuthTokenByAccessHash(ctx context.Context, accessTokenHash string) (McpOauthToken, error)
+	GetMCPOAuthTokenByRefreshHash(ctx context.Context, refreshTokenHash sql.NullString) (McpOauthToken, error)
+	// MCP Session queries for organization selection persistence
+	GetMCPSession(ctx context.Context, sessionID string) (McpSession, error)
+	// Fallback: get most recent org selection for a user (when session ID changes)
+	GetMCPSessionByUser(ctx context.Context, userID string) (McpSession, error)
 	GetNotification(ctx context.Context, arg GetNotificationParams) (Notification, error)
 	GetOAuthConnectionByProvider(ctx context.Context, arg GetOAuthConnectionByProviderParams) (OauthConnection, error)
 	GetOAuthConnectionByUserAndProvider(ctx context.Context, arg GetOAuthConnectionByUserAndProviderParams) (OauthConnection, error)
@@ -83,8 +108,11 @@ type Querier interface {
 	ListUserOrganizations(ctx context.Context, userID string) ([]Organization, error)
 	ListUsersPaginated(ctx context.Context, arg ListUsersPaginatedParams) ([]ListUsersPaginatedRow, error)
 	MarkAllNotificationsRead(ctx context.Context, userID string) error
+	MarkMCPOAuthCodeUsed(ctx context.Context, id string) error
 	MarkNotificationRead(ctx context.Context, arg MarkNotificationReadParams) error
 	RemoveOrganizationMember(ctx context.Context, arg RemoveOrganizationMemberParams) error
+	RevokeMCPOAuthToken(ctx context.Context, id string) error
+	RevokeUserMCPOAuthTokens(ctx context.Context, userID string) error
 	// User Preferences (org related)
 	SetCurrentOrganization(ctx context.Context, arg SetCurrentOrganizationParams) error
 	SetEmailVerified(ctx context.Context, id string) error
@@ -100,6 +128,8 @@ type Querier interface {
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
 	UpdateUserPreferences(ctx context.Context, arg UpdateUserPreferencesParams) error
+	// Persist org selection (upsert to handle both new and existing sessions)
+	UpsertMCPSession(ctx context.Context, arg UpsertMCPSessionParams) error
 }
 
 var _ Querier = (*Queries)(nil)

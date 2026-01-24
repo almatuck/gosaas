@@ -30,9 +30,10 @@
 
 	// Handle errors from child components
 	function handleError(e: ErrorEvent) {
-		error = e.error || new Error(e.message);
+		const err = e.error || new Error(e.message);
+		error = err;
 		errorInfo = e.filename ? `${e.filename}:${e.lineno}:${e.colno}` : '';
-		onError?.(error, errorInfo);
+		onError?.(err, errorInfo);
 	}
 
 	// Attach global error handler when mounted

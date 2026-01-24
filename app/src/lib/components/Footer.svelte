@@ -17,7 +17,8 @@
 
 	const footerLinks = {
 		product: [
-			{ label: 'Pricing', href: '/pricing' }
+			{ label: 'Pricing', href: '/pricing' },
+			{ label: 'Login', href: '/auth/login' }
 		],
 		legal: [
 			{ label: 'Privacy Policy', href: site.legal.privacyUrl },

@@ -20,6 +20,8 @@ import (
 	"gosaas/app"
 	"gosaas/internal/config"
 	"gosaas/internal/handler"
+	"gosaas/internal/mcp"
+	mcpoauth "gosaas/internal/mcp/oauth"
 	"gosaas/internal/middleware"
 	"gosaas/internal/oauth"
 	"gosaas/internal/realtime"
@@ -176,6 +178,28 @@ func main() {
 		fmt.Println("OAuth callbacks registered at /oauth/{provider}/callback")
 	}
 
+	// Register MCP (Model Context Protocol) handler for AI agent access
+	if ctx.UseLocal() {
+		// Determine base URL for MCP OAuth discovery
+		var baseURL string
+		if useHTTPS {
+			baseURL = fmt.Sprintf("https://%s", srvHost)
+		} else {
+			baseURL = fmt.Sprintf("http://%s:%d", srvHost, serverPort)
+		}
+
+		mcpHandler := mcp.NewHandler(ctx, baseURL)
+		http.DefaultServeMux.Handle("/mcp", mcpHandler)
+		http.DefaultServeMux.Handle("/mcp/", mcpHandler)
+
+		// Register MCP OAuth endpoints for Dynamic Client Registration
+		mcpOAuthHandler := mcpoauth.NewHandler(ctx, baseURL)
+		mcpOAuthHandler.RegisterRoutes(http.DefaultServeMux)
+
+		fmt.Println("MCP endpoint registered at /mcp")
+		fmt.Println("MCP OAuth endpoints registered at /.well-known/oauth-* and /mcp/oauth/*")
+	}
+
 	// Create WebSocket hub for real-time events
 	hub := realtime.NewHub()
 	go hub.Run(context.Background())
@@ -287,6 +311,12 @@ func main() {
 
 		// Route OAuth callbacks to default mux (browser redirects, not API calls)
 		if strings.HasPrefix(r.URL.Path, "/oauth/") {
+			http.DefaultServeMux.ServeHTTP(w, r)
+			return
+		}
+
+		// Route MCP (Model Context Protocol) requests to default mux
+		if strings.HasPrefix(r.URL.Path, "/mcp") || strings.HasPrefix(r.URL.Path, "/.well-known/oauth-") {
 			http.DefaultServeMux.ServeHTTP(w, r)
 			return
 		}
