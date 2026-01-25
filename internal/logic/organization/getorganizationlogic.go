@@ -28,7 +28,7 @@ func NewGetOrganizationLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 }
 
 func (l *GetOrganizationLogic) GetOrganization(req *types.GetOrganizationRequest) (resp *types.GetOrganizationResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

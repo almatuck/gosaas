@@ -32,7 +32,7 @@ func NewCreateOrganizationLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *CreateOrganizationLogic) CreateOrganization(req *types.CreateOrganizationRequest) (resp *types.CreateOrganizationResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

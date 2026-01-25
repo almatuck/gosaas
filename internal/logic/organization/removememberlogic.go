@@ -27,7 +27,7 @@ func NewRemoveMemberLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Remo
 }
 
 func (l *RemoveMemberLogic) RemoveMember(req *types.RemoveMemberRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

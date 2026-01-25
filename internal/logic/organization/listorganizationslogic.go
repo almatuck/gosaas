@@ -26,7 +26,7 @@ func NewListOrganizationsLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *ListOrganizationsLogic) ListOrganizations() (resp *types.ListOrganizationsResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return &types.ListOrganizationsResponse{Organizations: []types.Organization{}}, nil
 	}
 

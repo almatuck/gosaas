@@ -27,7 +27,7 @@ func NewUpdateMemberRoleLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *UpdateMemberRoleLogic) UpdateMemberRole(req *types.UpdateMemberRoleRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

@@ -50,7 +50,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		logx.Info("Email not configured - transactional emails disabled")
 	}
 
-	if c.Levee.Enabled && c.Levee.APIKey != "" {
+	if c.IsLeveeEnabled() && c.Levee.APIKey != "" {
 		// Mode 1: Use Levee for auth, billing, email
 		baseURL := c.Levee.BaseURL
 		if baseURL == "" {

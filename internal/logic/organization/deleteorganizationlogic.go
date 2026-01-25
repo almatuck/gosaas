@@ -28,7 +28,7 @@ func NewDeleteOrganizationLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *DeleteOrganizationLogic) DeleteOrganization(req *types.DeleteOrganizationRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

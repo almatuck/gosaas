@@ -26,7 +26,7 @@ func NewMarkNotificationReadLogic(ctx context.Context, svcCtx *svc.ServiceContex
 }
 
 func (l *MarkNotificationReadLogic) MarkNotificationRead(req *types.MarkNotificationReadRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.NotificationsEnabled {
+	if !l.svcCtx.Config.IsNotificationsEnabled() {
 		return &types.MessageResponse{Message: "Notifications not enabled"}, nil
 	}
 

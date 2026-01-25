@@ -1,14 +1,28 @@
 package config
 
-import "github.com/zeromicro/go-zero/rest"
+import (
+	"strings"
+
+	"github.com/zeromicro/go-zero/rest"
+)
+
+// parseBool parses a string as boolean with a default value.
+// Accepts: "true", "1", "yes" as true; empty or other values return default.
+func parseBool(s string, defaultVal bool) bool {
+	s = strings.TrimSpace(strings.ToLower(s))
+	if s == "" {
+		return defaultVal
+	}
+	return s == "true" || s == "1" || s == "yes"
+}
 
 type Config struct {
 	rest.RestConf
 	App struct {
 		BaseURL        string `json:",optional"`
 		Domain         string `json:",optional"`
-		ProductionMode bool   `json:",default=false"`
-		AdminEmail     string `json:",optional"` // For Let's Encrypt notifications
+		ProductionMode string `json:",default=false"` // "true" to enable
+		AdminEmail     string `json:",optional"`      // For Let's Encrypt notifications
 	}
 	Admin struct {
 		Username string `json:",optional"` // Backoffice admin username
@@ -46,26 +60,26 @@ type Config struct {
 	Products []Product `json:",optional"`
 	Security struct {
 		// CSRF protection settings
-		CSRFEnabled      bool   `json:",default=true"`
-		CSRFSecret       string `json:",optional"`      // If empty, uses Auth.AccessSecret
+		CSRFEnabled      string `json:",default=true"` // "true" to enable
+		CSRFSecret       string `json:",optional"`     // If empty, uses Auth.AccessSecret
 		CSRFTokenExpiry  int64  `json:",default=43200"` // 12 hours in seconds
-		CSRFSecureCookie bool   `json:",default=true"`
+		CSRFSecureCookie string `json:",default=true"` // "true" for secure cookies
 
 		// Rate limiting settings
-		RateLimitEnabled      bool `json:",default=true"`
-		RateLimitRequests     int  `json:",default=100"` // requests per interval
-		RateLimitInterval     int  `json:",default=60"`  // interval in seconds
-		RateLimitBurst        int  `json:",default=20"`  // burst size
-		AuthRateLimitRequests int  `json:",default=5"`   // auth endpoints rate limit
-		AuthRateLimitInterval int  `json:",default=60"`  // auth rate limit interval
+		RateLimitEnabled      string `json:",default=true"` // "true" to enable
+		RateLimitRequests     int    `json:",default=100"`  // requests per interval
+		RateLimitInterval     int    `json:",default=60"`   // interval in seconds
+		RateLimitBurst        int    `json:",default=20"`   // burst size
+		AuthRateLimitRequests int    `json:",default=5"`    // auth endpoints rate limit
+		AuthRateLimitInterval int    `json:",default=60"`   // auth rate limit interval
 
 		// Security headers settings
-		EnableSecurityHeaders bool   `json:",default=true"`
-		ContentSecurityPolicy string `json:",optional"` // Override default CSP
-		AllowedOrigins        string `json:",optional"` // CORS allowed origins (comma-separated)
+		EnableSecurityHeaders string `json:",default=true"` // "true" to enable
+		ContentSecurityPolicy string `json:",optional"`     // Override default CSP
+		AllowedOrigins        string `json:",optional"`     // CORS allowed origins (comma-separated)
 
 		// HTTPS enforcement
-		ForceHTTPS bool `json:",default=false"` // Set to true in production
+		ForceHTTPS string `json:",default=false"` // "true" in production
 
 		// Input validation
 		MaxRequestBodySize int64 `json:",default=10485760"` // 10MB default
@@ -82,31 +96,31 @@ type Config struct {
 		BaseURL     string `json:",default=http://localhost:5173"` // For links in emails
 	}
 	Analytics struct {
-		Enabled       bool   `json:",default=true"`    // Enable/disable analytics
+		Enabled       string `json:",default=true"`    // "true" to enable
 		Provider      string `json:",default=console"` // Provider: segment, mixpanel, posthog, console
 		APIKey        string `json:",optional"`        // Provider API key
 		Endpoint      string `json:",optional"`        // Custom endpoint URL
 		BatchSize     int    `json:",default=50"`      // Events per batch
 		FlushInterval int    `json:",default=30"`      // Flush interval in seconds
-		Debug         bool   `json:",default=false"`   // Debug mode for verbose logging
+		Debug         string `json:",default=false"`   // "true" for verbose logging
 	}
 	Subscription struct {
-		Enabled             bool `json:",default=true"` // Enable subscription features
-		EnforceQuotas       bool `json:",default=true"` // Enforce usage quotas
-		FreeTierAnalyses    int  `json:",default=5"`    // Free tier monthly analysis limit
-		FreeTierHistoryDays int  `json:",default=7"`    // Free tier history retention days
-		ProTierHistoryDays  int  `json:",default=30"`   // Pro tier history retention days
-		TeamTierHistoryDays int  `json:",default=-1"`   // Team tier history retention (-1 = unlimited)
+		Enabled             string `json:",default=true"` // "true" to enable
+		EnforceQuotas       string `json:",default=true"` // "true" to enforce
+		FreeTierAnalyses    int    `json:",default=5"`    // Free tier monthly analysis limit
+		FreeTierHistoryDays int    `json:",default=7"`    // Free tier history retention days
+		ProTierHistoryDays  int    `json:",default=30"`   // Pro tier history retention days
+		TeamTierHistoryDays int    `json:",default=-1"`   // Team tier history retention (-1 = unlimited)
 	}
 	AI struct {
-		Enabled     bool   `json:",default=true"`                     // Enable AI features
-		APIKey      string `json:",optional"`                         // Anthropic API key
+		Enabled     string `json:",default=true"`                       // "true" to enable
+		APIKey      string `json:",optional"`                           // Anthropic API key
 		Model       string `json:",default=claude-sonnet-4-5-20250929"` // Claude model to use
-		MaxTokens   int    `json:",default=4096"`                     // Max tokens per response
-		TimeoutSecs int    `json:",default=60"`                       // Request timeout in seconds
+		MaxTokens   int    `json:",default=4096"`                       // Max tokens per response
+		TimeoutSecs int    `json:",default=60"`                         // Request timeout in seconds
 	}
 	CostAlerts struct {
-		Enabled            bool    `json:",default=true"` // Enable cost alert emails
+		Enabled            string  `json:",default=true"` // "true" to enable
 		AdminEmail         string  `json:",optional"`     // Email to receive cost alerts
 		DailyCostThreshold float64 `json:",default=10.0"` // Alert if daily costs exceed this USD amount
 		UserCostThreshold  float64 `json:",default=1.0"`  // Alert if single user's daily costs exceed this
@@ -130,10 +144,10 @@ type Config struct {
 		WelcomeTemplate           string `json:",default=welcome"`
 	}
 	Levee struct {
-		APIKey      string `json:",optional"`     // Levee API key
-		BaseURL     string `json:",optional"`     // Custom API endpoint (optional)
-		GRPCAddress string `json:",optional"`     // gRPC endpoint for LLM streaming (e.g., levee.localrivet.com:9889)
-		Enabled     bool   `json:",default=true"` // Enable Levee integration
+		APIKey      string `json:",optional"`      // Levee API key
+		BaseURL     string `json:",optional"`      // Custom API endpoint (optional)
+		GRPCAddress string `json:",optional"`      // gRPC endpoint for LLM streaming (e.g., levee.localrivet.com:9889)
+		Enabled     string `json:",default=true"`  // "true" to enable
 
 		// Checkout redirect URLs
 		CheckoutSuccessURL string `json:",default=/app/billing/success"` // Redirect after successful checkout
@@ -172,12 +186,12 @@ type Config struct {
 	}
 	OAuth struct {
 		// Google OAuth
-		GoogleEnabled      bool   `json:",default=false"`
+		GoogleEnabled      string `json:",default=false"` // "true" to enable
 		GoogleClientID     string `json:",optional"`
 		GoogleClientSecret string `json:",optional"`
 
 		// GitHub OAuth
-		GitHubEnabled      bool   `json:",default=false"`
+		GitHubEnabled      string `json:",default=false"` // "true" to enable
 		GitHubClientID     string `json:",optional"`
 		GitHubClientSecret string `json:",optional"`
 
@@ -186,10 +200,102 @@ type Config struct {
 	}
 	Features struct {
 		// Enable/disable features
-		OrganizationsEnabled bool `json:",default=true"`
-		NotificationsEnabled bool `json:",default=true"`
-		OAuthEnabled         bool `json:",default=false"`
+		OrganizationsEnabled string `json:",default=true"`  // "true" to enable
+		NotificationsEnabled string `json:",default=true"`  // "true" to enable
+		OAuthEnabled         string `json:",default=false"` // "true" to enable
 	}
+}
+
+// ========== Helper Methods ==========
+
+// IsProductionMode returns true if production mode is enabled.
+func (c Config) IsProductionMode() bool {
+	return parseBool(c.App.ProductionMode, false)
+}
+
+// IsCSRFEnabled returns true if CSRF protection is enabled.
+func (c Config) IsCSRFEnabled() bool {
+	return parseBool(c.Security.CSRFEnabled, true)
+}
+
+// IsCSRFSecureCookie returns true if CSRF cookies should be secure.
+func (c Config) IsCSRFSecureCookie() bool {
+	return parseBool(c.Security.CSRFSecureCookie, true)
+}
+
+// IsRateLimitEnabled returns true if rate limiting is enabled.
+func (c Config) IsRateLimitEnabled() bool {
+	return parseBool(c.Security.RateLimitEnabled, true)
+}
+
+// IsSecurityHeadersEnabled returns true if security headers are enabled.
+func (c Config) IsSecurityHeadersEnabled() bool {
+	return parseBool(c.Security.EnableSecurityHeaders, true)
+}
+
+// IsForceHTTPS returns true if HTTPS should be enforced.
+func (c Config) IsForceHTTPS() bool {
+	return parseBool(c.Security.ForceHTTPS, false)
+}
+
+// IsAnalyticsEnabled returns true if analytics is enabled.
+func (c Config) IsAnalyticsEnabled() bool {
+	return parseBool(c.Analytics.Enabled, true)
+}
+
+// IsAnalyticsDebug returns true if analytics debug mode is enabled.
+func (c Config) IsAnalyticsDebug() bool {
+	return parseBool(c.Analytics.Debug, false)
+}
+
+// IsSubscriptionEnabled returns true if subscription features are enabled.
+func (c Config) IsSubscriptionEnabled() bool {
+	return parseBool(c.Subscription.Enabled, true)
+}
+
+// IsEnforceQuotas returns true if usage quotas should be enforced.
+func (c Config) IsEnforceQuotas() bool {
+	return parseBool(c.Subscription.EnforceQuotas, true)
+}
+
+// IsAIEnabled returns true if AI features are enabled.
+func (c Config) IsAIEnabled() bool {
+	return parseBool(c.AI.Enabled, true)
+}
+
+// IsCostAlertsEnabled returns true if cost alerts are enabled.
+func (c Config) IsCostAlertsEnabled() bool {
+	return parseBool(c.CostAlerts.Enabled, true)
+}
+
+// IsLeveeEnabled returns true if Levee integration is enabled.
+func (c Config) IsLeveeEnabled() bool {
+	return parseBool(c.Levee.Enabled, true)
+}
+
+// IsGoogleOAuthEnabled returns true if Google OAuth is enabled.
+func (c Config) IsGoogleOAuthEnabled() bool {
+	return parseBool(c.OAuth.GoogleEnabled, false)
+}
+
+// IsGitHubOAuthEnabled returns true if GitHub OAuth is enabled.
+func (c Config) IsGitHubOAuthEnabled() bool {
+	return parseBool(c.OAuth.GitHubEnabled, false)
+}
+
+// IsOrganizationsEnabled returns true if organizations feature is enabled.
+func (c Config) IsOrganizationsEnabled() bool {
+	return parseBool(c.Features.OrganizationsEnabled, true)
+}
+
+// IsNotificationsEnabled returns true if notifications feature is enabled.
+func (c Config) IsNotificationsEnabled() bool {
+	return parseBool(c.Features.NotificationsEnabled, true)
+}
+
+// IsOAuthEnabled returns true if OAuth feature is enabled.
+func (c Config) IsOAuthEnabled() bool {
+	return parseBool(c.Features.OAuthEnabled, false)
 }
 
 // Product defines a subscription product with its prices

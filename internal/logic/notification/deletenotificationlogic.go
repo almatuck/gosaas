@@ -26,7 +26,7 @@ func NewDeleteNotificationLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *DeleteNotificationLogic) DeleteNotification(req *types.DeleteNotificationRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.NotificationsEnabled {
+	if !l.svcCtx.Config.IsNotificationsEnabled() {
 		return &types.MessageResponse{Message: "Notifications not enabled"}, nil
 	}
 

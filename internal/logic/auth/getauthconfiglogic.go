@@ -29,9 +29,9 @@ func (l *GetAuthConfigLogic) GetAuthConfig() (resp *types.AuthConfigResponse, er
 	googleEnabled := false
 	githubEnabled := false
 
-	if l.svcCtx.UseLocal() && l.svcCtx.Config.Features.OAuthEnabled {
-		googleEnabled = l.svcCtx.Config.OAuth.GoogleEnabled
-		githubEnabled = l.svcCtx.Config.OAuth.GitHubEnabled
+	if l.svcCtx.UseLocal() && l.svcCtx.Config.IsOAuthEnabled() {
+		googleEnabled = l.svcCtx.Config.IsGoogleOAuthEnabled()
+		githubEnabled = l.svcCtx.Config.IsGitHubOAuthEnabled()
 	}
 
 	return &types.AuthConfigResponse{

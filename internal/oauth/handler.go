@@ -43,7 +43,7 @@ func (h *Handler) githubCallback(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleCallback(w http.ResponseWriter, r *http.Request, provider string) {
 	// Check if OAuth is enabled
-	if !h.svcCtx.Config.Features.OAuthEnabled {
+	if !h.svcCtx.Config.IsOAuthEnabled() {
 		h.redirectWithError(w, r, "OAuth is not enabled")
 		return
 	}
@@ -74,13 +74,13 @@ func (h *Handler) handleCallback(w http.ResponseWriter, r *http.Request, provide
 
 	switch provider {
 	case "google":
-		if !h.svcCtx.Config.OAuth.GoogleEnabled {
+		if !h.svcCtx.Config.IsGoogleOAuthEnabled() {
 			h.redirectWithError(w, r, "Google OAuth is not enabled")
 			return
 		}
 		userInfo, err = h.exchangeGoogleCode(code)
 	case "github":
-		if !h.svcCtx.Config.OAuth.GitHubEnabled {
+		if !h.svcCtx.Config.IsGitHubOAuthEnabled() {
 			h.redirectWithError(w, r, "GitHub OAuth is not enabled")
 			return
 		}

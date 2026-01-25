@@ -30,7 +30,7 @@ func NewAcceptInviteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Acce
 }
 
 func (l *AcceptInviteLogic) AcceptInvite(req *types.AcceptInviteRequest) (resp *types.AcceptInviteResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

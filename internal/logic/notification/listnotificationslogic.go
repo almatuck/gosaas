@@ -28,7 +28,7 @@ func NewListNotificationsLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 
 func (l *ListNotificationsLogic) ListNotifications(req *types.ListNotificationsRequest) (resp *types.ListNotificationsResponse, err error) {
 	// Check if notifications are enabled
-	if !l.svcCtx.Config.Features.NotificationsEnabled {
+	if !l.svcCtx.Config.IsNotificationsEnabled() {
 		return &types.ListNotificationsResponse{
 			Notifications: []types.Notification{},
 			UnreadCount:   0,

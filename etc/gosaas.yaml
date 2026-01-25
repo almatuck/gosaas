@@ -6,7 +6,7 @@ Port: 8888
 App:
   BaseURL: ${APP_BASE_URL}
   Domain: ${APP_DOMAIN}
-  ProductionMode: ${PRODUCTION_MODE}
+  ProductionMode: "${PRODUCTION_MODE}"
 
 # Backoffice Admin (for viewing SaaS stats)
 Admin:
@@ -91,9 +91,9 @@ Products:
 
 # Security configuration
 Security:
-  EnableSecurityHeaders: true
-  ForceHTTPS: false
-  RateLimitEnabled: true
+  EnableSecurityHeaders: "true"
+  ForceHTTPS: "false"
+  RateLimitEnabled: "true"
   RateLimitRequests: 100
   RateLimitInterval: 60
   RateLimitBurst: 20
@@ -129,7 +129,7 @@ Levee:
   APIKey: ${LEVEE_API_KEY}
   BaseURL: ${LEVEE_BASE_URL}
   GRPCAddress: ${LEVEE_GRPC_ADDRESS}
-  Enabled: true
+  Enabled: "true"
   CheckoutSuccessURL: "/app/account"
   CheckoutCancelURL: "/pricing"
   NewsletterListSlug: "newsletter-subscribers"
@@ -152,16 +152,16 @@ Levee:
 
 # OAuth / Social Login
 OAuth:
-  GoogleEnabled: ${GOOGLE_OAUTH_ENABLED}
+  GoogleEnabled: "${GOOGLE_OAUTH_ENABLED}"
   GoogleClientID: ${GOOGLE_CLIENT_ID}
   GoogleClientSecret: ${GOOGLE_CLIENT_SECRET}
-  GitHubEnabled: ${GITHUB_OAUTH_ENABLED}
+  GitHubEnabled: "${GITHUB_OAUTH_ENABLED}"
   GitHubClientID: ${GITHUB_CLIENT_ID}
   GitHubClientSecret: ${GITHUB_CLIENT_SECRET}
   CallbackBaseURL: ${APP_BASE_URL}
 
 # Feature Toggles
 Features:
-  OrganizationsEnabled: ${ORGANIZATIONS_ENABLED}
-  NotificationsEnabled: ${NOTIFICATIONS_ENABLED}
-  OAuthEnabled: ${OAUTH_ENABLED}
+  OrganizationsEnabled: "${ORGANIZATIONS_ENABLED}"
+  NotificationsEnabled: "${NOTIFICATIONS_ENABLED}"
+  OAuthEnabled: "${OAUTH_ENABLED}"

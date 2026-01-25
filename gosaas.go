@@ -56,7 +56,7 @@ func main() {
 	var serverPort = c.Port
 	var useHTTPS = false
 
-	if c.App.ProductionMode {
+	if c.IsProductionMode() {
 		if c.App.Domain == "" {
 			fmt.Println("ERROR: App.Domain is required in production mode")
 			os.Exit(1)
@@ -111,7 +111,7 @@ func main() {
 	// Apply global security middleware
 	server.Use(func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			if c.Security.EnableSecurityHeaders {
+			if c.IsSecurityHeadersEnabled() {
 				headers := middleware.APISecurityHeaders()
 				w.Header().Set("Content-Security-Policy", headers.ContentSecurityPolicy)
 				w.Header().Set("X-Content-Type-Options", headers.XContentTypeOptions)
@@ -119,7 +119,7 @@ func main() {
 				w.Header().Set("X-XSS-Protection", headers.XXSSProtection)
 				w.Header().Set("Referrer-Policy", headers.ReferrerPolicy)
 				w.Header().Set("Permissions-Policy", headers.PermissionsPolicy)
-				if c.Security.ForceHTTPS {
+				if c.IsForceHTTPS() {
 					w.Header().Set("Strict-Transport-Security", headers.StrictTransportSecurity)
 				}
 				w.Header().Set("Cache-Control", headers.CacheControl)
@@ -172,7 +172,7 @@ func main() {
 	}
 
 	// Register OAuth callback handlers directly (bypasses go-zero for browser redirects)
-	if ctx.UseLocal() && c.Features.OAuthEnabled {
+	if ctx.UseLocal() && c.IsOAuthEnabled() {
 		oauthHandler := oauth.NewHandler(ctx)
 		oauthHandler.RegisterRoutes(http.DefaultServeMux)
 		fmt.Println("OAuth callbacks registered at /oauth/{provider}/callback")

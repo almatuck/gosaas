@@ -29,7 +29,7 @@ func NewUpdateOrganizationLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *UpdateOrganizationLogic) UpdateOrganization(req *types.UpdateOrganizationRequest) (resp *types.GetOrganizationResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

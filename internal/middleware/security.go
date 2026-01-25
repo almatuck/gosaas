@@ -24,7 +24,7 @@ func NewSecurityMiddleware(cfg config.Config) *SecurityMiddleware {
 	}
 
 	// Initialize security headers
-	if cfg.Security.EnableSecurityHeaders {
+	if cfg.IsSecurityHeadersEnabled() {
 		headers := APISecurityHeaders()
 		if cfg.Security.ContentSecurityPolicy != "" {
 			headers.ContentSecurityPolicy = cfg.Security.ContentSecurityPolicy
@@ -33,21 +33,21 @@ func NewSecurityMiddleware(cfg config.Config) *SecurityMiddleware {
 	}
 
 	// Initialize CSRF protection
-	if cfg.Security.CSRFEnabled {
+	if cfg.IsCSRFEnabled() {
 		secret := cfg.Security.CSRFSecret
 		if secret == "" {
 			secret = cfg.Auth.AccessSecret
 		}
 		csrfConfig := DefaultCSRFConfig([]byte(secret))
 		csrfConfig.TokenExpiry = time.Duration(cfg.Security.CSRFTokenExpiry) * time.Second
-		csrfConfig.SecureCookie = cfg.Security.CSRFSecureCookie
+		csrfConfig.SecureCookie = cfg.IsCSRFSecureCookie()
 		// Skip CSRF for API endpoints that use JWT authentication
 		csrfConfig.SkipPaths = []string{"/api/v1/"}
 		sm.csrf = NewCSRFProtection(csrfConfig)
 	}
 
 	// Initialize rate limiting
-	if cfg.Security.RateLimitEnabled {
+	if cfg.IsRateLimitEnabled() {
 		// General rate limiter
 		rateLimitConfig := &RateLimitConfig{
 			Rate:            cfg.Security.RateLimitRequests,

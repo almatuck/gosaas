@@ -27,7 +27,7 @@ func NewDisconnectOAuthLogic(ctx context.Context, svcCtx *svc.ServiceContext) *D
 }
 
 func (l *DisconnectOAuthLogic) DisconnectOAuth(req *types.DisconnectOAuthRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.OAuthEnabled {
+	if !l.svcCtx.Config.IsOAuthEnabled() {
 		return nil, fmt.Errorf("OAuth feature is not enabled")
 	}
 

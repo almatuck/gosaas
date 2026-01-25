@@ -26,7 +26,7 @@ func NewGetUnreadCountLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 
 func (l *GetUnreadCountLogic) GetUnreadCount() (resp *types.GetUnreadCountResponse, err error) {
 	// Check if notifications are enabled
-	if !l.svcCtx.Config.Features.NotificationsEnabled {
+	if !l.svcCtx.Config.IsNotificationsEnabled() {
 		return &types.GetUnreadCountResponse{Count: 0}, nil
 	}
 

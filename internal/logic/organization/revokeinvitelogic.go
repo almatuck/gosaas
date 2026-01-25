@@ -27,7 +27,7 @@ func NewRevokeInviteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Revo
 }
 
 func (l *RevokeInviteLogic) RevokeInvite(req *types.RevokeInviteRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

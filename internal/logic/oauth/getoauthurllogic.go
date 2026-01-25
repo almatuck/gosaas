@@ -28,7 +28,7 @@ func NewGetOAuthUrlLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetOA
 }
 
 func (l *GetOAuthUrlLogic) GetOAuthUrl(req *types.GetOAuthUrlRequest) (resp *types.GetOAuthUrlResponse, err error) {
-	if !l.svcCtx.Config.Features.OAuthEnabled {
+	if !l.svcCtx.Config.IsOAuthEnabled() {
 		return nil, fmt.Errorf("OAuth feature is not enabled")
 	}
 
@@ -53,7 +53,7 @@ func (l *GetOAuthUrlLogic) GetOAuthUrl(req *types.GetOAuthUrlRequest) (resp *typ
 
 	switch req.Provider {
 	case "google":
-		if !l.svcCtx.Config.OAuth.GoogleEnabled {
+		if !l.svcCtx.Config.IsGoogleOAuthEnabled() {
 			return nil, fmt.Errorf("Google OAuth is not enabled")
 		}
 		authURL = buildGoogleAuthURL(
@@ -62,7 +62,7 @@ func (l *GetOAuthUrlLogic) GetOAuthUrl(req *types.GetOAuthUrlRequest) (resp *typ
 			state,
 		)
 	case "github":
-		if !l.svcCtx.Config.OAuth.GitHubEnabled {
+		if !l.svcCtx.Config.IsGitHubOAuthEnabled() {
 			return nil, fmt.Errorf("GitHub OAuth is not enabled")
 		}
 		authURL = buildGitHubAuthURL(

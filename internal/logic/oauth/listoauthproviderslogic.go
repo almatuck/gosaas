@@ -26,7 +26,7 @@ func NewListOAuthProvidersLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *ListOAuthProvidersLogic) ListOAuthProviders() (resp *types.ListOAuthProvidersResponse, err error) {
-	if !l.svcCtx.Config.Features.OAuthEnabled {
+	if !l.svcCtx.Config.IsOAuthEnabled() {
 		return nil, fmt.Errorf("OAuth feature is not enabled")
 	}
 
@@ -58,7 +58,7 @@ func (l *ListOAuthProvidersLogic) ListOAuthProviders() (resp *types.ListOAuthPro
 	var providers []types.OAuthProvider
 
 	// Google
-	if l.svcCtx.Config.OAuth.GoogleEnabled {
+	if l.svcCtx.Config.IsGoogleOAuthEnabled() {
 		email := connectedProviders["google"]
 		providers = append(providers, types.OAuthProvider{
 			Name:      "google",
@@ -68,7 +68,7 @@ func (l *ListOAuthProvidersLogic) ListOAuthProviders() (resp *types.ListOAuthPro
 	}
 
 	// GitHub
-	if l.svcCtx.Config.OAuth.GitHubEnabled {
+	if l.svcCtx.Config.IsGitHubOAuthEnabled() {
 		email := connectedProviders["github"]
 		providers = append(providers, types.OAuthProvider{
 			Name:      "github",

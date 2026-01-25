@@ -26,7 +26,7 @@ func NewMarkAllNotificationsReadLogic(ctx context.Context, svcCtx *svc.ServiceCo
 
 func (l *MarkAllNotificationsReadLogic) MarkAllNotificationsRead() (resp *types.MessageResponse, err error) {
 	// Check if notifications are enabled
-	if !l.svcCtx.Config.Features.NotificationsEnabled {
+	if !l.svcCtx.Config.IsNotificationsEnabled() {
 		return &types.MessageResponse{Message: "Notifications not enabled"}, nil
 	}
 

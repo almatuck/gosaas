@@ -28,7 +28,7 @@ func NewSwitchOrganizationLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *SwitchOrganizationLogic) SwitchOrganization(req *types.SwitchOrganizationRequest) (resp *types.MessageResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

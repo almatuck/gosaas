@@ -28,7 +28,7 @@ func NewListMembersLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListM
 }
 
 func (l *ListMembersLogic) ListMembers(req *types.ListMembersRequest) (resp *types.ListMembersResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 

@@ -26,7 +26,7 @@ func NewGetInviteByTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *GetInviteByTokenLogic) GetInviteByToken(req *types.GetInviteByTokenRequest) (resp *types.GetInviteByTokenResponse, err error) {
-	if !l.svcCtx.Config.Features.OrganizationsEnabled {
+	if !l.svcCtx.Config.IsOrganizationsEnabled() {
 		return nil, fmt.Errorf("organizations feature is not enabled")
 	}
 
