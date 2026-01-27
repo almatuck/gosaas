@@ -143,6 +143,7 @@ Update `etc/<appname>.yaml` Products section accordingly.
 | `app/src/lib/config/site.ts` | Branding, SEO, social links |
 | `app/src/routes/(www)/+page.svelte` | Landing page content |
 | `app/src/app.css` | Colors, fonts, theme |
+| `app/static/favicon.svg` | Site favicon (replace with your logo) |
 | `etc/<appname>.yaml` | Products, pricing, features |
 | `README.md` | Project documentation |
 | `.env` | API keys, secrets (already done by install.sh) |
@@ -187,7 +188,7 @@ The frontend is statically built and embedded into a single Go binary.
 │   │       ├── stores/        # Svelte stores (auth, subscription)
 │   │       ├── components/    # UI components
 │   │       └── utils/         # Utilities (seo.ts, etc.)
-│   └── static/                # Static assets
+│   └── static/                # Static assets (favicon.svg, images)
 └── docs/                      # Documentation
 ```
 
@@ -393,6 +394,7 @@ type GetWidgetResponse {
 | Add component | `app/src/lib/components/` |
 | Add store | `app/src/lib/stores/` |
 | Change branding | `app/src/lib/config/site.ts` |
+| Change favicon | `app/static/favicon.svg` |
 | Change pricing | `etc/gosaas.yaml` |
 | Add middleware | `internal/middleware/` |
 | Database migrations | `internal/db/` |
