@@ -2,17 +2,16 @@ package subscription
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type ListPlansLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -78,15 +77,15 @@ func (l *ListPlansLogic) ListPlans() (resp *types.ListPlansResponse, err error) 
 func ListPlansHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := &ListPlansLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.ListPlans()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

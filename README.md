@@ -377,7 +377,7 @@ See [Deployment Guide](./docs/DEPLOYMENT.md) for platform-specific instructions 
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Go 1.25+, go-zero framework |
+| Backend | Go 1.25+, chi router |
 | Frontend | SvelteKit 2, Svelte 5, Tailwind v4 |
 | Database | SQLite (standalone) or Levee (managed) |
 | Payments | Stripe |

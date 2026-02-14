@@ -3,19 +3,18 @@ package organization
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"gosaas/internal/auth"
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type UpdateMemberRoleLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -25,20 +24,20 @@ func UpdateMemberRoleHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.UpdateMemberRoleRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &UpdateMemberRoleLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.UpdateMemberRole(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -61,14 +60,14 @@ func (l *UpdateMemberRoleLogic) UpdateMemberRole(req *types.UpdateMemberRoleRequ
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
 	// Get organization to check ownership
 	org, err := l.svcCtx.DB.Queries.GetOrganizationByID(l.ctx, req.OrgId)
 	if err != nil {
-		l.Errorf("Failed to get organization: %v", err)
+		slog.Error("Failed to get organization", "error", err)
 		return nil, fmt.Errorf("organization not found")
 	}
 
@@ -78,7 +77,7 @@ func (l *UpdateMemberRoleLogic) UpdateMemberRole(req *types.UpdateMemberRoleRequ
 		UserID:         userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to get member: %v", err)
+		slog.Error("Failed to get member", "error", err)
 		return nil, fmt.Errorf("you are not a member of this organization")
 	}
 
@@ -113,7 +112,7 @@ func (l *UpdateMemberRoleLogic) UpdateMemberRole(req *types.UpdateMemberRoleRequ
 		UserID:         req.UserId,
 	})
 	if err != nil {
-		l.Errorf("Failed to update member role: %v", err)
+		slog.Error("Failed to update member role", "error", err)
 		return nil, err
 	}
 

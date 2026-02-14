@@ -3,20 +3,19 @@ package organization
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/auth"
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type GetOrganizationLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -26,20 +25,20 @@ func GetOrganizationHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.GetOrganizationRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &GetOrganizationLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.GetOrganization(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -56,14 +55,14 @@ func (l *GetOrganizationLogic) GetOrganization(req *types.GetOrganizationRequest
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
 	// Get organization
 	org, err := l.svcCtx.DB.Queries.GetOrganizationByID(l.ctx, req.Id)
 	if err != nil {
-		l.Errorf("Failed to get organization: %v", err)
+		slog.Error("Failed to get organization", "error", err)
 		return nil, fmt.Errorf("organization not found")
 	}
 
@@ -73,7 +72,7 @@ func (l *GetOrganizationLogic) GetOrganization(req *types.GetOrganizationRequest
 		UserID:         userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to get member: %v", err)
+		slog.Error("Failed to get member", "error", err)
 		return nil, fmt.Errorf("you are not a member of this organization")
 	}
 

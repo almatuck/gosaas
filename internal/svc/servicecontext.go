@@ -1,20 +1,21 @@
 package svc
 
 import (
+	"log/slog"
+	"net/http"
+
 	"gosaas/internal/config"
 	"gosaas/internal/db"
 	"gosaas/internal/local"
 	"gosaas/internal/middleware"
 
 	leveeSDK "github.com/almatuck/levee-go"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest"
 )
 
 type ServiceContext struct {
 	Config             config.Config
 	SecurityMiddleware *middleware.SecurityMiddleware
-	AdminAuth          rest.Middleware // Admin backoffice basic auth
+	AdminAuth          func(http.Handler) http.Handler // Admin backoffice auth
 
 	// Levee SDK (used when Levee.Enabled=true)
 	Levee *leveeSDK.Client
@@ -30,9 +31,9 @@ type ServiceContext struct {
 func NewServiceContext(c config.Config) *ServiceContext {
 	// Initialize security middleware
 	securityMw := middleware.NewSecurityMiddleware(c)
-	logx.Info("Security middleware initialized")
+	slog.Info("Security middleware initialized")
 
-	// Initialize admin auth middleware (only needs username - password validated at login)
+	// Initialize admin auth middleware
 	adminAuth := middleware.NewAdminAuthMiddleware(c.Admin.Username)
 
 	svc := &ServiceContext{
@@ -45,9 +46,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	emailService := local.NewEmailService(c)
 	if emailService.IsConfigured() {
 		svc.Email = emailService
-		logx.Info("Email service initialized")
+		slog.Info("Email service initialized")
 	} else {
-		logx.Info("Email not configured - transactional emails disabled")
+		slog.Info("Email not configured - transactional emails disabled")
 	}
 
 	if c.IsLeveeEnabled() && c.Levee.APIKey != "" {
@@ -58,27 +59,25 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		}
 		client, err := leveeSDK.NewClient(c.Levee.APIKey, baseURL)
 		if err != nil {
-			logx.Errorf("Failed to create Levee client: %v", err)
+			slog.Error("Failed to create Levee client", "error", err)
 		} else {
 			svc.Levee = client
-			logx.Info("Levee SDK client initialized (using Levee for auth/billing)")
+			slog.Info("Levee SDK client initialized (using Levee for auth/billing)")
 		}
 	} else {
 		// Mode 2: Use local SQLite + direct Stripe
-		logx.Info("Levee disabled - using local SQLite + direct Stripe")
+		slog.Info("Levee disabled - using local SQLite + direct Stripe")
 
-		// Initialize SQLite database
 		database, err := db.NewSQLite(c.Database.SQLitePath)
 		if err != nil {
-			logx.Errorf("Failed to initialize SQLite database: %v", err)
+			slog.Error("Failed to initialize SQLite database", "error", err)
 		} else {
 			svc.DB = database
-			logx.Infof("SQLite database initialized at %s", c.Database.SQLitePath)
+			slog.Info("SQLite database initialized", "path", c.Database.SQLitePath)
 
-			// Initialize local services
 			svc.Auth = local.NewAuthService(database, c)
 			svc.Billing = local.NewBillingService(database, c)
-			logx.Info("Local auth and billing services initialized")
+			slog.Info("Local auth and billing services initialized")
 		}
 	}
 
@@ -89,9 +88,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 func (svc *ServiceContext) Close() {
 	if svc.DB != nil {
 		svc.DB.Close()
-		logx.Info("SQLite database connection closed")
+		slog.Info("SQLite database connection closed")
 	}
-	logx.Info("Service context closed")
+	slog.Info("Service context closed")
 }
 
 // UseLevee returns true if Levee is enabled and configured

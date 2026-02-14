@@ -5,44 +5,21 @@ import * as components from "./gosaasComponents"
 export * from "./gosaasComponents"
 
 /**
- * @description "Health check endpoint"
+ * @description "Health check"
  */
 export function healthCheck() {
 	return webapi.get<components.HealthResponse>(`/health`)
 }
 
 /**
- * @description "Get admin dashboard stats"
- */
-export function getAdminStats() {
-	return webapi.get<components.AdminStatsResponse>(`/api/v1/admin/stats`)
-}
-
-/**
- * @description "List all subscriptions (paginated)"
- * @param params
- */
-export function adminListSubscriptions(params: components.AdminListSubscriptionsRequestParams) {
-	return webapi.get<components.AdminListSubscriptionsResponse>(`/api/v1/admin/subscriptions`, params)
-}
-
-/**
- * @description "List all users (paginated)"
- * @param params
- */
-export function adminListUsers(params: components.AdminListUsersRequestParams) {
-	return webapi.get<components.AdminListUsersResponse>(`/api/v1/admin/users`, params)
-}
-
-/**
- * @description "Get auth configuration (OAuth providers enabled)"
+ * @description "Get auth config"
  */
 export function getAuthConfig() {
 	return webapi.get<components.AuthConfigResponse>(`/api/v1/auth/config`)
 }
 
 /**
- * @description "Request password reset"
+ * @description "Forgot password"
  * @param req
  */
 export function forgotPassword(req: components.ForgotPasswordRequest) {
@@ -50,7 +27,7 @@ export function forgotPassword(req: components.ForgotPasswordRequest) {
 }
 
 /**
- * @description "User login"
+ * @description "Login"
  * @param req
  */
 export function login(req: components.LoginRequest) {
@@ -58,7 +35,7 @@ export function login(req: components.LoginRequest) {
 }
 
 /**
- * @description "Refresh authentication token"
+ * @description "Refresh token"
  * @param req
  */
 export function refreshToken(req: components.RefreshTokenRequest) {
@@ -66,7 +43,7 @@ export function refreshToken(req: components.RefreshTokenRequest) {
 }
 
 /**
- * @description "Register new user"
+ * @description "Register"
  * @param req
  */
 export function register(req: components.RegisterRequest) {
@@ -74,7 +51,7 @@ export function register(req: components.RegisterRequest) {
 }
 
 /**
- * @description "Resend email verification"
+ * @description "Resend verification"
  * @param req
  */
 export function resendVerification(req: components.ResendVerificationRequest) {
@@ -82,7 +59,7 @@ export function resendVerification(req: components.ResendVerificationRequest) {
 }
 
 /**
- * @description "Reset password with token"
+ * @description "Reset password"
  * @param req
  */
 export function resetPassword(req: components.ResetPasswordRequest) {
@@ -90,7 +67,7 @@ export function resetPassword(req: components.ResetPasswordRequest) {
 }
 
 /**
- * @description "Verify email address with token"
+ * @description "Verify email"
  * @param req
  */
 export function verifyEmail(req: components.EmailVerificationRequest) {
@@ -98,7 +75,37 @@ export function verifyEmail(req: components.EmailVerificationRequest) {
 }
 
 /**
- * @description "List user notifications"
+ * @description "O auth callback"
+ * @param req
+ */
+export function oAuthCallback(req: components.OAuthLoginRequest, provider: string) {
+	return webapi.post<components.OAuthLoginResponse>(`/api/v1/oauth/${provider}/callback`, req)
+}
+
+/**
+ * @description "Get o auth url"
+ * @param params
+ */
+export function getOAuthUrl(params: components.GetOAuthUrlRequestParams, provider: string) {
+	return webapi.get<components.GetOAuthUrlResponse>(`/api/v1/oauth/${provider}/url`, params)
+}
+
+/**
+ * @description "Get invite by token"
+ */
+export function getInviteByToken(token: string) {
+	return webapi.get<components.GetInviteByTokenResponse>(`/api/v1/organizations/invites/${token}`)
+}
+
+/**
+ * @description "List plans"
+ */
+export function listPlans() {
+	return webapi.get<components.ListPlansResponse>(`/api/v1/subscription/plans`)
+}
+
+/**
+ * @description "List notifications"
  * @param params
  */
 export function listNotifications(params: components.ListNotificationsRequestParams) {
@@ -113,58 +120,42 @@ export function deleteNotification(id: string) {
 }
 
 /**
- * @description "Mark notification as read"
+ * @description "Mark notification read"
  */
 export function markNotificationRead(id: string) {
 	return webapi.put<components.MessageResponse>(`/api/v1/notifications/${id}/read`)
 }
 
 /**
- * @description "Mark all notifications as read"
+ * @description "Mark all notifications read"
  */
 export function markAllNotificationsRead() {
 	return webapi.put<components.MessageResponse>(`/api/v1/notifications/read-all`)
 }
 
 /**
- * @description "Get unread notification count"
+ * @description "Get unread count"
  */
 export function getUnreadCount() {
 	return webapi.get<components.GetUnreadCountResponse>(`/api/v1/notifications/unread-count`)
 }
 
 /**
- * @description "OAuth callback - exchange code for tokens"
- * @param req
- */
-export function oAuthCallback(req: components.OAuthLoginRequest, provider: string) {
-	return webapi.post<components.OAuthLoginResponse>(`/api/v1/oauth/${provider}/callback`, req)
-}
-
-/**
- * @description "Get OAuth authorization URL"
- * @param params
- */
-export function getOAuthUrl(params: components.GetOAuthUrlRequestParams, provider: string) {
-	return webapi.get<components.GetOAuthUrlResponse>(`/api/v1/oauth/${provider}/url`, params)
-}
-
-/**
- * @description "Disconnect OAuth provider"
+ * @description "Disconnect o auth"
  */
 export function disconnectOAuth(provider: string) {
 	return webapi.delete<components.MessageResponse>(`/api/v1/oauth/${provider}`)
 }
 
 /**
- * @description "List connected OAuth providers"
+ * @description "List o auth providers"
  */
 export function listOAuthProviders() {
 	return webapi.get<components.ListOAuthProvidersResponse>(`/api/v1/oauth/providers`)
 }
 
 /**
- * @description "Create a new organization"
+ * @description "Create organization"
  * @param req
  */
 export function createOrganization(req: components.CreateOrganizationRequest) {
@@ -172,14 +163,14 @@ export function createOrganization(req: components.CreateOrganizationRequest) {
 }
 
 /**
- * @description "List user's organizations"
+ * @description "List organizations"
  */
 export function listOrganizations() {
 	return webapi.get<components.ListOrganizationsResponse>(`/api/v1/organizations`)
 }
 
 /**
- * @description "Get organization by ID"
+ * @description "Get organization"
  */
 export function getOrganization(id: string) {
 	return webapi.get<components.GetOrganizationResponse>(`/api/v1/organizations/${id}`)
@@ -201,7 +192,7 @@ export function deleteOrganization(id: string) {
 }
 
 /**
- * @description "Invite member to organization"
+ * @description "Invite member"
  * @param req
  */
 export function inviteMember(req: components.InviteMemberRequest, id: string) {
@@ -209,7 +200,7 @@ export function inviteMember(req: components.InviteMemberRequest, id: string) {
 }
 
 /**
- * @description "List pending invites"
+ * @description "List invites"
  */
 export function listInvites(id: string) {
 	return webapi.get<components.ListInvitesResponse>(`/api/v1/organizations/${id}/invites`)
@@ -223,7 +214,7 @@ export function leaveOrganization(id: string) {
 }
 
 /**
- * @description "List organization members"
+ * @description "List members"
  */
 export function listMembers(id: string) {
 	return webapi.get<components.ListMembersResponse>(`/api/v1/organizations/${id}/members`)
@@ -245,14 +236,14 @@ export function updateMemberRole(req: components.UpdateMemberRoleRequest, orgId:
 }
 
 /**
- * @description "Remove member from organization"
+ * @description "Remove member"
  */
 export function removeMember(orgId: string, userId: string) {
 	return webapi.delete<components.MessageResponse>(`/api/v1/organizations/${orgId}/members/${userId}`)
 }
 
 /**
- * @description "Accept organization invite"
+ * @description "Accept invite"
  * @param req
  */
 export function acceptInvite(req: components.AcceptInviteRequest) {
@@ -260,7 +251,7 @@ export function acceptInvite(req: components.AcceptInviteRequest) {
 }
 
 /**
- * @description "Switch current organization"
+ * @description "Switch organization"
  * @param req
  */
 export function switchOrganization(req: components.SwitchOrganizationRequest) {
@@ -268,28 +259,14 @@ export function switchOrganization(req: components.SwitchOrganizationRequest) {
 }
 
 /**
- * @description "Get invite details by token"
- */
-export function getInviteByToken(token: string) {
-	return webapi.get<components.GetInviteByTokenResponse>(`/api/v1/organizations/invites/${token}`)
-}
-
-/**
- * @description "List all available subscription plans"
- */
-export function listPlans() {
-	return webapi.get<components.ListPlansResponse>(`/api/v1/subscription/plans`)
-}
-
-/**
- * @description "Get current user's subscription"
+ * @description "Get subscription"
  */
 export function getSubscription() {
 	return webapi.get<components.GetSubscriptionResponse>(`/api/v1/subscription`)
 }
 
 /**
- * @description "Get billing history"
+ * @description "List billing history"
  * @param params
  */
 export function listBillingHistory(params: components.ListBillingHistoryRequestParams) {
@@ -297,14 +274,14 @@ export function listBillingHistory(params: components.ListBillingHistoryRequestP
 }
 
 /**
- * @description "Create billing portal session for subscription management"
+ * @description "Create billing portal"
  */
 export function createBillingPortal() {
 	return webapi.post<components.CreateBillingPortalResponse>(`/api/v1/subscription/billing-portal`)
 }
 
 /**
- * @description "Cancel current subscription"
+ * @description "Cancel subscription"
  * @param req
  */
 export function cancelSubscription(req: components.CancelSubscriptionRequest) {
@@ -312,7 +289,7 @@ export function cancelSubscription(req: components.CancelSubscriptionRequest) {
 }
 
 /**
- * @description "Check if user has access to a feature"
+ * @description "Check feature"
  * @param req
  */
 export function checkFeature(req: components.CheckFeatureRequest) {
@@ -320,7 +297,7 @@ export function checkFeature(req: components.CheckFeatureRequest) {
 }
 
 /**
- * @description "Create checkout session to subscribe to a plan"
+ * @description "Create checkout"
  * @param req
  */
 export function createCheckout(req: components.CreateCheckoutRequest) {
@@ -328,21 +305,21 @@ export function createCheckout(req: components.CreateCheckoutRequest) {
 }
 
 /**
- * @description "Get current usage statistics"
+ * @description "Get usage stats"
  */
 export function getUsageStats() {
 	return webapi.get<components.GetUsageStatsResponse>(`/api/v1/subscription/usage`)
 }
 
 /**
- * @description "Get current user profile"
+ * @description "Get current user"
  */
 export function getCurrentUser() {
 	return webapi.get<components.GetUserResponse>(`/api/v1/user/me`)
 }
 
 /**
- * @description "Update current user profile"
+ * @description "Update current user"
  * @param req
  */
 export function updateCurrentUser(req: components.UpdateUserRequest) {
@@ -350,7 +327,7 @@ export function updateCurrentUser(req: components.UpdateUserRequest) {
 }
 
 /**
- * @description "Delete current user account"
+ * @description "Delete account"
  * @param req
  */
 export function deleteAccount(req: components.DeleteAccountRequest) {
@@ -358,7 +335,7 @@ export function deleteAccount(req: components.DeleteAccountRequest) {
 }
 
 /**
- * @description "Change password for authenticated user"
+ * @description "Change password"
  * @param req
  */
 export function changePassword(req: components.ChangePasswordRequest) {
@@ -366,17 +343,40 @@ export function changePassword(req: components.ChangePasswordRequest) {
 }
 
 /**
- * @description "Get user preferences"
+ * @description "Get preferences"
  */
 export function getPreferences() {
 	return webapi.get<components.GetPreferencesResponse>(`/api/v1/user/me/preferences`)
 }
 
 /**
- * @description "Update user preferences"
+ * @description "Update preferences"
  * @param req
  */
 export function updatePreferences(req: components.UpdatePreferencesRequest) {
 	return webapi.put<components.GetPreferencesResponse>(`/api/v1/user/me/preferences`, req)
+}
+
+/**
+ * @description "Get admin stats"
+ */
+export function getAdminStats() {
+	return webapi.get<components.AdminStatsResponse>(`/api/v1/admin/stats`)
+}
+
+/**
+ * @description "Admin list subscriptions"
+ * @param params
+ */
+export function adminListSubscriptions(params: components.AdminListSubscriptionsRequestParams) {
+	return webapi.get<components.AdminListSubscriptionsResponse>(`/api/v1/admin/subscriptions`, params)
+}
+
+/**
+ * @description "Admin list users"
+ * @param params
+ */
+export function adminListUsers(params: components.AdminListUsersRequestParams) {
+	return webapi.get<components.AdminListUsersResponse>(`/api/v1/admin/users`, params)
 }
 

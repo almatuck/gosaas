@@ -7,8 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"log/slog"
+
 	"github.com/gorilla/websocket"
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 const (
@@ -89,7 +90,7 @@ func (c *Client) readPump() {
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				logx.Errorf("WebSocket read error: %v", err)
+				slog.Error("WebSocket read error", "error", err)
 			}
 			break
 		}
@@ -149,7 +150,7 @@ func (c *Client) writePump() {
 func (c *Client) handleTextMessage(msg []byte) {
 	var message Message
 	if err := json.Unmarshal(msg, &message); err != nil {
-		logx.Errorf("Error unmarshaling message: %v", err)
+		slog.Error("Error unmarshaling message", "error", err)
 		return
 	}
 
@@ -175,7 +176,7 @@ func (c *Client) handleMessage(msg *Message) {
 	case "rewrite":
 		c.handleRewrite(msg)
 	default:
-		logx.Infof("Unknown message type: %s", msg.Type)
+		slog.Info("Unknown message type", "type", msg.Type)
 	}
 }
 
@@ -184,7 +185,7 @@ func (c *Client) handleRewrite(msg *Message) {
 	if rewriteHandler != nil {
 		rewriteHandler(c, msg)
 	} else {
-		logx.Error("Rewrite handler not registered")
+		slog.Error("Rewrite handler not registered")
 	}
 }
 
@@ -197,7 +198,7 @@ func (c *Client) handlePing(msg *Message) {
 
 	data, err := json.Marshal(pong)
 	if err != nil {
-		logx.Errorf("Error marshaling pong message: %v", err)
+		slog.Error("Error marshaling pong message", "error", err)
 		return
 	}
 

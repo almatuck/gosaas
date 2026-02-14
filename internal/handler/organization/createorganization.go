@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"strings"
@@ -11,16 +12,15 @@ import (
 
 	"gosaas/internal/auth"
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	"github.com/google/uuid"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type CreateOrganizationLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -30,20 +30,20 @@ func CreateOrganizationHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.CreateOrganizationRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &CreateOrganizationLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.CreateOrganization(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -60,7 +60,7 @@ func (l *CreateOrganizationLogic) CreateOrganization(req *types.CreateOrganizati
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
@@ -73,7 +73,7 @@ func (l *CreateOrganizationLogic) CreateOrganization(req *types.CreateOrganizati
 	// Check if slug already exists
 	found, err := l.svcCtx.DB.Queries.CheckSlugExists(l.ctx, slug)
 	if err != nil {
-		l.Errorf("Failed to check slug: %v", err)
+		slog.Error("Failed to check slug", "error", err)
 		return nil, err
 	}
 	if found > 0 {
@@ -90,7 +90,7 @@ func (l *CreateOrganizationLogic) CreateOrganization(req *types.CreateOrganizati
 		OwnerID: userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to create organization: %v", err)
+		slog.Error("Failed to create organization", "error", err)
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (l *CreateOrganizationLogic) CreateOrganization(req *types.CreateOrganizati
 		Role:           "owner",
 	})
 	if err != nil {
-		l.Errorf("Failed to add owner as member: %v", err)
+		slog.Error("Failed to add owner as member", "error", err)
 		return nil, err
 	}
 
@@ -113,7 +113,7 @@ func (l *CreateOrganizationLogic) CreateOrganization(req *types.CreateOrganizati
 		UserID:         userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to set current organization: %v", err)
+		slog.Error("Failed to set current organization", "error", err)
 		// Non-fatal, continue
 	}
 

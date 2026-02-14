@@ -2,18 +2,17 @@ package notification
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"gosaas/internal/auth"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type MarkAllNotificationsReadLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -31,14 +30,14 @@ func (l *MarkAllNotificationsReadLogic) MarkAllNotificationsRead() (resp *types.
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
 	// Mark all as read
 	err = l.svcCtx.DB.Queries.MarkAllNotificationsRead(l.ctx, userID.String())
 	if err != nil {
-		l.Errorf("Failed to mark all notifications as read: %v", err)
+		slog.Error("Failed to mark all notifications as read", "error", err)
 		return nil, err
 	}
 
@@ -48,15 +47,15 @@ func (l *MarkAllNotificationsReadLogic) MarkAllNotificationsRead() (resp *types.
 func MarkAllNotificationsReadHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := &MarkAllNotificationsReadLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.MarkAllNotificationsRead()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

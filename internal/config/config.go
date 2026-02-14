@@ -3,7 +3,7 @@ package config
 import (
 	"strings"
 
-	"github.com/zeromicro/go-zero/rest"
+	"gopkg.in/yaml.v3"
 )
 
 // parseBool parses a string as boolean with a default value.
@@ -16,194 +16,327 @@ func parseBool(s string, defaultVal bool) bool {
 	return s == "true" || s == "1" || s == "yes"
 }
 
+// LoadConfig unmarshals YAML data into a Config with defaults pre-applied.
+func LoadConfig(data []byte) (*Config, error) {
+	c := DefaultConfig()
+	if err := yaml.Unmarshal(data, &c); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+// DefaultConfig returns a Config with all default values set.
+func DefaultConfig() Config {
+	return Config{
+		Name: "gosaas",
+		Host: "0.0.0.0",
+		Port: 8888,
+		App: AppConfig{
+			ProductionMode: "false",
+		},
+		Auth: AuthConfig{
+			RefreshTokenExpire: 604800,
+		},
+		Database: DatabaseConfig{
+			SQLitePath:      "./data/gosaas.db",
+			Host:            "localhost",
+			Port:            5432,
+			User:            "postgres",
+			DBName:          "gosaas",
+			SSLMode:         "disable",
+			MaxOpenConns:    25,
+			MaxIdleConns:    5,
+			ConnMaxLifetime: 300,
+		},
+		Stripe: StripeConfig{
+			SuccessURL: "/app/account",
+			CancelURL:  "/pricing",
+		},
+		Security: SecurityConfig{
+			CSRFEnabled:           "true",
+			CSRFTokenExpiry:       43200,
+			CSRFSecureCookie:      "true",
+			RateLimitEnabled:      "true",
+			RateLimitRequests:     100,
+			RateLimitInterval:     60,
+			RateLimitBurst:        20,
+			AuthRateLimitRequests: 5,
+			AuthRateLimitInterval: 60,
+			EnableSecurityHeaders: "true",
+			ForceHTTPS:            "false",
+			MaxRequestBodySize:    10485760,
+			MaxURLLength:          2048,
+		},
+		Email: EmailConfig{
+			SMTPPort: 587,
+			FromName: "gosaas",
+			BaseURL:  "http://localhost:5173",
+		},
+		Analytics: AnalyticsConfig{
+			Enabled:       "true",
+			Provider:      "console",
+			BatchSize:     50,
+			FlushInterval: 30,
+			Debug:         "false",
+		},
+		Subscription: SubscriptionConfig{
+			Enabled:             "true",
+			EnforceQuotas:       "true",
+			FreeTierAnalyses:    5,
+			FreeTierHistoryDays: 7,
+			ProTierHistoryDays:  30,
+			TeamTierHistoryDays: -1,
+		},
+		AI: AIConfig{
+			Enabled:     "true",
+			Model:       "claude-sonnet-4-5-20250929",
+			MaxTokens:   4096,
+			TimeoutSecs: 60,
+		},
+		CostAlerts: CostAlertsConfig{
+			Enabled:            "true",
+			DailyCostThreshold: 10.0,
+			UserCostThreshold:  1.0,
+		},
+		Outlet: OutletConfig{
+			WaitlistListSlug:          "waitlist",
+			NewsletterListSlug:        "newsletter",
+			UsersListSlug:             "users",
+			OnboardingSequence:        "onboarding",
+			TrialConversionSequence:   "trial-conversion",
+			EmailVerificationTemplate: "email-verification",
+			PasswordResetTemplate:     "password-reset",
+			WelcomeTemplate:           "welcome",
+		},
+		Levee: LeveeConfig{
+			Enabled:                           "true",
+			CheckoutSuccessURL:                "/app/billing/success",
+			CheckoutCancelURL:                 "/pricing",
+			WaitlistListSlug:                  "waitlist",
+			NewsletterListSlug:                "newsletter-subscribers",
+			UsersListSlug:                     "users",
+			ProductHuntListSlug:               "product-hunt-launchers",
+			WaitlistNurtureSequence:           "waitlist-nurture",
+			OnboardingSequence:                "onboarding-sequence",
+			TrialConversionSequence:           "free-to-pro-upgrade",
+			FreeProductSlug:                   "free",
+			ProMonthlyProductSlug:             "pro",
+			ProYearlyProductSlug:              "pro-yearly",
+			TeamMonthlyProductSlug:            "team",
+			TeamYearlyProductSlug:             "team-yearly",
+			EmailVerificationTemplate:         "email-verification",
+			PasswordResetTemplate:             "password-reset",
+			PasswordChangedTemplate:           "password-changed",
+			AccountDeletedTemplate:            "account-deleted",
+			WaitlistConfirmTemplate:           "waitlist-confirm",
+			SubscriptionWelcomeTemplate:       "subscription-welcome",
+			SubscriptionRenewalTemplate:       "subscription-renewal",
+			SubscriptionCancelledTemplate:     "subscription-cancelled",
+			PaymentFailedTemplate:             "payment-failed",
+			TrialEndingTemplate:               "trial-ending",
+			CostAlertTemplate:                 "cost-alert",
+		},
+		OAuth: OAuthConfig{
+			GoogleEnabled: "false",
+			GitHubEnabled: "false",
+		},
+		Features: FeaturesConfig{
+			OrganizationsEnabled: "true",
+			NotificationsEnabled: "true",
+			OAuthEnabled:         "false",
+		},
+	}
+}
+
 type Config struct {
-	rest.RestConf
-	App struct {
-		BaseURL        string `json:",optional"`
-		Domain         string `json:",optional"`
-		ProductionMode string `json:",default=false"` // "true" to enable
-		AdminEmail     string `json:",optional"`      // For Let's Encrypt notifications
-	}
-	Admin struct {
-		Username string `json:",optional"` // Backoffice admin username
-		Password string `json:",optional"` // Backoffice admin password
-	}
-	Auth struct {
-		AccessSecret       string
-		AccessExpire       int64
-		RefreshTokenExpire int64 `json:",default=604800"` // 7 days in seconds
-	}
-	Database struct {
-		// SQLite (used when Levee is disabled)
-		SQLitePath string `json:",default=./data/gosaas.db"`
+	Name     string         `yaml:"Name"`
+	Host     string         `yaml:"Host"`
+	Port     int            `yaml:"Port"`
+	App      AppConfig      `yaml:"App"`
+	Admin    AdminConfig    `yaml:"Admin"`
+	Auth     AuthConfig     `yaml:"Auth"`
+	Database DatabaseConfig `yaml:"Database"`
+	Stripe   StripeConfig   `yaml:"Stripe"`
+	Products []Product      `yaml:"Products"`
+	Security SecurityConfig `yaml:"Security"`
+	Email    EmailConfig    `yaml:"Email"`
+	Analytics    AnalyticsConfig    `yaml:"Analytics"`
+	Subscription SubscriptionConfig `yaml:"Subscription"`
+	AI           AIConfig           `yaml:"AI"`
+	CostAlerts   CostAlertsConfig   `yaml:"CostAlerts"`
+	Outlet       OutletConfig       `yaml:"Outlet"`
+	Levee        LeveeConfig        `yaml:"Levee"`
+	OAuth        OAuthConfig        `yaml:"OAuth"`
+	Features     FeaturesConfig     `yaml:"Features"`
+}
 
-		// PostgreSQL (optional, for scaling later)
-		Host            string `json:",default=localhost"`
-		Port            int    `json:",default=5432"`
-		User            string `json:",default=postgres"`
-		Password        string `json:",optional"`
-		DBName          string `json:",default=gosaas"`
-		SSLMode         string `json:",default=disable"`
-		MaxOpenConns    int    `json:",default=25"`
-		MaxIdleConns    int    `json:",default=5"`
-		ConnMaxLifetime int    `json:",default=300"` // seconds
-	}
-	Stripe struct {
-		SecretKey      string `json:",optional"` // sk_test_xxx or sk_live_xxx
-		PublishableKey string `json:",optional"` // pk_test_xxx or pk_live_xxx
-		WebhookSecret  string `json:",optional"` // whsec_xxx
-		SuccessURL     string `json:",default=/app/account"`
-		CancelURL      string `json:",default=/pricing"`
-	}
-	// Products defines subscription products for standalone mode (without Levee)
-	// These are synced to Stripe on startup. See docs/stripe.md for configuration details.
-	Products []Product `json:",optional"`
-	Security struct {
-		// CSRF protection settings
-		CSRFEnabled      string `json:",default=true"` // "true" to enable
-		CSRFSecret       string `json:",optional"`     // If empty, uses Auth.AccessSecret
-		CSRFTokenExpiry  int64  `json:",default=43200"` // 12 hours in seconds
-		CSRFSecureCookie string `json:",default=true"` // "true" for secure cookies
+type AppConfig struct {
+	BaseURL        string `yaml:"BaseURL"`
+	Domain         string `yaml:"Domain"`
+	ProductionMode string `yaml:"ProductionMode"`
+	AdminEmail     string `yaml:"AdminEmail"`
+}
 
-		// Rate limiting settings
-		RateLimitEnabled      string `json:",default=true"` // "true" to enable
-		RateLimitRequests     int    `json:",default=100"`  // requests per interval
-		RateLimitInterval     int    `json:",default=60"`   // interval in seconds
-		RateLimitBurst        int    `json:",default=20"`   // burst size
-		AuthRateLimitRequests int    `json:",default=5"`    // auth endpoints rate limit
-		AuthRateLimitInterval int    `json:",default=60"`   // auth rate limit interval
+type AdminConfig struct {
+	Username string `yaml:"Username"`
+	Password string `yaml:"Password"`
+}
 
-		// Security headers settings
-		EnableSecurityHeaders string `json:",default=true"` // "true" to enable
-		ContentSecurityPolicy string `json:",optional"`     // Override default CSP
-		AllowedOrigins        string `json:",optional"`     // CORS allowed origins (comma-separated)
+type AuthConfig struct {
+	AccessSecret       string `yaml:"AccessSecret"`
+	AccessExpire       int64  `yaml:"AccessExpire"`
+	RefreshTokenExpire int64  `yaml:"RefreshTokenExpire"`
+}
 
-		// HTTPS enforcement
-		ForceHTTPS string `json:",default=false"` // "true" in production
+type DatabaseConfig struct {
+	SQLitePath      string `yaml:"SQLitePath"`
+	Host            string `yaml:"Host"`
+	Port            int    `yaml:"Port"`
+	User            string `yaml:"User"`
+	Password        string `yaml:"Password"`
+	DBName          string `yaml:"DBName"`
+	SSLMode         string `yaml:"SSLMode"`
+	MaxOpenConns    int    `yaml:"MaxOpenConns"`
+	MaxIdleConns    int    `yaml:"MaxIdleConns"`
+	ConnMaxLifetime int    `yaml:"ConnMaxLifetime"`
+}
 
-		// Input validation
-		MaxRequestBodySize int64 `json:",default=10485760"` // 10MB default
-		MaxURLLength       int   `json:",default=2048"`
-	}
-	Email struct {
-		SMTPHost    string `json:",optional"`
-		SMTPPort    int    `json:",optional,default=587"`
-		SMTPUser    string `json:",optional"`
-		SMTPPass    string `json:",optional"`
-		FromAddress string `json:",optional"`
-		FromName    string `json:",default=gosaas"`
-		ReplyTo     string `json:",optional"`
-		BaseURL     string `json:",default=http://localhost:5173"` // For links in emails
-	}
-	Analytics struct {
-		Enabled       string `json:",default=true"`    // "true" to enable
-		Provider      string `json:",default=console"` // Provider: segment, mixpanel, posthog, console
-		APIKey        string `json:",optional"`        // Provider API key
-		Endpoint      string `json:",optional"`        // Custom endpoint URL
-		BatchSize     int    `json:",default=50"`      // Events per batch
-		FlushInterval int    `json:",default=30"`      // Flush interval in seconds
-		Debug         string `json:",default=false"`   // "true" for verbose logging
-	}
-	Subscription struct {
-		Enabled             string `json:",default=true"` // "true" to enable
-		EnforceQuotas       string `json:",default=true"` // "true" to enforce
-		FreeTierAnalyses    int    `json:",default=5"`    // Free tier monthly analysis limit
-		FreeTierHistoryDays int    `json:",default=7"`    // Free tier history retention days
-		ProTierHistoryDays  int    `json:",default=30"`   // Pro tier history retention days
-		TeamTierHistoryDays int    `json:",default=-1"`   // Team tier history retention (-1 = unlimited)
-	}
-	AI struct {
-		Enabled     string `json:",default=true"`                       // "true" to enable
-		APIKey      string `json:",optional"`                           // Anthropic API key
-		Model       string `json:",default=claude-sonnet-4-5-20250929"` // Claude model to use
-		MaxTokens   int    `json:",default=4096"`                       // Max tokens per response
-		TimeoutSecs int    `json:",default=60"`                         // Request timeout in seconds
-	}
-	CostAlerts struct {
-		Enabled            string  `json:",default=true"` // "true" to enable
-		AdminEmail         string  `json:",optional"`     // Email to receive cost alerts
-		DailyCostThreshold float64 `json:",default=10.0"` // Alert if daily costs exceed this USD amount
-		UserCostThreshold  float64 `json:",default=1.0"`  // Alert if single user's daily costs exceed this
-	}
-	Outlet struct {
-		BaseURL string `json:",optional"` // Outlet.sh instance URL (e.g., https://email.yourdomain.com)
-		APIKey  string `json:",optional"` // Outlet.sh API key
+type StripeConfig struct {
+	SecretKey      string `yaml:"SecretKey"`
+	PublishableKey string `yaml:"PublishableKey"`
+	WebhookSecret  string `yaml:"WebhookSecret"`
+	SuccessURL     string `yaml:"SuccessURL"`
+	CancelURL      string `yaml:"CancelURL"`
+}
 
-		// List slugs for subscriber management
-		WaitlistListSlug   string `json:",default=waitlist"`
-		NewsletterListSlug string `json:",default=newsletter"`
-		UsersListSlug      string `json:",default=users"`
+type SecurityConfig struct {
+	CSRFEnabled           string `yaml:"CSRFEnabled"`
+	CSRFSecret            string `yaml:"CSRFSecret"`
+	CSRFTokenExpiry       int64  `yaml:"CSRFTokenExpiry"`
+	CSRFSecureCookie      string `yaml:"CSRFSecureCookie"`
+	RateLimitEnabled      string `yaml:"RateLimitEnabled"`
+	RateLimitRequests     int    `yaml:"RateLimitRequests"`
+	RateLimitInterval     int    `yaml:"RateLimitInterval"`
+	RateLimitBurst        int    `yaml:"RateLimitBurst"`
+	AuthRateLimitRequests int    `yaml:"AuthRateLimitRequests"`
+	AuthRateLimitInterval int    `yaml:"AuthRateLimitInterval"`
+	EnableSecurityHeaders string `yaml:"EnableSecurityHeaders"`
+	ContentSecurityPolicy string `yaml:"ContentSecurityPolicy"`
+	AllowedOrigins        string `yaml:"AllowedOrigins"`
+	ForceHTTPS            string `yaml:"ForceHTTPS"`
+	MaxRequestBodySize    int64  `yaml:"MaxRequestBodySize"`
+	MaxURLLength          int    `yaml:"MaxURLLength"`
+}
 
-		// Sequence slugs for email automation
-		OnboardingSequence      string `json:",default=onboarding"`
-		TrialConversionSequence string `json:",default=trial-conversion"`
+type EmailConfig struct {
+	SMTPHost    string `yaml:"SMTPHost"`
+	SMTPPort    int    `yaml:"SMTPPort"`
+	SMTPUser    string `yaml:"SMTPUser"`
+	SMTPPass    string `yaml:"SMTPPass"`
+	FromAddress string `yaml:"FromAddress"`
+	FromName    string `yaml:"FromName"`
+	ReplyTo     string `yaml:"ReplyTo"`
+	BaseURL     string `yaml:"BaseURL"`
+}
 
-		// Template slugs for transactional emails
-		EmailVerificationTemplate string `json:",default=email-verification"`
-		PasswordResetTemplate     string `json:",default=password-reset"`
-		WelcomeTemplate           string `json:",default=welcome"`
-	}
-	Levee struct {
-		APIKey      string `json:",optional"`      // Levee API key
-		BaseURL     string `json:",optional"`      // Custom API endpoint (optional)
-		GRPCAddress string `json:",optional"`      // gRPC endpoint for LLM streaming (e.g., levee.localrivet.com:9889)
-		Enabled     string `json:",default=true"`  // "true" to enable
+type AnalyticsConfig struct {
+	Enabled       string `yaml:"Enabled"`
+	Provider      string `yaml:"Provider"`
+	APIKey        string `yaml:"APIKey"`
+	Endpoint      string `yaml:"Endpoint"`
+	BatchSize     int    `yaml:"BatchSize"`
+	FlushInterval int    `yaml:"FlushInterval"`
+	Debug         string `yaml:"Debug"`
+}
 
-		// Checkout redirect URLs
-		CheckoutSuccessURL string `json:",default=/app/billing/success"` // Redirect after successful checkout
-		CheckoutCancelURL  string `json:",default=/pricing"`             // Redirect after cancelled checkout
+type SubscriptionConfig struct {
+	Enabled             string `yaml:"Enabled"`
+	EnforceQuotas       string `yaml:"EnforceQuotas"`
+	FreeTierAnalyses    int    `yaml:"FreeTierAnalyses"`
+	FreeTierHistoryDays int    `yaml:"FreeTierHistoryDays"`
+	ProTierHistoryDays  int    `yaml:"ProTierHistoryDays"`
+	TeamTierHistoryDays int    `yaml:"TeamTierHistoryDays"`
+}
 
-		// List slugs
-		WaitlistListSlug    string `json:",default=waitlist"`
-		NewsletterListSlug  string `json:",default=newsletter-subscribers"`
-		UsersListSlug       string `json:",default=users"`
-		ProductHuntListSlug string `json:",default=product-hunt-launchers"`
+type AIConfig struct {
+	Enabled     string `yaml:"Enabled"`
+	APIKey      string `yaml:"APIKey"`
+	Model       string `yaml:"Model"`
+	MaxTokens   int    `yaml:"MaxTokens"`
+	TimeoutSecs int    `yaml:"TimeoutSecs"`
+}
 
-		// Sequence slugs
-		WaitlistNurtureSequence string `json:",default=waitlist-nurture"`
-		OnboardingSequence      string `json:",default=onboarding-sequence"`
-		TrialConversionSequence string `json:",default=free-to-pro-upgrade"`
+type CostAlertsConfig struct {
+	Enabled            string  `yaml:"Enabled"`
+	AdminEmail         string  `yaml:"AdminEmail"`
+	DailyCostThreshold float64 `yaml:"DailyCostThreshold"`
+	UserCostThreshold  float64 `yaml:"UserCostThreshold"`
+}
 
-		// Product slugs for checkout (these map to Levee price nicknames)
-		FreeProductSlug        string `json:",default=free"`
-		ProMonthlyProductSlug  string `json:",default=pro"`
-		ProYearlyProductSlug   string `json:",default=pro-yearly"`
-		TeamMonthlyProductSlug string `json:",default=team"`
-		TeamYearlyProductSlug  string `json:",default=team-yearly"`
+type OutletConfig struct {
+	BaseURL                   string `yaml:"BaseURL"`
+	APIKey                    string `yaml:"APIKey"`
+	WaitlistListSlug          string `yaml:"WaitlistListSlug"`
+	NewsletterListSlug        string `yaml:"NewsletterListSlug"`
+	UsersListSlug             string `yaml:"UsersListSlug"`
+	OnboardingSequence        string `yaml:"OnboardingSequence"`
+	TrialConversionSequence   string `yaml:"TrialConversionSequence"`
+	EmailVerificationTemplate string `yaml:"EmailVerificationTemplate"`
+	PasswordResetTemplate     string `yaml:"PasswordResetTemplate"`
+	WelcomeTemplate           string `yaml:"WelcomeTemplate"`
+}
 
-		// Template slugs for transactional emails
-		EmailVerificationTemplate     string `json:",default=email-verification"`
-		PasswordResetTemplate         string `json:",default=password-reset"`
-		PasswordChangedTemplate       string `json:",default=password-changed"`
-		AccountDeletedTemplate        string `json:",default=account-deleted"`
-		WaitlistConfirmTemplate       string `json:",default=waitlist-confirm"`
-		SubscriptionWelcomeTemplate   string `json:",default=subscription-welcome"`
-		SubscriptionRenewalTemplate   string `json:",default=subscription-renewal"`
-		SubscriptionCancelledTemplate string `json:",default=subscription-cancelled"`
-		PaymentFailedTemplate         string `json:",default=payment-failed"`
-		TrialEndingTemplate           string `json:",default=trial-ending"`
-		CostAlertTemplate             string `json:",default=cost-alert"`
-	}
-	OAuth struct {
-		// Google OAuth
-		GoogleEnabled      string `json:",default=false"` // "true" to enable
-		GoogleClientID     string `json:",optional"`
-		GoogleClientSecret string `json:",optional"`
+type LeveeConfig struct {
+	APIKey      string `yaml:"APIKey"`
+	BaseURL     string `yaml:"BaseURL"`
+	GRPCAddress string `yaml:"GRPCAddress"`
+	Enabled     string `yaml:"Enabled"`
 
-		// GitHub OAuth
-		GitHubEnabled      string `json:",default=false"` // "true" to enable
-		GitHubClientID     string `json:",optional"`
-		GitHubClientSecret string `json:",optional"`
+	CheckoutSuccessURL string `yaml:"CheckoutSuccessURL"`
+	CheckoutCancelURL  string `yaml:"CheckoutCancelURL"`
 
-		// Callback URL base (defaults to App.BaseURL)
-		CallbackBaseURL string `json:",optional"`
-	}
-	Features struct {
-		// Enable/disable features
-		OrganizationsEnabled string `json:",default=true"`  // "true" to enable
-		NotificationsEnabled string `json:",default=true"`  // "true" to enable
-		OAuthEnabled         string `json:",default=false"` // "true" to enable
-	}
+	WaitlistListSlug    string `yaml:"WaitlistListSlug"`
+	NewsletterListSlug  string `yaml:"NewsletterListSlug"`
+	UsersListSlug       string `yaml:"UsersListSlug"`
+	ProductHuntListSlug string `yaml:"ProductHuntListSlug"`
+
+	WaitlistNurtureSequence string `yaml:"WaitlistNurtureSequence"`
+	OnboardingSequence      string `yaml:"OnboardingSequence"`
+	TrialConversionSequence string `yaml:"TrialConversionSequence"`
+
+	FreeProductSlug        string `yaml:"FreeProductSlug"`
+	ProMonthlyProductSlug  string `yaml:"ProMonthlyProductSlug"`
+	ProYearlyProductSlug   string `yaml:"ProYearlyProductSlug"`
+	TeamMonthlyProductSlug string `yaml:"TeamMonthlyProductSlug"`
+	TeamYearlyProductSlug  string `yaml:"TeamYearlyProductSlug"`
+
+	EmailVerificationTemplate     string `yaml:"EmailVerificationTemplate"`
+	PasswordResetTemplate         string `yaml:"PasswordResetTemplate"`
+	PasswordChangedTemplate       string `yaml:"PasswordChangedTemplate"`
+	AccountDeletedTemplate        string `yaml:"AccountDeletedTemplate"`
+	WaitlistConfirmTemplate       string `yaml:"WaitlistConfirmTemplate"`
+	SubscriptionWelcomeTemplate   string `yaml:"SubscriptionWelcomeTemplate"`
+	SubscriptionRenewalTemplate   string `yaml:"SubscriptionRenewalTemplate"`
+	SubscriptionCancelledTemplate string `yaml:"SubscriptionCancelledTemplate"`
+	PaymentFailedTemplate         string `yaml:"PaymentFailedTemplate"`
+	TrialEndingTemplate           string `yaml:"TrialEndingTemplate"`
+	CostAlertTemplate             string `yaml:"CostAlertTemplate"`
+}
+
+type OAuthConfig struct {
+	GoogleEnabled      string `yaml:"GoogleEnabled"`
+	GoogleClientID     string `yaml:"GoogleClientID"`
+	GoogleClientSecret string `yaml:"GoogleClientSecret"`
+	GitHubEnabled      string `yaml:"GitHubEnabled"`
+	GitHubClientID     string `yaml:"GitHubClientID"`
+	GitHubClientSecret string `yaml:"GitHubClientSecret"`
+	CallbackBaseURL    string `yaml:"CallbackBaseURL"`
+}
+
+type FeaturesConfig struct {
+	OrganizationsEnabled string `yaml:"OrganizationsEnabled"`
+	NotificationsEnabled string `yaml:"NotificationsEnabled"`
+	OAuthEnabled         string `yaml:"OAuthEnabled"`
 }
 
 // ========== Helper Methods ==========
@@ -298,55 +431,24 @@ func (c Config) IsOAuthEnabled() bool {
 	return parseBool(c.Features.OAuthEnabled, false)
 }
 
-// Product defines a subscription product with its prices
-// Products are synced to Stripe on startup (standalone mode only)
+// Product defines a subscription product with its prices.
 type Product struct {
-	// Slug is the unique identifier for this product (e.g., "free", "pro", "team")
-	// Used in checkout URLs and API calls
-	Slug string `json:"slug"`
-
-	// Name is the display name shown to customers (e.g., "Pro Plan")
-	Name string `json:"name"`
-
-	// Description is shown on pricing page and Stripe checkout
-	Description string `json:"description,optional"`
-
-	// Features is a list of features included in this plan
-	// Displayed on pricing pages and used for feature gating
-	Features []string `json:"features,optional"`
-
-	// Prices defines the pricing options for this product
-	// A product can have multiple prices (e.g., monthly and yearly)
-	Prices []Price `json:"prices,optional"`
-
-	// Default marks this as the default plan for new users (only one should be true)
-	Default bool `json:"default,optional"`
-
-	// StripeProductID is auto-populated after syncing to Stripe
-	StripeProductID string `json:"stripeProductId,optional"`
+	Slug            string   `yaml:"slug" json:"slug"`
+	Name            string   `yaml:"name" json:"name"`
+	Description     string   `yaml:"description" json:"description,omitempty"`
+	Features        []string `yaml:"features" json:"features,omitempty"`
+	Prices          []Price  `yaml:"prices" json:"prices,omitempty"`
+	Default         bool     `yaml:"default" json:"default,omitempty"`
+	StripeProductID string   `yaml:"stripeProductId" json:"stripeProductId,omitempty"`
 }
 
-// Price defines a single pricing option for a product
+// Price defines a single pricing option for a product.
 type Price struct {
-	// Slug identifies this price (e.g., "monthly", "yearly")
-	Slug string `json:"slug"`
-
-	// Amount in cents (e.g., 2900 for $29.00, 0 for free)
-	Amount int64 `json:"amount"`
-
-	// Currency code (default: "usd")
-	Currency string `json:"currency,default=usd"`
-
-	// Interval: "month", "year", or "one_time"
-	Interval string `json:"interval,default=month"`
-
-	// IntervalCount: billing frequency (default: 1)
-	// e.g., interval=month + intervalCount=3 = quarterly billing
-	IntervalCount int64 `json:"intervalCount,default=1"`
-
-	// TrialDays: number of trial days (0 = no trial)
-	TrialDays int64 `json:"trialDays,optional"`
-
-	// StripePriceID is auto-populated after syncing to Stripe
-	StripePriceID string `json:"stripePriceId,optional"`
+	Slug          string `yaml:"slug" json:"slug"`
+	Amount        int64  `yaml:"amount" json:"amount"`
+	Currency      string `yaml:"currency" json:"currency"`
+	Interval      string `yaml:"interval" json:"interval"`
+	IntervalCount int64  `yaml:"intervalCount" json:"intervalCount"`
+	TrialDays     int64  `yaml:"trialDays" json:"trialDays,omitempty"`
+	StripePriceID string `yaml:"stripePriceId" json:"stripePriceId,omitempty"`
 }

@@ -8,12 +8,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/smtp"
+	"log/slog"
 	"strings"
 	"time"
 
 	"gosaas/internal/config"
-
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 // EmailService handles email sending via SMTP or Outlet.sh
@@ -104,7 +103,7 @@ func (s *EmailService) SendEmail(ctx context.Context, req SendEmailRequest) (*Se
 		return s.sendViaSMTP(ctx, req)
 	}
 
-	logx.Info("No email service configured - skipping email send")
+	slog.Info("No email service configured - skipping email send")
 	return &SendEmailResponse{
 		Success: true,
 		Status:  "skipped",
@@ -159,7 +158,7 @@ func (s *EmailService) sendViaSMTP(_ context.Context, req SendEmailRequest) (*Se
 
 	// If using template but no Outlet.sh, log warning and use variables as body
 	if req.TemplateSlug != "" && body == "" {
-		logx.Infof("Template '%s' requested but Outlet.sh not configured - sending variable data", req.TemplateSlug)
+		slog.Info("Template requested but Outlet.sh not configured - sending variable data", "template", req.TemplateSlug)
 		var parts []string
 		for k, v := range req.Variables {
 			parts = append(parts, fmt.Sprintf("%s: %s", k, v))
@@ -191,11 +190,11 @@ func (s *EmailService) sendViaSMTP(_ context.Context, req SendEmailRequest) (*Se
 	}
 
 	if err != nil {
-		logx.Errorf("SMTP send failed: %v", err)
+		slog.Error("SMTP send failed", "error", err)
 		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
 
-	logx.Infof("Email sent via SMTP to %s", req.To)
+	slog.Info("Email sent via SMTP", "to", req.To)
 	return &SendEmailResponse{
 		Success: true,
 		Status:  "sent",
@@ -263,14 +262,14 @@ func (s *EmailService) sendViaOutlet(ctx context.Context, req SendEmailRequest) 
 	if err := s.doOutletRequest(ctx, "POST", "/api/v1/sdk/emails/send", req, &resp); err != nil {
 		return nil, err
 	}
-	logx.Infof("Email sent via Outlet.sh to %s", req.To)
+	slog.Info("Email sent via Outlet.sh", "to", req.To)
 	return &resp, nil
 }
 
 // Subscribe adds an email to a list (Outlet.sh only)
 func (s *EmailService) Subscribe(ctx context.Context, listSlug string, req SubscribeRequest) (*SubscribeResponse, error) {
 	if !s.hasOutlet() {
-		logx.Info("Outlet.sh not configured - skipping subscribe")
+		slog.Info("Outlet.sh not configured - skipping subscribe")
 		return &SubscribeResponse{
 			Success: true,
 			Message: "List subscription requires Outlet.sh",
@@ -288,7 +287,7 @@ func (s *EmailService) Subscribe(ctx context.Context, listSlug string, req Subsc
 // EnrollInSequence enrolls a contact in an email sequence (Outlet.sh only)
 func (s *EmailService) EnrollInSequence(ctx context.Context, sequenceSlug string, req EnrollSequenceRequest) (*EnrollSequenceResponse, error) {
 	if !s.hasOutlet() {
-		logx.Info("Outlet.sh not configured - skipping sequence enroll")
+		slog.Info("Outlet.sh not configured - skipping sequence enroll")
 		return &EnrollSequenceResponse{
 			Success: true,
 			Message: "Sequence enrollment requires Outlet.sh",

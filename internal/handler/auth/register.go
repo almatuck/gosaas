@@ -3,19 +3,19 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	levee "github.com/almatuck/levee-go"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type RegisterLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -25,20 +25,20 @@ func RegisterHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.RegisterRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &RegisterLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.Register(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -75,14 +75,14 @@ func (l *RegisterLogic) Register(req *types.RegisterRequest) (resp *types.LoginR
 		CancelUrl:     cancelURL,
 	})
 	if err != nil {
-		l.Errorf("Registration failed for %s: %v", req.Email, err)
+		slog.Error("registration failed", "email", req.Email, "error", err)
 		return nil, err
 	}
 
 	// Parse expiry time
 	expiresAt, _ := time.Parse(time.RFC3339, authResp.ExpiresAt)
 
-	l.Infof("User registered: %s (plan: %s)", req.Email, plan)
+	slog.Info("user registered", "email", req.Email, "plan", plan)
 
 	return &types.LoginResponse{
 		Token:        authResp.Token,
@@ -101,11 +101,11 @@ func (l *RegisterLogic) registerLocal(req *types.RegisterRequest) (*types.LoginR
 	// Register user locally
 	authResp, err := l.svcCtx.Auth.Register(l.ctx, req.Email, req.Password, req.Name)
 	if err != nil {
-		l.Errorf("Registration failed for %s: %v", req.Email, err)
+		slog.Error("registration failed", "email", req.Email, "error", err)
 		return nil, err
 	}
 
-	l.Infof("User registered (local): %s", req.Email)
+	slog.Info("user registered (local)", "email", req.Email)
 
 	// If user wants a paid plan, create checkout session
 	var checkoutURL string

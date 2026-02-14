@@ -196,7 +196,7 @@ The frontend is statically built and embedded into a single Go binary.
 
 ### 1. Code Generation
 
-**NEVER run `goctl` commands directly.** Always use:
+**TypeScript generation only.** Always use:
 ```bash
 make gen
 ```
@@ -503,7 +503,7 @@ const { checkoutUrl } = await createCheckout({ planName: 'pro' });
 
 ## Do NOT
 
-- Run `goctl` directly (use `make gen`)
+- Skip `make gen` after adding new endpoints
 - Use npm or yarn (use `pnpm`)
 - Use Svelte 4 syntax (`export let`, `$:`, `<slot>`)
 - Add inline styles or `<style>` blocks

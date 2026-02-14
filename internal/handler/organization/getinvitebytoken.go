@@ -3,18 +3,17 @@ package organization
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type GetInviteByTokenLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -24,20 +23,20 @@ func GetInviteByTokenHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.GetInviteByTokenRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &GetInviteByTokenLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.GetInviteByToken(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -54,7 +53,7 @@ func (l *GetInviteByTokenLogic) GetInviteByToken(req *types.GetInviteByTokenRequ
 	// Get invite by token (this is a public endpoint - no auth required)
 	invite, err := l.svcCtx.DB.Queries.GetInviteByToken(l.ctx, req.Token)
 	if err != nil {
-		l.Errorf("Failed to get invite: %v", err)
+		slog.Error("Failed to get invite", "error", err)
 		return nil, fmt.Errorf("invalid or expired invite")
 	}
 

@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Handler handles OAuth callbacks directly (not through go-zero)
+// Handler handles OAuth callbacks directly
 type Handler struct {
 	svcCtx *svc.ServiceContext
 }

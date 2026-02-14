@@ -3,18 +3,18 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	levee "github.com/almatuck/levee-go"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type ResetPasswordLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -24,20 +24,20 @@ func ResetPasswordHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.ResetPasswordRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &ResetPasswordLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.ResetPassword(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -54,7 +54,7 @@ func (l *ResetPasswordLogic) ResetPassword(req *types.ResetPasswordRequest) (res
 		ConfirmPassword: req.NewPassword,
 	})
 	if err != nil {
-		l.Errorf("Reset password failed: %v", err)
+		slog.Error("reset password failed", "error", err)
 		return nil, err
 	}
 

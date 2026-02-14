@@ -10,18 +10,17 @@ import (
 
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/webhook"
-	"github.com/zeromicro/go-zero/core/logx"
+	"log/slog"
 )
 
 // StripeHandler creates a raw HTTP handler for Stripe webhooks
-// This must be registered directly with server.AddRoute() to access raw body
-// for signature verification (go-zero handlers parse the body too early)
+// This must be registered directly to access raw body for signature verification
 func StripeHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Read raw body for signature verification
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			logx.Errorf("Failed to read webhook body: %v", err)
+			slog.Error("Failed to read webhook body", "error", err)
 			http.Error(w, "Failed to read body", http.StatusBadRequest)
 			return
 		}
@@ -29,7 +28,7 @@ func StripeHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		// Get Stripe signature header
 		sig := r.Header.Get("Stripe-Signature")
 		if sig == "" {
-			logx.Error("Missing Stripe-Signature header")
+			slog.Error("Missing Stripe-Signature header")
 			http.Error(w, "Missing signature", http.StatusBadRequest)
 			return
 		}
@@ -37,7 +36,7 @@ func StripeHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		// Verify webhook signature
 		webhookSecret := svcCtx.Config.Stripe.WebhookSecret
 		if webhookSecret == "" {
-			logx.Error("Stripe webhook secret not configured")
+			slog.Error("Stripe webhook secret not configured")
 			http.Error(w, "Webhook not configured", http.StatusInternalServerError)
 			return
 		}
@@ -46,14 +45,14 @@ func StripeHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			IgnoreAPIVersionMismatch: true,
 		})
 		if err != nil {
-			logx.Errorf("Failed to verify webhook signature: %v", err)
+			slog.Error("Failed to verify webhook signature", "error", err)
 			http.Error(w, "Invalid signature", http.StatusBadRequest)
 			return
 		}
 
 		// Handle the event
 		if err := handleStripeEvent(svcCtx, &event); err != nil {
-			logx.Errorf("Failed to handle webhook event %s: %v", event.Type, err)
+			slog.Error("Failed to handle webhook event", "type", event.Type, "error", err)
 			http.Error(w, "Failed to handle event", http.StatusInternalServerError)
 			return
 		}
@@ -94,17 +93,17 @@ func handleStripeEvent(svcCtx *svc.ServiceContext, event *stripe.Event) error {
 		if err := json.Unmarshal(event.Data.Raw, &invoice); err != nil {
 			return err
 		}
-		logx.Infof("Invoice payment succeeded: %s", invoice.ID)
+		slog.Info("Invoice payment succeeded", "invoice_id", invoice.ID)
 
 	case "invoice.payment_failed":
 		var invoice stripe.Invoice
 		if err := json.Unmarshal(event.Data.Raw, &invoice); err != nil {
 			return err
 		}
-		logx.Infof("[WARN] Invoice payment failed: %s for customer %s", invoice.ID, invoice.Customer.ID)
+		slog.Warn("Invoice payment failed", "invoice_id", invoice.ID, "customer_id", invoice.Customer.ID)
 
 	default:
-		logx.Infof("Unhandled Stripe event type: %s", event.Type)
+		slog.Info("Unhandled Stripe event type", "type", event.Type)
 	}
 
 	return nil
@@ -121,13 +120,12 @@ func handleCheckoutCompleted(svcCtx *svc.ServiceContext, ctx context.Context, se
 		subscriptionID = session.Subscription.ID
 	}
 
-	logx.Infof("Checkout completed: session=%s customer=%s subscription=%s",
-		session.ID, customerID, subscriptionID)
+	slog.Info("Checkout completed", "session_id", session.ID, "customer_id", customerID, "subscription_id", subscriptionID)
 
 	// Get user ID from metadata
 	userID, ok := session.Metadata["user_id"]
 	if !ok || userID == "" {
-		logx.Info("No user_id in checkout session metadata")
+		slog.Info("No user_id in checkout session metadata")
 		return nil
 	}
 
@@ -141,7 +139,7 @@ func handleCheckoutCompleted(svcCtx *svc.ServiceContext, ctx context.Context, se
 
 // handleSubscriptionUpdated processes subscription updates
 func handleSubscriptionUpdated(svcCtx *svc.ServiceContext, ctx context.Context, subscription *stripe.Subscription) error {
-	logx.Infof("Subscription updated: id=%s status=%s", subscription.ID, subscription.Status)
+	slog.Info("Subscription updated", "subscription_id", subscription.ID, "status", subscription.Status)
 
 	if svcCtx.Billing != nil {
 		// Get period from subscription items (Stripe API 2025-03-31 moved these fields)
@@ -167,7 +165,7 @@ func handleSubscriptionUpdated(svcCtx *svc.ServiceContext, ctx context.Context, 
 
 // handleSubscriptionDeleted processes subscription cancellations
 func handleSubscriptionDeleted(svcCtx *svc.ServiceContext, ctx context.Context, subscription *stripe.Subscription) error {
-	logx.Infof("Subscription deleted: id=%s", subscription.ID)
+	slog.Info("Subscription deleted", "subscription_id", subscription.ID)
 
 	if svcCtx.Billing != nil {
 		return svcCtx.Billing.HandleSubscriptionDeleted(ctx, subscription.ID)

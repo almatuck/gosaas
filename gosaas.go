@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	_ "embed"
-	"flag"
 	"fmt"
 	"io"
 	"net"
@@ -30,24 +29,19 @@ import (
 	"gosaas/internal/websocket"
 
 	levee "github.com/almatuck/levee-go"
-	"github.com/zeromicro/go-zero/core/conf"
-	"github.com/zeromicro/go-zero/rest"
+	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
 	"golang.org/x/crypto/acme/autocert"
 )
 
 //go:embed etc/gosaas.yaml
 var embeddedConfig []byte
 
-var _ = flag.String("f", "etc/gosaas.yaml", "the config file (ignored, using embedded config)")
-
 func main() {
-	flag.Parse()
-
-	var c config.Config
-
-	// Use embedded config - expand environment variables
-	if err := conf.LoadFromYamlBytes([]byte(os.ExpandEnv(string(embeddedConfig))), &c); err != nil {
-		fmt.Printf("Failed to load embedded config: %v\n", err)
+	// Load config with environment variable expansion
+	c, err := config.LoadConfig([]byte(os.ExpandEnv(string(embeddedConfig))))
+	if err != nil {
+		fmt.Printf("Failed to load config: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -61,13 +55,11 @@ func main() {
 			fmt.Println("ERROR: App.Domain is required in production mode")
 			os.Exit(1)
 		}
-		// Production mode - use domain name with HTTPS on standard port
 		srvHost = c.App.Domain
 		serverPort = 443
 		useHTTPS = true
 		fmt.Printf("Running in PRODUCTION mode - server.json will return https://%s\n", c.App.Domain)
 	} else if serverPort == 443 || serverPort == 80 {
-		// Fallback: check if running on standard HTTPS/HTTP ports
 		if c.App.Domain == "" {
 			fmt.Println("ERROR: App.Domain is required when using ports 80/443")
 			os.Exit(1)
@@ -77,7 +69,6 @@ func main() {
 			useHTTPS = true
 		}
 	} else {
-		// Development mode - use localhost with port
 		srvHost = "localhost"
 		app.DevMode = true
 		fmt.Printf("Running in DEVELOPMENT mode - server.json will return http://localhost:%d\n", serverPort)
@@ -89,28 +80,25 @@ func main() {
 	app.SetServerHost(srvHost, serverPort, useHTTPS)
 
 	// Set up SPA filesystem for static file serving
-	spaFS, err := app.FileSystem()
-	if err != nil {
-		fmt.Printf("Warning: Could not load embedded SPA files: %v\n", err)
+	spaFS, spaErr := app.FileSystem()
+	if spaErr != nil {
+		fmt.Printf("Warning: Could not load embedded SPA files: %v\n", spaErr)
 		fmt.Println("App should be running separately on port 5173")
 	}
 
-	// Create go-zero server with embedded app
-	var serverOpts []rest.RunOption
-	if err == nil {
-		serverOpts = append(serverOpts,
-			rest.WithNotFoundHandler(app.NotFoundHandler(spaFS)),
-		)
-	}
-	server := rest.MustNewServer(c.RestConf, serverOpts...)
-	defer server.Stop()
+	// Create chi router
+	r := chi.NewRouter()
 
-	ctx := svc.NewServiceContext(c)
-	defer ctx.Close()
+	// Standard middleware
+	r.Use(chimw.Recoverer)
+	r.Use(chimw.RealIP)
 
-	// Apply global security middleware
-	server.Use(func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
+	svcCtx := svc.NewServiceContext(*c)
+	defer svcCtx.Close()
+
+	// Global security headers middleware
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if c.IsSecurityHeadersEnabled() {
 				headers := middleware.APISecurityHeaders()
 				w.Header().Set("Content-Security-Policy", headers.ContentSecurityPolicy)
@@ -125,62 +113,49 @@ func main() {
 				w.Header().Set("Cache-Control", headers.CacheControl)
 				w.Header().Set("Pragma", headers.Pragma)
 			}
-			next(w, r)
-		}
-	})
-
-	// Add CSRF token endpoint
-	server.AddRoute(rest.Route{
-		Method:  http.MethodGet,
-		Path:    "/api/v1/csrf-token",
-		Handler: ctx.SecurityMiddleware.GetCSRFTokenHandler(),
-	})
-
-	handler.RegisterHandlers(server, ctx)
-
-	// Register Stripe webhook for standalone mode (Levee has its own webhook handlers)
-	if ctx.UseLocal() && ctx.Config.Stripe.WebhookSecret != "" {
-		server.AddRoute(rest.Route{
-			Method:  http.MethodPost,
-			Path:    "/api/webhook/stripe",
-			Handler: webhook.StripeHandler(ctx),
+			next.ServeHTTP(w, r)
 		})
+	})
+
+	// Register API routes
+	handler.RegisterHandlers(r, svcCtx)
+
+	// Register Stripe webhook for standalone mode
+	if svcCtx.UseLocal() && svcCtx.Config.Stripe.WebhookSecret != "" {
+		r.Post("/api/webhook/stripe", webhook.StripeHandler(svcCtx))
 		fmt.Println("Stripe webhook registered at /api/webhook/stripe")
 
 		// Sync products to Stripe on startup
-		if ctx.Billing != nil && len(ctx.Config.Products) > 0 {
+		if svcCtx.Billing != nil && len(svcCtx.Config.Products) > 0 {
 			syncCtx := context.Background()
-			syncedProducts, err := ctx.Billing.SyncProductsToStripe(syncCtx)
+			syncedProducts, err := svcCtx.Billing.SyncProductsToStripe(syncCtx)
 			if err != nil {
 				fmt.Printf("Warning: Failed to sync products to Stripe: %v\n", err)
 			} else {
 				fmt.Printf("Synced %d products to Stripe\n", len(syncedProducts))
-				// Update config with synced Stripe IDs for lookup
-				ctx.Config.Products = syncedProducts
+				svcCtx.Config.Products = syncedProducts
 			}
 		}
 	}
 
 	// Register Levee embedded handlers on default mux (reverse proxy routes to these)
-	// This includes: email tracking, unsubscribe, confirm, and webhook endpoints
-	if ctx.Levee != nil {
-		ctx.Levee.RegisterHandlers(http.DefaultServeMux, "",
+	if svcCtx.Levee != nil {
+		svcCtx.Levee.RegisterHandlers(http.DefaultServeMux, "",
 			levee.WithUnsubscribeRedirect("/unsubscribed"),
 			levee.WithConfirmRedirect("/welcome"),
 			levee.WithConfirmExpiredRedirect("/confirm-expired"),
 		)
 	}
 
-	// Register OAuth callback handlers directly (bypasses go-zero for browser redirects)
-	if ctx.UseLocal() && c.IsOAuthEnabled() {
-		oauthHandler := oauth.NewHandler(ctx)
+	// Register OAuth callback handlers
+	if svcCtx.UseLocal() && c.IsOAuthEnabled() {
+		oauthHandler := oauth.NewHandler(svcCtx)
 		oauthHandler.RegisterRoutes(http.DefaultServeMux)
 		fmt.Println("OAuth callbacks registered at /oauth/{provider}/callback")
 	}
 
-	// Register MCP (Model Context Protocol) handler for AI agent access
-	if ctx.UseLocal() {
-		// Determine base URL for MCP OAuth discovery
+	// Register MCP (Model Context Protocol) handler
+	if svcCtx.UseLocal() {
 		var baseURL string
 		if useHTTPS {
 			baseURL = fmt.Sprintf("https://%s", srvHost)
@@ -188,12 +163,11 @@ func main() {
 			baseURL = fmt.Sprintf("http://%s:%d", srvHost, serverPort)
 		}
 
-		mcpHandler := mcp.NewHandler(ctx, baseURL)
+		mcpHandler := mcp.NewHandler(svcCtx, baseURL)
 		http.DefaultServeMux.Handle("/mcp", mcpHandler)
 		http.DefaultServeMux.Handle("/mcp/", mcpHandler)
 
-		// Register MCP OAuth endpoints for Dynamic Client Registration
-		mcpOAuthHandler := mcpoauth.NewHandler(ctx, baseURL)
+		mcpOAuthHandler := mcpoauth.NewHandler(svcCtx, baseURL)
 		mcpOAuthHandler.RegisterRoutes(http.DefaultServeMux)
 
 		fmt.Println("MCP endpoint registered at /mcp")
@@ -205,30 +179,54 @@ func main() {
 	go hub.Run(context.Background())
 
 	// Register rewrite handler for WebSocket messages
-	rewriteHandler := realtime.NewRewriteHandler(ctx)
+	rewriteHandler := realtime.NewRewriteHandler(svcCtx)
 	rewriteHandler.Register()
 
-	// Add WebSocket endpoint
-	server.AddRoute(rest.Route{
-		Method:  http.MethodGet,
-		Path:    "/ws",
-		Handler: websocket.Handler(hub),
-	})
+	// WebSocket endpoint
+	r.Get("/ws", websocket.Handler(hub))
 
-	// In development mode, just run go-zero server directly
+	// SPA fallback (must be last)
+	if spaErr == nil {
+		r.NotFound(app.NotFoundHandler(spaFS).ServeHTTP)
+	}
+
+	// Create HTTP server
+	addr := fmt.Sprintf("%s:%d", c.Host, c.Port)
+
+	// In development mode, serve directly
 	if app.DevMode {
-		fmt.Printf("Starting go-zero backend server on %s:%d (dev mode)...\n", c.Host, c.Port)
-		server.Start()
+		fmt.Printf("Starting server on %s (dev mode)...\n", addr)
+		server := &http.Server{
+			Addr:         addr,
+			Handler:      r,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 30 * time.Second,
+			IdleTimeout:  120 * time.Second,
+		}
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("Server error: %v\n", err)
+			os.Exit(1)
+		}
 		return
 	}
 
-	// Production mode: Start go-zero server in background, then HTTPS/HTTP servers
+	// Production mode: Start backend in background, then HTTPS/HTTP servers
+	backendServer := &http.Server{
+		Addr:         addr,
+		Handler:      r,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
 	go func() {
-		fmt.Printf("Starting go-zero backend server on %s:%d...\n", c.Host, c.Port)
-		server.Start()
+		fmt.Printf("Starting backend server on %s...\n", addr)
+		if err := backendServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("Backend server error: %v\n", err)
+		}
 	}()
 
-	// Set up autocert for Let's Encrypt - update these for your domain
+	// Set up autocert for Let's Encrypt
 	certManager := &autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		Cache:      autocert.DirCache("certs"),
@@ -236,11 +234,10 @@ func main() {
 		Email:      c.App.AdminEmail,
 	}
 
-	// Create reverse proxy to go-zero backend with connection pooling
+	// Create reverse proxy to backend with connection pooling
 	backendURL, _ := url.Parse(fmt.Sprintf("http://%s:%d", c.Host, c.Port))
 	proxy := httputil.NewSingleHostReverseProxy(backendURL)
 
-	// Modify director to preserve WebSocket headers
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
@@ -249,7 +246,6 @@ func main() {
 		}
 	}
 
-	// Configure transport for optimal performance
 	proxy.Transport = &http.Transport{
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 100,
@@ -259,7 +255,6 @@ func main() {
 		ReadBufferSize:      32 << 10,
 	}
 
-	// Add error handler for backend failures
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 		fmt.Printf("Proxy error: %v\n", err)
 		http.Error(w, "Backend temporarily unavailable", http.StatusBadGateway)
@@ -297,7 +292,7 @@ func main() {
 			return
 		}
 
-		// Route other webhook requests to backend (e.g., /webhooks/levee)
+		// Route other webhook requests to backend
 		if strings.HasPrefix(r.URL.Path, "/webhooks/") {
 			proxy.ServeHTTP(w, r)
 			return
@@ -309,26 +304,26 @@ func main() {
 			return
 		}
 
-		// Route OAuth callbacks to default mux (browser redirects, not API calls)
+		// Route OAuth callbacks to default mux
 		if strings.HasPrefix(r.URL.Path, "/oauth/") {
 			http.DefaultServeMux.ServeHTTP(w, r)
 			return
 		}
 
-		// Route MCP (Model Context Protocol) requests to default mux
+		// Route MCP requests to default mux
 		if strings.HasPrefix(r.URL.Path, "/mcp") || strings.HasPrefix(r.URL.Path, "/.well-known/oauth-") {
 			http.DefaultServeMux.ServeHTTP(w, r)
 			return
 		}
 
-		// Route WebSocket requests to backend with proper upgrade handling
+		// Route WebSocket requests to backend
 		if strings.HasPrefix(r.URL.Path, "/ws") {
 			proxyWebSocket(w, r, c.Host, c.Port)
 			return
 		}
 
 		// Serve static files with SPA fallback
-		if err == nil {
+		if spaErr == nil {
 			app.SPAHandler(spaFS).ServeHTTP(w, r)
 		} else {
 			http.Error(w, "SPA not available", http.StatusServiceUnavailable)
@@ -406,6 +401,12 @@ func main() {
 		fmt.Printf("HTTP server forced to shutdown: %v\n", err)
 	} else {
 		fmt.Println("HTTP server stopped")
+	}
+
+	if err := backendServer.Shutdown(shutdownCtx); err != nil {
+		fmt.Printf("Backend server forced to shutdown: %v\n", err)
+	} else {
+		fmt.Println("Backend server stopped")
 	}
 
 	fmt.Println("All servers shut down successfully")

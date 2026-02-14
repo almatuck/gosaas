@@ -3,18 +3,17 @@ package oauth
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"gosaas/internal/auth"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type ListOAuthProvidersLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -31,14 +30,14 @@ func (l *ListOAuthProvidersLogic) ListOAuthProviders() (resp *types.ListOAuthPro
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
 	// Get user's OAuth connections
 	connections, err := l.svcCtx.DB.Queries.ListUserOAuthConnections(l.ctx, userID.String())
 	if err != nil {
-		l.Errorf("Failed to list OAuth connections: %v", err)
+		slog.Error("Failed to list OAuth connections", "error", err)
 		return nil, err
 	}
 
@@ -79,15 +78,15 @@ func (l *ListOAuthProvidersLogic) ListOAuthProviders() (resp *types.ListOAuthPro
 func ListOAuthProvidersHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := &ListOAuthProvidersLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.ListOAuthProviders()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

@@ -2,13 +2,12 @@ package middleware
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
-
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
-// AdminAuthMiddleware checks if the authenticated user is an admin
-// This runs AFTER go-zero's JWT middleware has validated the token
+// AdminAuthMiddleware checks if the authenticated user is an admin.
+// This runs AFTER JWT middleware has validated the token.
 type AdminAuthMiddleware struct {
 	adminUsername string
 }
@@ -19,40 +18,37 @@ func NewAdminAuthMiddleware(adminUsername string) *AdminAuthMiddleware {
 	}
 }
 
-func (m *AdminAuthMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Check if admin username is configured
+func (m *AdminAuthMiddleware) Handle(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if m.adminUsername == "" {
-			logx.Error("[AdminAuth] Admin username not configured")
+			slog.Error("[AdminAuth] Admin username not configured")
 			adminForbidden(w, "Admin access not configured")
 			return
 		}
 
-		// Get email from JWT claims (set by go-zero JWT middleware)
 		email := r.Context().Value("email")
 		if email == nil {
-			logx.Error("[AdminAuth] No email claim in JWT")
+			slog.Error("[AdminAuth] No email claim in JWT")
 			adminForbidden(w, "Admin access required")
 			return
 		}
 
 		emailStr, ok := email.(string)
 		if !ok {
-			logx.Error("[AdminAuth] Invalid email claim type in JWT")
+			slog.Error("[AdminAuth] Invalid email claim type in JWT")
 			adminForbidden(w, "Admin access required")
 			return
 		}
 
-		// Check if the authenticated user is the admin
 		if emailStr != m.adminUsername {
-			logx.Infof("[AdminAuth] Non-admin user attempted admin access: %s", emailStr)
+			slog.Info("[AdminAuth] Non-admin user attempted admin access", "email", emailStr)
 			adminForbidden(w, "Admin access required")
 			return
 		}
 
-		logx.Infof("[AdminAuth] Admin access granted: %s", emailStr)
-		next(w, r)
-	}
+		slog.Info("[AdminAuth] Admin access granted", "email", emailStr)
+		next.ServeHTTP(w, r)
+	})
 }
 
 // adminForbidden sends a 403 response for non-admin users

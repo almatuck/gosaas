@@ -2,19 +2,18 @@ package notification
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"gosaas/internal/auth"
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type DeleteNotificationLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -31,7 +30,7 @@ func (l *DeleteNotificationLogic) DeleteNotification(req *types.DeleteNotificati
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
@@ -41,7 +40,7 @@ func (l *DeleteNotificationLogic) DeleteNotification(req *types.DeleteNotificati
 		UserID: userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to delete notification: %v", err)
+		slog.Error("Failed to delete notification", "error", err)
 		return nil, err
 	}
 
@@ -52,20 +51,20 @@ func DeleteNotificationHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.DeleteNotificationRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &DeleteNotificationLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.DeleteNotification(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

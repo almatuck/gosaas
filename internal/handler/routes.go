@@ -1,393 +1,116 @@
-// Package handler registers all API routes with the go-zero server.
+// Package handler registers all API routes.
 package handler
 
 import (
 	"net/http"
 
-	admin "gosaas/internal/handler/admin"
-	auth "gosaas/internal/handler/auth"
-	notification "gosaas/internal/handler/notification"
-	oauth "gosaas/internal/handler/oauth"
-	organization "gosaas/internal/handler/organization"
-	subscription "gosaas/internal/handler/subscription"
-	user "gosaas/internal/handler/user"
+	"gosaas/internal/handler/admin"
+	"gosaas/internal/handler/auth"
+	"gosaas/internal/handler/notification"
+	"gosaas/internal/handler/oauth"
+	"gosaas/internal/handler/organization"
+	"gosaas/internal/handler/subscription"
+	"gosaas/internal/handler/user"
+	"gosaas/internal/middleware"
 	"gosaas/internal/svc"
 
-	"github.com/zeromicro/go-zero/rest"
+	"github.com/go-chi/chi/v5"
 )
 
-func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// Health check endpoint
-				Method:  http.MethodGet,
-				Path:    "/health",
-				Handler: HealthCheckHandler(serverCtx),
-			},
-		},
-	)
+func RegisterHandlers(r chi.Router, svcCtx *svc.ServiceContext) {
+	// Health check (no prefix, no auth)
+	r.Get("/health", HealthCheckHandler(svcCtx))
 
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.AdminAuth},
-			[]rest.Route{
-				{
-					// Get admin dashboard stats
-					Method:  http.MethodGet,
-					Path:    "/admin/stats",
-					Handler: admin.GetAdminStatsHandler(serverCtx),
-				},
-				{
-					// List all subscriptions (paginated)
-					Method:  http.MethodGet,
-					Path:    "/admin/subscriptions",
-					Handler: admin.AdminListSubscriptionsHandler(serverCtx),
-				},
-				{
-					// List all users (paginated)
-					Method:  http.MethodGet,
-					Path:    "/admin/users",
-					Handler: admin.AdminListUsersHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/api/v1"),
-	)
+	r.Route("/api/v1", func(r chi.Router) {
+		// ── Public routes (no auth) ──────────────────────────────
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// Get auth configuration (OAuth providers enabled)
-				Method:  http.MethodGet,
-				Path:    "/auth/config",
-				Handler: auth.GetAuthConfigHandler(serverCtx),
-			},
-			{
-				// Request password reset
-				Method:  http.MethodPost,
-				Path:    "/auth/forgot-password",
-				Handler: auth.ForgotPasswordHandler(serverCtx),
-			},
-			{
-				// User login
-				Method:  http.MethodPost,
-				Path:    "/auth/login",
-				Handler: auth.LoginHandler(serverCtx),
-			},
-			{
-				// Refresh authentication token
-				Method:  http.MethodPost,
-				Path:    "/auth/refresh",
-				Handler: auth.RefreshTokenHandler(serverCtx),
-			},
-			{
-				// Register new user
-				Method:  http.MethodPost,
-				Path:    "/auth/register",
-				Handler: auth.RegisterHandler(serverCtx),
-			},
-			{
-				// Resend email verification
-				Method:  http.MethodPost,
-				Path:    "/auth/resend-verification",
-				Handler: auth.ResendVerificationHandler(serverCtx),
-			},
-			{
-				// Reset password with token
-				Method:  http.MethodPost,
-				Path:    "/auth/reset-password",
-				Handler: auth.ResetPasswordHandler(serverCtx),
-			},
-			{
-				// Verify email address with token
-				Method:  http.MethodPost,
-				Path:    "/auth/verify-email",
-				Handler: auth.VerifyEmailHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/api/v1"),
-	)
+		// Auth
+		r.Get("/auth/config", auth.GetAuthConfigHandler(svcCtx))
+		r.Post("/auth/forgot-password", auth.ForgotPasswordHandler(svcCtx))
+		r.Post("/auth/login", auth.LoginHandler(svcCtx))
+		r.Post("/auth/refresh", auth.RefreshTokenHandler(svcCtx))
+		r.Post("/auth/register", auth.RegisterHandler(svcCtx))
+		r.Post("/auth/resend-verification", auth.ResendVerificationHandler(svcCtx))
+		r.Post("/auth/reset-password", auth.ResetPasswordHandler(svcCtx))
+		r.Post("/auth/verify-email", auth.VerifyEmailHandler(svcCtx))
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// List user notifications
-				Method:  http.MethodGet,
-				Path:    "/notifications",
-				Handler: notification.ListNotificationsHandler(serverCtx),
-			},
-			{
-				// Delete notification
-				Method:  http.MethodDelete,
-				Path:    "/notifications/:id",
-				Handler: notification.DeleteNotificationHandler(serverCtx),
-			},
-			{
-				// Mark notification as read
-				Method:  http.MethodPut,
-				Path:    "/notifications/:id/read",
-				Handler: notification.MarkNotificationReadHandler(serverCtx),
-			},
-			{
-				// Mark all notifications as read
-				Method:  http.MethodPut,
-				Path:    "/notifications/read-all",
-				Handler: notification.MarkAllNotificationsReadHandler(serverCtx),
-			},
-			{
-				// Get unread notification count
-				Method:  http.MethodGet,
-				Path:    "/notifications/unread-count",
-				Handler: notification.GetUnreadCountHandler(serverCtx),
-			},
-		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/api/v1"),
-	)
+		// OAuth (public - callback and URL generation)
+		r.Post("/oauth/{provider}/callback", oauth.OAuthCallbackHandler(svcCtx))
+		r.Get("/oauth/{provider}/url", oauth.GetOAuthUrlHandler(svcCtx))
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// OAuth callback - exchange code for tokens
-				Method:  http.MethodPost,
-				Path:    "/oauth/:provider/callback",
-				Handler: oauth.OAuthCallbackHandler(serverCtx),
-			},
-			{
-				// Get OAuth authorization URL
-				Method:  http.MethodGet,
-				Path:    "/oauth/:provider/url",
-				Handler: oauth.GetOAuthUrlHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/api/v1"),
-	)
+		// Organization invite (public - token-based)
+		r.Get("/organizations/invites/{token}", organization.GetInviteByTokenHandler(svcCtx))
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// Disconnect OAuth provider
-				Method:  http.MethodDelete,
-				Path:    "/oauth/:provider",
-				Handler: oauth.DisconnectOAuthHandler(serverCtx),
-			},
-			{
-				// List connected OAuth providers
-				Method:  http.MethodGet,
-				Path:    "/oauth/providers",
-				Handler: oauth.ListOAuthProvidersHandler(serverCtx),
-			},
-		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/api/v1"),
-	)
+		// Subscription plans (public)
+		r.Get("/subscription/plans", subscription.ListPlansHandler(svcCtx))
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// Create a new organization
-				Method:  http.MethodPost,
-				Path:    "/organizations",
-				Handler: organization.CreateOrganizationHandler(serverCtx),
-			},
-			{
-				// List user's organizations
-				Method:  http.MethodGet,
-				Path:    "/organizations",
-				Handler: organization.ListOrganizationsHandler(serverCtx),
-			},
-			{
-				// Get organization by ID
-				Method:  http.MethodGet,
-				Path:    "/organizations/:id",
-				Handler: organization.GetOrganizationHandler(serverCtx),
-			},
-			{
-				// Update organization
-				Method:  http.MethodPut,
-				Path:    "/organizations/:id",
-				Handler: organization.UpdateOrganizationHandler(serverCtx),
-			},
-			{
-				// Delete organization
-				Method:  http.MethodDelete,
-				Path:    "/organizations/:id",
-				Handler: organization.DeleteOrganizationHandler(serverCtx),
-			},
-			{
-				// Invite member to organization
-				Method:  http.MethodPost,
-				Path:    "/organizations/:id/invites",
-				Handler: organization.InviteMemberHandler(serverCtx),
-			},
-			{
-				// List pending invites
-				Method:  http.MethodGet,
-				Path:    "/organizations/:id/invites",
-				Handler: organization.ListInvitesHandler(serverCtx),
-			},
-			{
-				// Leave organization
-				Method:  http.MethodPost,
-				Path:    "/organizations/:id/leave",
-				Handler: organization.LeaveOrganizationHandler(serverCtx),
-			},
-			{
-				// List organization members
-				Method:  http.MethodGet,
-				Path:    "/organizations/:id/members",
-				Handler: organization.ListMembersHandler(serverCtx),
-			},
-			{
-				// Revoke invite
-				Method:  http.MethodDelete,
-				Path:    "/organizations/:orgId/invites/:inviteId",
-				Handler: organization.RevokeInviteHandler(serverCtx),
-			},
-			{
-				// Update member role
-				Method:  http.MethodPut,
-				Path:    "/organizations/:orgId/members/:userId",
-				Handler: organization.UpdateMemberRoleHandler(serverCtx),
-			},
-			{
-				// Remove member from organization
-				Method:  http.MethodDelete,
-				Path:    "/organizations/:orgId/members/:userId",
-				Handler: organization.RemoveMemberHandler(serverCtx),
-			},
-			{
-				// Accept organization invite
-				Method:  http.MethodPost,
-				Path:    "/organizations/invites/accept",
-				Handler: organization.AcceptInviteHandler(serverCtx),
-			},
-			{
-				// Switch current organization
-				Method:  http.MethodPost,
-				Path:    "/organizations/switch",
-				Handler: organization.SwitchOrganizationHandler(serverCtx),
-			},
-		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/api/v1"),
-	)
+		// ── JWT-protected routes ─────────────────────────────────
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// Get invite details by token
-				Method:  http.MethodGet,
-				Path:    "/organizations/invites/:token",
-				Handler: organization.GetInviteByTokenHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/api/v1"),
-	)
+		r.Group(func(r chi.Router) {
+			// Apply JWT auth based on mode
+			if svcCtx.UseLevee() {
+				r.Use(middleware.LeveeTokenTranslator(svcCtx.Config.Auth.AccessSecret))
+				r.Use(middleware.JWTAuth(svcCtx.Config.Auth.AccessSecret))
+			} else {
+				r.Use(middleware.JWTAuth(svcCtx.Config.Auth.AccessSecret))
+			}
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// List all available subscription plans
-				Method:  http.MethodGet,
-				Path:    "/subscription/plans",
-				Handler: subscription.ListPlansHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/api/v1"),
-	)
+			// Notifications
+			r.Get("/notifications", notification.ListNotificationsHandler(svcCtx))
+			r.Delete("/notifications/{id}", notification.DeleteNotificationHandler(svcCtx))
+			r.Put("/notifications/{id}/read", notification.MarkNotificationReadHandler(svcCtx))
+			r.Put("/notifications/read-all", notification.MarkAllNotificationsReadHandler(svcCtx))
+			r.Get("/notifications/unread-count", notification.GetUnreadCountHandler(svcCtx))
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// Get current user's subscription
-				Method:  http.MethodGet,
-				Path:    "/subscription",
-				Handler: subscription.GetSubscriptionHandler(serverCtx),
-			},
-			{
-				// Get billing history
-				Method:  http.MethodGet,
-				Path:    "/subscription/billing-history",
-				Handler: subscription.ListBillingHistoryHandler(serverCtx),
-			},
-			{
-				// Create billing portal session for subscription management
-				Method:  http.MethodPost,
-				Path:    "/subscription/billing-portal",
-				Handler: subscription.CreateBillingPortalHandler(serverCtx),
-			},
-			{
-				// Cancel current subscription
-				Method:  http.MethodPost,
-				Path:    "/subscription/cancel",
-				Handler: subscription.CancelSubscriptionHandler(serverCtx),
-			},
-			{
-				// Check if user has access to a feature
-				Method:  http.MethodPost,
-				Path:    "/subscription/check-feature",
-				Handler: subscription.CheckFeatureHandler(serverCtx),
-			},
-			{
-				// Create checkout session to subscribe to a plan
-				Method:  http.MethodPost,
-				Path:    "/subscription/checkout",
-				Handler: subscription.CreateCheckoutHandler(serverCtx),
-			},
-			{
-				// Get current usage statistics
-				Method:  http.MethodGet,
-				Path:    "/subscription/usage",
-				Handler: subscription.GetUsageStatsHandler(serverCtx),
-			},
-		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/api/v1"),
-	)
+			// OAuth (authenticated - manage connections)
+			r.Delete("/oauth/{provider}", oauth.DisconnectOAuthHandler(svcCtx))
+			r.Get("/oauth/providers", oauth.ListOAuthProvidersHandler(svcCtx))
 
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// Get current user profile
-				Method:  http.MethodGet,
-				Path:    "/user/me",
-				Handler: user.GetCurrentUserHandler(serverCtx),
-			},
-			{
-				// Update current user profile
-				Method:  http.MethodPut,
-				Path:    "/user/me",
-				Handler: user.UpdateCurrentUserHandler(serverCtx),
-			},
-			{
-				// Delete current user account
-				Method:  http.MethodDelete,
-				Path:    "/user/me",
-				Handler: user.DeleteAccountHandler(serverCtx),
-			},
-			{
-				// Change password for authenticated user
-				Method:  http.MethodPost,
-				Path:    "/user/me/change-password",
-				Handler: user.ChangePasswordHandler(serverCtx),
-			},
-			{
-				// Get user preferences
-				Method:  http.MethodGet,
-				Path:    "/user/me/preferences",
-				Handler: user.GetPreferencesHandler(serverCtx),
-			},
-			{
-				// Update user preferences
-				Method:  http.MethodPut,
-				Path:    "/user/me/preferences",
-				Handler: user.UpdatePreferencesHandler(serverCtx),
-			},
-		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
-		rest.WithPrefix("/api/v1"),
-	)
+			// Organizations
+			r.Post("/organizations", organization.CreateOrganizationHandler(svcCtx))
+			r.Get("/organizations", organization.ListOrganizationsHandler(svcCtx))
+			r.Get("/organizations/{id}", organization.GetOrganizationHandler(svcCtx))
+			r.Put("/organizations/{id}", organization.UpdateOrganizationHandler(svcCtx))
+			r.Delete("/organizations/{id}", organization.DeleteOrganizationHandler(svcCtx))
+			r.Post("/organizations/{id}/invites", organization.InviteMemberHandler(svcCtx))
+			r.Get("/organizations/{id}/invites", organization.ListInvitesHandler(svcCtx))
+			r.Post("/organizations/{id}/leave", organization.LeaveOrganizationHandler(svcCtx))
+			r.Get("/organizations/{id}/members", organization.ListMembersHandler(svcCtx))
+			r.Delete("/organizations/{orgId}/invites/{inviteId}", organization.RevokeInviteHandler(svcCtx))
+			r.Put("/organizations/{orgId}/members/{userId}", organization.UpdateMemberRoleHandler(svcCtx))
+			r.Delete("/organizations/{orgId}/members/{userId}", organization.RemoveMemberHandler(svcCtx))
+			r.Post("/organizations/invites/accept", organization.AcceptInviteHandler(svcCtx))
+			r.Post("/organizations/switch", organization.SwitchOrganizationHandler(svcCtx))
+
+			// Subscription
+			r.Get("/subscription", subscription.GetSubscriptionHandler(svcCtx))
+			r.Get("/subscription/billing-history", subscription.ListBillingHistoryHandler(svcCtx))
+			r.Post("/subscription/billing-portal", subscription.CreateBillingPortalHandler(svcCtx))
+			r.Post("/subscription/cancel", subscription.CancelSubscriptionHandler(svcCtx))
+			r.Post("/subscription/check-feature", subscription.CheckFeatureHandler(svcCtx))
+			r.Post("/subscription/checkout", subscription.CreateCheckoutHandler(svcCtx))
+			r.Get("/subscription/usage", subscription.GetUsageStatsHandler(svcCtx))
+
+			// User
+			r.Get("/user/me", user.GetCurrentUserHandler(svcCtx))
+			r.Put("/user/me", user.UpdateCurrentUserHandler(svcCtx))
+			r.Delete("/user/me", user.DeleteAccountHandler(svcCtx))
+			r.Post("/user/me/change-password", user.ChangePasswordHandler(svcCtx))
+			r.Get("/user/me/preferences", user.GetPreferencesHandler(svcCtx))
+			r.Put("/user/me/preferences", user.UpdatePreferencesHandler(svcCtx))
+
+			// Admin (JWT + admin auth)
+			r.Group(func(r chi.Router) {
+				r.Use(svcCtx.AdminAuth)
+				r.Get("/admin/stats", admin.GetAdminStatsHandler(svcCtx))
+				r.Get("/admin/subscriptions", admin.AdminListSubscriptionsHandler(svcCtx))
+				r.Get("/admin/users", admin.AdminListUsersHandler(svcCtx))
+			})
+		})
+	})
+
+	// CSRF token endpoint (no auth, no prefix)
+	r.Get("/api/v1/csrf-token", func(w http.ResponseWriter, r *http.Request) {
+		svcCtx.SecurityMiddleware.GetCSRFTokenHandler().ServeHTTP(w, r)
+	})
 }

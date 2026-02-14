@@ -3,19 +3,18 @@ package admin
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type AdminListSubscriptionsLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -44,7 +43,7 @@ func (l *AdminListSubscriptionsLogic) AdminListSubscriptions(req *types.AdminLis
 	// Get total count (with filter)
 	totalCount, err := l.svcCtx.DB.CountSubscriptionsFiltered(l.ctx, statusFilter)
 	if err != nil {
-		l.Errorf("Failed to count subscriptions: %v", err)
+		slog.Error("Failed to count subscriptions", "error", err)
 		return nil, fmt.Errorf("failed to count subscriptions")
 	}
 
@@ -56,7 +55,7 @@ func (l *AdminListSubscriptionsLogic) AdminListSubscriptions(req *types.AdminLis
 		PageSize:     int64(pageSize),
 	})
 	if err != nil {
-		l.Errorf("Failed to list subscriptions: %v", err)
+		slog.Error("Failed to list subscriptions", "error", err)
 		return nil, fmt.Errorf("failed to list subscriptions")
 	}
 
@@ -88,20 +87,20 @@ func AdminListSubscriptionsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.AdminListSubscriptionsRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &AdminListSubscriptionsLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.AdminListSubscriptions(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

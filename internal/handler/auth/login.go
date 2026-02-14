@@ -4,20 +4,20 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	levee "github.com/almatuck/levee-go"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type LoginLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -27,20 +27,20 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.LoginRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &LoginLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.Login(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -67,14 +67,14 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, 
 		Password: req.Password,
 	})
 	if err != nil {
-		l.Errorf("Login failed for %s: %v", req.Email, err)
+		slog.Error("login failed", "email", req.Email, "error", err)
 		return nil, err
 	}
 
 	// Parse expiry time
 	expiresAt, _ := time.Parse(time.RFC3339, authResp.ExpiresAt)
 
-	l.Infof("User logged in: %s", req.Email)
+	slog.Info("user logged in", "email", req.Email)
 
 	return &types.LoginResponse{
 		Token:        authResp.Token,
@@ -91,11 +91,11 @@ func (l *LoginLogic) loginLocal(req *types.LoginRequest) (*types.LoginResponse, 
 
 	authResp, err := l.svcCtx.Auth.Login(l.ctx, req.Email, req.Password)
 	if err != nil {
-		l.Errorf("Login failed for %s: %v", req.Email, err)
+		slog.Error("login failed", "email", req.Email, "error", err)
 		return nil, err
 	}
 
-	l.Infof("User logged in (local): %s", req.Email)
+	slog.Info("user logged in (local)", "email", req.Email)
 
 	return &types.LoginResponse{
 		Token:        authResp.Token,
@@ -112,7 +112,7 @@ func (l *LoginLogic) loginAdmin(req *types.LoginRequest) (*types.LoginResponse, 
 	providedPass := []byte(req.Password)
 
 	if subtle.ConstantTimeCompare(expectedPass, providedPass) != 1 {
-		l.Errorf("Admin login failed: invalid password")
+		slog.Error("admin login failed: invalid password")
 		return nil, fmt.Errorf("invalid credentials")
 	}
 
@@ -135,11 +135,11 @@ func (l *LoginLogic) loginAdmin(req *types.LoginRequest) (*types.LoginResponse, 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	accessToken, err := token.SignedString([]byte(l.svcCtx.Config.Auth.AccessSecret))
 	if err != nil {
-		l.Errorf("Failed to sign admin token: %v", err)
+		slog.Error("failed to sign admin token", "error", err)
 		return nil, fmt.Errorf("failed to generate token")
 	}
 
-	l.Infof("Admin logged in: %s", req.Email)
+	slog.Info("admin logged in", "email", req.Email)
 
 	return &types.LoginResponse{
 		Token:       accessToken,
@@ -159,14 +159,14 @@ func (l *LoginLogic) ensureAdminUserAndLogin(req *types.LoginRequest) (*types.Lo
 	user, err := l.svcCtx.Auth.GetUserByEmail(l.ctx, req.Email)
 	if err != nil {
 		// User doesn't exist - create them
-		l.Infof("Creating admin user on first login: %s", req.Email)
+		slog.Info("creating admin user on first login", "email", req.Email)
 		authResp, err := l.svcCtx.Auth.Register(l.ctx, req.Email, req.Password, "Admin")
 		if err != nil {
-			l.Errorf("Failed to create admin user: %v", err)
+			slog.Error("failed to create admin user", "error", err)
 			return nil, fmt.Errorf("failed to create admin user: %w", err)
 		}
 
-		l.Infof("Admin user created and logged in: %s", req.Email)
+		slog.Info("admin user created and logged in", "email", req.Email)
 		return &types.LoginResponse{
 			Token:        authResp.Token,
 			RefreshToken: authResp.RefreshToken,
@@ -178,11 +178,11 @@ func (l *LoginLogic) ensureAdminUserAndLogin(req *types.LoginRequest) (*types.Lo
 	// This allows the config password to be the master admin password
 	authResp, err := l.svcCtx.Auth.GenerateTokensForUser(l.ctx, user.ID, user.Email)
 	if err != nil {
-		l.Errorf("Failed to generate admin tokens: %v", err)
+		slog.Error("failed to generate admin tokens", "error", err)
 		return nil, err
 	}
 
-	l.Infof("Admin logged in: %s", req.Email)
+	slog.Info("admin logged in", "email", req.Email)
 	return &types.LoginResponse{
 		Token:        authResp.Token,
 		RefreshToken: authResp.RefreshToken,

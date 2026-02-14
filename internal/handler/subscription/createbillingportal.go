@@ -3,19 +3,19 @@ package subscription
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"gosaas/internal/auth"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	levee "github.com/almatuck/levee-go"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type CreateBillingPortalLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -28,14 +28,14 @@ func (l *CreateBillingPortalLogic) CreateBillingPortal() (resp *types.CreateBill
 	// Get email from JWT context
 	email, err := auth.GetEmailFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get email from context: %v", err)
+		slog.Error("Failed to get email from context", "error", err)
 		return nil, err
 	}
 
 	// Get customer to get Stripe customer ID
 	customer, err := l.svcCtx.Levee.Customers.GetCustomerByEmail(l.ctx, email)
 	if err != nil {
-		l.Errorf("Failed to get customer %s: %v", email, err)
+		slog.Error("Failed to get customer", "email", email, "error", err)
 		return nil, err
 	}
 
@@ -48,7 +48,7 @@ func (l *CreateBillingPortalLogic) CreateBillingPortal() (resp *types.CreateBill
 		ReturnUrl:  returnURL,
 	})
 	if err != nil {
-		l.Errorf("Failed to get billing portal for %s: %v", email, err)
+		slog.Error("Failed to get billing portal", "email", email, "error", err)
 		return nil, err
 	}
 
@@ -61,15 +61,15 @@ func (l *CreateBillingPortalLogic) CreateBillingPortal() (resp *types.CreateBill
 func CreateBillingPortalHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := &CreateBillingPortalLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.CreateBillingPortal()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

@@ -3,19 +3,18 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/auth"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type GetCurrentUserLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -24,7 +23,7 @@ func (l *GetCurrentUserLogic) GetCurrentUser() (resp *types.GetUserResponse, err
 	// Get email from JWT context
 	email, err := auth.GetEmailFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get email from context: %v", err)
+		slog.Error("Failed to get email from context", "error", err)
 		return nil, err
 	}
 
@@ -55,7 +54,7 @@ func (l *GetCurrentUserLogic) GetCurrentUser() (resp *types.GetUserResponse, err
 	// Get customer from Levee SDK
 	customer, err := l.svcCtx.Levee.Customers.GetCustomerByEmail(l.ctx, email)
 	if err != nil {
-		l.Errorf("Failed to get customer %s: %v", email, err)
+		slog.Error("Failed to get customer", "email", email, "error", err)
 		return nil, err
 	}
 
@@ -79,7 +78,7 @@ func (l *GetCurrentUserLogic) getCurrentUserLocal(email string) (*types.GetUserR
 
 	user, err := l.svcCtx.Auth.GetUserByEmail(l.ctx, email)
 	if err != nil {
-		l.Errorf("Failed to get user %s: %v", email, err)
+		slog.Error("Failed to get user", "email", email, "error", err)
 		return nil, err
 	}
 
@@ -99,15 +98,15 @@ func (l *GetCurrentUserLogic) getCurrentUserLocal(email string) (*types.GetUserR
 func GetCurrentUserHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := &GetCurrentUserLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.GetCurrentUser()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

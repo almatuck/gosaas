@@ -10,7 +10,7 @@ import (
 
 	_ "modernc.org/sqlite" // Pure Go SQLite driver (no CGO)
 
-	"github.com/zeromicro/go-zero/core/logx"
+	"log/slog"
 )
 
 // NewSQLite creates a new SQLite database connection, runs migrations, and returns a Store
@@ -39,6 +39,6 @@ func NewSQLite(path string) (*Store, error) {
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	logx.Infof("SQLite database initialized at %s", path)
+	slog.Info("SQLite database initialized", "path", path)
 	return NewStore(db), nil
 }

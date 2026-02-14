@@ -61,14 +61,9 @@ type GetWidgetResponse struct {
 }
 ```
 
-2. Add route to `internal/handler/routes.go`:
+2. Add route to `internal/handler/routes.go` (inside the `r.Route("/api/v1", ...)` block):
 ```go
-{
-    // Get widget by ID
-    Method:  http.MethodGet,
-    Path:    "/widgets/:id",
-    Handler: widget.GetWidgetHandler(serverCtx),
-},
+r.Get("/widgets/{id}", widget.GetWidgetHandler(svcCtx))
 ```
 
 3. Create handler file `internal/handler/widget/getwidget.go`:
@@ -77,15 +72,15 @@ package widget
 
 import (
     "context"
+    "log/slog"
     "net/http"
+    "gosaas/internal/httpx"
     "gosaas/internal/svc"
     "gosaas/internal/types"
-    "github.com/zeromicro/go-zero/core/logx"
-    "github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type GetWidgetLogic struct {
-    logx.Logger
+    logger *slog.Logger
     ctx    context.Context
     svcCtx *svc.ServiceContext
 }
@@ -94,15 +89,15 @@ func GetWidgetHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var req types.GetWidgetRequest
         if err := httpx.Parse(r, &req); err != nil {
-            httpx.ErrorCtx(r.Context(), w, err)
+            httpx.ErrorResponse(w, err)
             return
         }
-        l := &GetWidgetLogic{Logger: logx.WithContext(r.Context()), ctx: r.Context(), svcCtx: svcCtx}
+        l := &GetWidgetLogic{logger: slog.Default(), ctx: r.Context(), svcCtx: svcCtx}
         resp, err := l.GetWidget(&req)
         if err != nil {
-            httpx.ErrorCtx(r.Context(), w, err)
+            httpx.ErrorResponse(w, err)
         } else {
-            httpx.OkJsonCtx(r.Context(), w, resp)
+            httpx.OkJson(w, resp)
         }
     }
 }

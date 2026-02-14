@@ -3,18 +3,17 @@ package admin
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type GetAdminStatsLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -34,42 +33,42 @@ func (l *GetAdminStatsLogic) GetAdminStats() (resp *types.AdminStatsResponse, er
 	// Get total users
 	totalUsers, err := l.svcCtx.DB.CountUsers(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to count users: %v", err)
+		slog.Error("Failed to count users", "error", err)
 		totalUsers = 0
 	}
 
 	// Get new users today
 	newUsersToday, err := l.svcCtx.DB.CountUsersCreatedAfter(l.ctx, startOfDay)
 	if err != nil {
-		l.Errorf("Failed to count users today: %v", err)
+		slog.Error("Failed to count users today", "error", err)
 		newUsersToday = 0
 	}
 
 	// Get new users this week
 	newUsersThisWeek, err := l.svcCtx.DB.CountUsersCreatedAfter(l.ctx, startOfWeek)
 	if err != nil {
-		l.Errorf("Failed to count users this week: %v", err)
+		slog.Error("Failed to count users this week", "error", err)
 		newUsersThisWeek = 0
 	}
 
 	// Get new users this month
 	newUsersThisMonth, err := l.svcCtx.DB.CountUsersCreatedAfter(l.ctx, startOfMonth)
 	if err != nil {
-		l.Errorf("Failed to count users this month: %v", err)
+		slog.Error("Failed to count users this month", "error", err)
 		newUsersThisMonth = 0
 	}
 
 	// Get active subscriptions (paid plans only)
 	activeSubscriptions, err := l.svcCtx.DB.CountActiveSubscriptions(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to count active subscriptions: %v", err)
+		slog.Error("Failed to count active subscriptions", "error", err)
 		activeSubscriptions = 0
 	}
 
 	// Get trial subscriptions
 	trialSubscriptions, err := l.svcCtx.DB.CountTrialSubscriptions(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to count trial subscriptions: %v", err)
+		slog.Error("Failed to count trial subscriptions", "error", err)
 		trialSubscriptions = 0
 	}
 
@@ -92,15 +91,15 @@ func (l *GetAdminStatsLogic) GetAdminStats() (resp *types.AdminStatsResponse, er
 func GetAdminStatsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := &GetAdminStatsLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.GetAdminStats()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

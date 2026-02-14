@@ -3,19 +3,18 @@ package admin
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type AdminListUsersLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -44,7 +43,7 @@ func (l *AdminListUsersLogic) AdminListUsers(req *types.AdminListUsersRequest) (
 	// Get total count
 	totalCount, err := l.svcCtx.DB.CountUsers(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to count users: %v", err)
+		slog.Error("Failed to count users", "error", err)
 		return nil, fmt.Errorf("failed to count users")
 	}
 
@@ -56,7 +55,7 @@ func (l *AdminListUsersLogic) AdminListUsers(req *types.AdminListUsersRequest) (
 		PageSize:   int64(pageSize),
 	})
 	if err != nil {
-		l.Errorf("Failed to list users: %v", err)
+		slog.Error("Failed to list users", "error", err)
 		return nil, fmt.Errorf("failed to list users")
 	}
 
@@ -94,20 +93,20 @@ func AdminListUsersHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.AdminListUsersRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &AdminListUsersLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.AdminListUsers(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

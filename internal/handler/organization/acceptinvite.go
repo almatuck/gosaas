@@ -4,21 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/auth"
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	"github.com/google/uuid"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type AcceptInviteLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -28,20 +28,20 @@ func AcceptInviteHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.AcceptInviteRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &AcceptInviteLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.AcceptInvite(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -58,14 +58,14 @@ func (l *AcceptInviteLogic) AcceptInvite(req *types.AcceptInviteRequest) (resp *
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
 	// Get invite by token
 	invite, err := l.svcCtx.DB.Queries.GetInviteByToken(l.ctx, req.Token)
 	if err != nil {
-		l.Errorf("Failed to get invite: %v", err)
+		slog.Error("Failed to get invite", "error", err)
 		return nil, fmt.Errorf("invalid or expired invite")
 	}
 
@@ -101,14 +101,14 @@ func (l *AcceptInviteLogic) AcceptInvite(req *types.AcceptInviteRequest) (resp *
 		Role:           invite.Role,
 	})
 	if err != nil {
-		l.Errorf("Failed to add member: %v", err)
+		slog.Error("Failed to add member", "error", err)
 		return nil, err
 	}
 
 	// Delete the invite
 	err = l.svcCtx.DB.Queries.DeleteInviteByToken(l.ctx, req.Token)
 	if err != nil {
-		l.Errorf("Failed to delete invite: %v", err)
+		slog.Error("Failed to delete invite", "error", err)
 		// Non-fatal
 	}
 
@@ -118,14 +118,14 @@ func (l *AcceptInviteLogic) AcceptInvite(req *types.AcceptInviteRequest) (resp *
 		UserID:         userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to set current organization: %v", err)
+		slog.Error("Failed to set current organization", "error", err)
 		// Non-fatal
 	}
 
 	// Get organization details
 	org, err := l.svcCtx.DB.Queries.GetOrganizationByID(l.ctx, invite.OrganizationID)
 	if err != nil {
-		l.Errorf("Failed to get organization: %v", err)
+		slog.Error("Failed to get organization", "error", err)
 		return nil, err
 	}
 

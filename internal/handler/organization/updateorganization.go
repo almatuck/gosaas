@@ -4,20 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/auth"
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type UpdateOrganizationLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -27,20 +26,20 @@ func UpdateOrganizationHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.UpdateOrganizationRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &UpdateOrganizationLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.UpdateOrganization(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -57,7 +56,7 @@ func (l *UpdateOrganizationLogic) UpdateOrganization(req *types.UpdateOrganizati
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
@@ -67,7 +66,7 @@ func (l *UpdateOrganizationLogic) UpdateOrganization(req *types.UpdateOrganizati
 		UserID:         userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to get member: %v", err)
+		slog.Error("Failed to get member", "error", err)
 		return nil, fmt.Errorf("you are not a member of this organization")
 	}
 	if member.Role != "owner" && member.Role != "admin" {
@@ -80,7 +79,7 @@ func (l *UpdateOrganizationLogic) UpdateOrganization(req *types.UpdateOrganizati
 		if req.Slug != org.Slug {
 			found, err := l.svcCtx.DB.Queries.CheckSlugExists(l.ctx, req.Slug)
 			if err != nil {
-				l.Errorf("Failed to check slug: %v", err)
+				slog.Error("Failed to check slug", "error", err)
 				return nil, err
 			}
 			if found > 0 {
@@ -97,14 +96,14 @@ func (l *UpdateOrganizationLogic) UpdateOrganization(req *types.UpdateOrganizati
 		ID:      req.Id,
 	})
 	if err != nil {
-		l.Errorf("Failed to update organization: %v", err)
+		slog.Error("Failed to update organization", "error", err)
 		return nil, err
 	}
 
 	// Get updated organization
 	org, err := l.svcCtx.DB.Queries.GetOrganizationByID(l.ctx, req.Id)
 	if err != nil {
-		l.Errorf("Failed to get organization: %v", err)
+		slog.Error("Failed to get organization", "error", err)
 		return nil, err
 	}
 

@@ -5,21 +5,21 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/auth"
 	"gosaas/internal/db"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	"github.com/google/uuid"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type InviteMemberLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -29,20 +29,20 @@ func InviteMemberHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.InviteMemberRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &InviteMemberLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.InviteMember(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
@@ -59,7 +59,7 @@ func (l *InviteMemberLogic) InviteMember(req *types.InviteMemberRequest) (resp *
 	// Get user ID from context
 	userID, err := auth.GetUserIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID: %v", err)
+		slog.Error("Failed to get user ID", "error", err)
 		return nil, err
 	}
 
@@ -69,7 +69,7 @@ func (l *InviteMemberLogic) InviteMember(req *types.InviteMemberRequest) (resp *
 		UserID:         userID.String(),
 	})
 	if err != nil {
-		l.Errorf("Failed to get member: %v", err)
+		slog.Error("Failed to get member", "error", err)
 		return nil, fmt.Errorf("you are not a member of this organization")
 	}
 	if member.Role != "owner" && member.Role != "admin" {
@@ -88,7 +88,7 @@ func (l *InviteMemberLogic) InviteMember(req *types.InviteMemberRequest) (resp *
 	// Generate invite token
 	token, err := generateToken(32)
 	if err != nil {
-		l.Errorf("Failed to generate token: %v", err)
+		slog.Error("Failed to generate token", "error", err)
 		return nil, err
 	}
 
@@ -113,7 +113,7 @@ func (l *InviteMemberLogic) InviteMember(req *types.InviteMemberRequest) (resp *
 		ExpiresAt:      expiresAt,
 	})
 	if err != nil {
-		l.Errorf("Failed to create invite: %v", err)
+		slog.Error("Failed to create invite", "error", err)
 		return nil, err
 	}
 
@@ -136,7 +136,7 @@ func (l *InviteMemberLogic) InviteMember(req *types.InviteMemberRequest) (resp *
 			),
 		)
 		if err != nil {
-			l.Errorf("Failed to send invite email: %v", err)
+			slog.Error("Failed to send invite email", "error", err)
 			// Continue anyway - invite is created
 		}
 	}

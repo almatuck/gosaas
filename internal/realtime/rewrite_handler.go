@@ -1,9 +1,9 @@
 package realtime
 
 import (
-	"gosaas/internal/svc"
+	"log/slog"
 
-	"github.com/zeromicro/go-zero/core/logx"
+	"gosaas/internal/svc"
 )
 
 // RewriteHandler handles WebSocket messages
@@ -25,7 +25,7 @@ func (h *RewriteHandler) Register() {
 // handleMessage processes incoming WebSocket messages
 // Customize this for your application's needs
 func (h *RewriteHandler) handleMessage(c *Client, msg *Message) {
-	logx.Infof("[RewriteHandler] Received message from client %s: type=%s", c.ID, msg.Type)
+	slog.Info("Received message from client", "clientID", c.ID, "type", msg.Type)
 
 	// Example: Echo the message back
 	response := &Message{
@@ -36,6 +36,6 @@ func (h *RewriteHandler) handleMessage(c *Client, msg *Message) {
 	}
 
 	if err := c.SendMessage(response); err != nil {
-		logx.Errorf("[RewriteHandler] Failed to send response: %v", err)
+		slog.Error("Failed to send response", "error", err)
 	}
 }

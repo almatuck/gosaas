@@ -3,19 +3,19 @@ package subscription
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"gosaas/internal/auth"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
 
 	levee "github.com/almatuck/levee-go"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type CreateCheckoutLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -45,7 +45,7 @@ func (l *CreateCheckoutLogic) CreateCheckout(req *types.CreateCheckoutRequest) (
 	// Get email and user ID from JWT context
 	email, err := auth.GetEmailFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get email from context: %v", err)
+		slog.Error("Failed to get email from context", "error", err)
 		return nil, err
 	}
 
@@ -80,7 +80,7 @@ func (l *CreateCheckoutLogic) CreateCheckout(req *types.CreateCheckoutRequest) (
 		CancelUrl:   cancelURL,
 	})
 	if err != nil {
-		l.Errorf("Failed to create checkout for %s: %v", email, err)
+		slog.Error("Failed to create checkout", "email", email, "error", err)
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (l *CreateCheckoutLogic) createCheckoutLocal(userID, email string, req *typ
 
 	checkoutURL, err := l.svcCtx.Billing.CreateCheckoutSession(l.ctx, userID, email, planName)
 	if err != nil {
-		l.Errorf("Failed to create checkout for %s: %v", email, err)
+		slog.Error("Failed to create checkout", "email", email, "error", err)
 		return nil, err
 	}
 
@@ -117,20 +117,20 @@ func CreateCheckoutHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.CreateCheckoutRequest
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 			return
 		}
 
 		l := &CreateCheckoutLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.CreateCheckout(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }

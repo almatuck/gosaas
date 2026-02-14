@@ -6,7 +6,7 @@ import (
 	"gosaas/internal/realtime"
 
 	"github.com/gorilla/websocket"
-	"github.com/zeromicro/go-zero/core/logx"
+	"log/slog"
 )
 
 var upgrader = websocket.Upgrader{
@@ -34,12 +34,12 @@ func Handler(hub *realtime.Hub) http.HandlerFunc {
 			userID = "anonymous"
 		}
 
-		logx.Infof("Serving WebSocket for clientID: %s, userID: %s", clientID, userID)
+		slog.Info("Serving WebSocket", "clientID", clientID, "userID", userID)
 
 		// Upgrade HTTP connection to WebSocket
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			logx.Errorf("WebSocket upgrade error: %v", err)
+			slog.Error("WebSocket upgrade error", "error", err)
 			return
 		}
 

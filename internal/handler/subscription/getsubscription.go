@@ -3,19 +3,18 @@ package subscription
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"gosaas/internal/auth"
+	"gosaas/internal/httpx"
 	"gosaas/internal/svc"
 	"gosaas/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 type GetSubscriptionLogic struct {
-	logx.Logger
+	logger *slog.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
@@ -24,7 +23,7 @@ func (l *GetSubscriptionLogic) GetSubscription() (resp *types.GetSubscriptionRes
 	// Get user ID from JWT context
 	userID, err := auth.GetCustomerIDFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get user ID from context: %v", err)
+		slog.Error("Failed to get user ID from context", "error", err)
 		return nil, err
 	}
 
@@ -41,14 +40,14 @@ func (l *GetSubscriptionLogic) GetSubscription() (resp *types.GetSubscriptionRes
 	// Get email from JWT context for Levee lookup
 	email, err := auth.GetEmailFromContext(l.ctx)
 	if err != nil {
-		l.Errorf("Failed to get email from context: %v", err)
+		slog.Error("Failed to get email from context", "error", err)
 		return nil, err
 	}
 
 	// Get subscriptions from Levee SDK
 	subsResp, err := l.svcCtx.Levee.Customers.ListCustomerSubscriptions(l.ctx, email)
 	if err != nil {
-		l.Errorf("Failed to get subscriptions for %s: %v", email, err)
+		slog.Error("Failed to get subscriptions", "email", email, "error", err)
 		return nil, err
 	}
 
@@ -166,15 +165,15 @@ func (l *GetSubscriptionLogic) freeSubscriptionResponse() *types.GetSubscription
 func GetSubscriptionHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := &GetSubscriptionLogic{
-			Logger: logx.WithContext(r.Context()),
+			logger: slog.Default(),
 			ctx:    r.Context(),
 			svcCtx: svcCtx,
 		}
 		resp, err := l.GetSubscription()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			httpx.ErrorResponse(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.OkJson(w, resp)
 		}
 	}
 }
