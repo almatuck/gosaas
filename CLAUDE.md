@@ -9,12 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 make air              # Backend with hot reload
 cd app && pnpm dev    # Frontend dev server
 
-# Code generation (CRITICAL: NEVER run goctl directly)
-make gen              # Regenerate handlers/types from .api file
+# Code generation (TypeScript only)
+make gen              # Regenerate TypeScript API client from Go types/routes
 
 # Testing
-go test -v ./internal/logic/...                        # All Go tests
-go test -v -run TestName ./internal/logic/auth/        # Single test
+go test -v ./internal/handler/...                       # All Go tests
+go test -v -run TestName ./internal/handler/auth/      # Single test
 cd app && pnpm check                                   # TypeScript check
 cd app && pnpm test:unit                               # Frontend tests
 
@@ -32,41 +32,81 @@ make build && cd app && pnpm build
 **Dual-mode system** - switches between standalone (SQLite + Stripe) and Levee (managed platform):
 
 ```
-gosaas.api                   → API definition (routes, types) - EDIT HERE to add endpoints
-├── internal/handler/        → AUTO-GENERATED from .api (DO NOT EDIT)
-├── internal/types/          → AUTO-GENERATED from .api (DO NOT EDIT)
-├── internal/logic/          → Business logic - EDIT HERE for implementation
-├── internal/svc/            → ServiceContext with UseLocal()/UseLevee() mode check
-├── internal/db/             → SQLite (standalone mode)
-└── internal/local/          → Local auth/billing services (standalone mode)
+internal/types/types.go      → Request/response types (source of truth)
+internal/handler/routes.go   → Route registrations (source of truth)
+internal/handler/{group}/    → Handler + business logic (one file per endpoint)
+internal/svc/                → ServiceContext with UseLocal()/UseLevee() mode check
+internal/db/                 → SQLite (standalone mode)
+internal/local/              → Local auth/billing services (standalone mode)
+cmd/genapi/                  → TypeScript generator (reads types + routes, writes TS)
 
 app/src/
 ├── routes/(www)/            → Marketing pages (public)
 ├── routes/(auth)/           → Auth pages (login, register)
 ├── routes/(app)/            → App pages (authenticated)
-├── lib/api/                 → AUTO-GENERATED TypeScript client
+├── lib/api/                 → AUTO-GENERATED TypeScript client (gosaas.ts, gosaasComponents.ts)
 ├── lib/config/site.ts       → Branding/SEO (single source of truth)
 └── lib/stores/              → Svelte stores (auth, subscription)
 ```
 
 ## Adding API Endpoints
 
-1. Define in `gosaas.api`:
+1. Add types to `internal/types/types.go`:
+```go
+type GetWidgetRequest struct {
+    Id string `path:"id"`
+}
+type GetWidgetResponse struct {
+    Name string `json:"name"`
+}
 ```
-@server(prefix: /api/v1, jwt: Auth)
-service gosaas {
-    @handler GetWidget
-    get /widgets/:id (GetWidgetRequest) returns (GetWidgetResponse)
+
+2. Add route to `internal/handler/routes.go`:
+```go
+{
+    // Get widget by ID
+    Method:  http.MethodGet,
+    Path:    "/widgets/:id",
+    Handler: widget.GetWidgetHandler(serverCtx),
+},
+```
+
+3. Create handler file `internal/handler/widget/getwidget.go`:
+```go
+package widget
+
+import (
+    "context"
+    "net/http"
+    "gosaas/internal/svc"
+    "gosaas/internal/types"
+    "github.com/zeromicro/go-zero/core/logx"
+    "github.com/zeromicro/go-zero/rest/httpx"
+)
+
+type GetWidgetLogic struct {
+    logx.Logger
+    ctx    context.Context
+    svcCtx *svc.ServiceContext
 }
 
-type GetWidgetRequest { Id string `path:"id"` }
-type GetWidgetResponse { Name string `json:"name"` }
-```
+func GetWidgetHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        var req types.GetWidgetRequest
+        if err := httpx.Parse(r, &req); err != nil {
+            httpx.ErrorCtx(r.Context(), w, err)
+            return
+        }
+        l := &GetWidgetLogic{Logger: logx.WithContext(r.Context()), ctx: r.Context(), svcCtx: svcCtx}
+        resp, err := l.GetWidget(&req)
+        if err != nil {
+            httpx.ErrorCtx(r.Context(), w, err)
+        } else {
+            httpx.OkJsonCtx(r.Context(), w, resp)
+        }
+    }
+}
 
-2. Run `make gen`
-
-3. Implement in `internal/logic/getwidgetlogic.go`:
-```go
 func (l *GetWidgetLogic) GetWidget(req *types.GetWidgetRequest) (*types.GetWidgetResponse, error) {
     if l.svcCtx.UseLocal() {
         // SQLite implementation
@@ -75,7 +115,9 @@ func (l *GetWidgetLogic) GetWidget(req *types.GetWidgetRequest) (*types.GetWidge
 }
 ```
 
-4. Frontend types auto-available: `import { getWidget } from '$lib/api'`
+4. Run `make gen` to regenerate TypeScript
+
+5. Frontend types auto-available: `import { getWidget } from '$lib/api'`
 
 ## Mode-Aware Logic Pattern
 
@@ -97,7 +139,7 @@ Key methods: `l.svcCtx.UseLocal()`, `l.svcCtx.UseLevee()`, `l.svcCtx.DB`, `l.svc
 
 ## Critical Rules
 
-- **NEVER run goctl directly** - Use `make gen`
+- **`make gen` for TypeScript only** - Regenerates TS from Go types/routes. No goctl.
 - **pnpm only** - Never npm or yarn
 - **Styles in app.css only** - No inline styles or `<style>` blocks
 - **Svelte 5 runes** - `$state`, `$derived`, `$props`, `$effect` (not Svelte 4 `export let`, `$:`, `<slot>`)

@@ -161,7 +161,7 @@ function createOrganizationStore() {
 		 */
 		async loadMembers(orgId: string): Promise<void> {
 			try {
-				const response = await api.listMembers({}, orgId);
+				const response = await api.listMembers(orgId);
 				update((state) => ({ ...state, members: response.members }));
 			} catch (error) {
 				logger.error('Failed to load members', error);
@@ -173,7 +173,7 @@ function createOrganizationStore() {
 		 */
 		async loadInvites(orgId: string): Promise<void> {
 			try {
-				const response = await api.listInvites({}, orgId);
+				const response = await api.listInvites(orgId);
 				update((state) => ({ ...state, invites: response.invites }));
 			} catch (error) {
 				logger.error('Failed to load invites', error);
@@ -189,7 +189,7 @@ function createOrganizationStore() {
 			role: string = 'member'
 		): Promise<OrganizationInvite | null> {
 			try {
-				const response = await api.inviteMember({}, { email, role }, orgId);
+				const response = await api.inviteMember({ email, role }, orgId);
 				update((state) => ({
 					...state,
 					invites: [...state.invites, response.invite]
@@ -207,7 +207,7 @@ function createOrganizationStore() {
 		 */
 		async revokeInvite(orgId: string, inviteId: string): Promise<boolean> {
 			try {
-				await api.revokeInvite({}, orgId, inviteId);
+				await api.revokeInvite(orgId, inviteId);
 				update((state) => ({
 					...state,
 					invites: state.invites.filter((i) => i.id !== inviteId)
@@ -225,7 +225,7 @@ function createOrganizationStore() {
 		 */
 		async updateMemberRole(orgId: string, userId: string, role: string): Promise<boolean> {
 			try {
-				await api.updateMemberRole({}, { role }, orgId, userId);
+				await api.updateMemberRole({ role }, orgId, userId);
 				update((state) => ({
 					...state,
 					members: state.members.map((m) => (m.userId === userId ? { ...m, role } : m))
@@ -243,7 +243,7 @@ function createOrganizationStore() {
 		 */
 		async removeMember(orgId: string, userId: string): Promise<boolean> {
 			try {
-				await api.removeMember({}, orgId, userId);
+				await api.removeMember(orgId, userId);
 				update((state) => ({
 					...state,
 					members: state.members.filter((m) => m.userId !== userId)
@@ -261,7 +261,7 @@ function createOrganizationStore() {
 		 */
 		async leaveOrganization(orgId: string): Promise<boolean> {
 			try {
-				await api.leaveOrganization({}, orgId);
+				await api.leaveOrganization(orgId);
 				update((state) => ({
 					...state,
 					organizations: state.organizations.filter((o) => o.id !== orgId),

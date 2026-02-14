@@ -21,7 +21,7 @@ help:
 	@echo "  make air       - Backend only with hot reload"
 	@echo "  make build     - Build production binary"
 	@echo "  make test      - Run tests"
-	@echo "  make gen       - Regenerate API code from .api file"
+	@echo "  make gen       - Regenerate TypeScript API client"
 	@echo ""
 	@echo "Database:"
 	@echo "  make migrate-up     - Run pending migrations"
@@ -82,14 +82,10 @@ deps:
 	go mod download
 	go mod tidy
 
-# Code generation from .api file
+# Generate TypeScript API client from Go types and routes
 gen:
-	@echo "Cleaning auto-generated handlers..."
-	@rm -rf internal/handler
-	@echo "Generating Go API code..."
-	goctl api go -api $(EXECUTABLE).api -dir . --style gozero
 	@echo "Generating TypeScript API code..."
-	goctl api ts -api $(EXECUTABLE).api -dir ./app/src/lib/api/
+	go run ./cmd/genapi
 	@echo "Code generation complete!"
 
 # Setup script - rename project

@@ -163,13 +163,13 @@ The frontend is statically built and embedded into a single Go binary.
 ## Architecture
 
 ```
-├── gosaas.api                 # API definition (routes, request/response types)
 ├── gosaas.go                  # Entry point
 ├── etc/gosaas.yaml            # Backend config + Products/Pricing
+├── cmd/genapi/                # Custom TypeScript generator
 ├── internal/
-│   ├── handler/               # AUTO-GENERATED - DO NOT EDIT
-│   ├── types/                 # AUTO-GENERATED - DO NOT EDIT
-│   ├── logic/                 # Business logic - EDIT HERE
+│   ├── types/types.go         # Request/response types (SOURCE OF TRUTH)
+│   ├── handler/routes.go      # Route registrations (SOURCE OF TRUTH)
+│   ├── handler/{group}/       # Handler + business logic (one file per endpoint)
 │   ├── svc/                   # Service context
 │   ├── db/                    # SQLite (standalone mode)
 │   ├── local/                 # Local auth/billing (standalone mode)
@@ -201,10 +201,7 @@ The frontend is statically built and embedded into a single Go binary.
 make gen
 ```
 
-This generates:
-- Go handlers in `internal/handler/`
-- Go types in `internal/types/`
-- TypeScript API client in `app/src/lib/api/`
+This generates TypeScript API client only (in `app/src/lib/api/`). Go types and handlers are manually written — there is no `.api` file.
 
 ### 2. Hot Reloading
 
@@ -358,38 +355,38 @@ Pricing is read from YAML at build time and embedded in static HTML.
 
 ## Adding New Endpoints
 
-1. Define in `gosaas.api`:
-```
-@server(
-    prefix: /api/v1
-    middleware: JwtAuth
-)
-service gosaas {
-    @handler GetWidget
-    get /widgets/:id (GetWidgetRequest) returns (GetWidgetResponse)
-}
-
-type GetWidgetRequest {
+1. Add types to `internal/types/types.go`:
+```go
+type GetWidgetRequest struct {
     Id string `path:"id"`
 }
-
-type GetWidgetResponse {
+type GetWidgetResponse struct {
     Id   string `json:"id"`
     Name string `json:"name"`
 }
 ```
 
-2. Run `make gen`
+2. Add route to `internal/handler/routes.go`:
+```go
+{
+    // Get widget by ID
+    Method:  http.MethodGet,
+    Path:    "/widgets/:id",
+    Handler: widget.GetWidgetHandler(serverCtx),
+},
+```
 
-3. Implement in `internal/logic/getwidgetlogic.go`
+3. Create handler file `internal/handler/widget/getwidget.go` (handler + logic in one file)
 
-4. Frontend types auto-available in `$lib/api`
+4. Run `make gen` to regenerate TypeScript client
+
+5. Frontend types auto-available: `import { getWidget } from '$lib/api'`
 
 ## File Locations
 
 | Task | Location |
 |------|----------|
-| Add API endpoint | `gosaas.api` → `make gen` → `internal/logic/` |
+| Add API endpoint | `internal/types/types.go` + `internal/handler/routes.go` + `internal/handler/{group}/` → `make gen` |
 | Add page | `app/src/routes/` |
 | Add component | `app/src/lib/components/` |
 | Add store | `app/src/lib/stores/` |
@@ -445,8 +442,8 @@ LEVEE_BASE_URL=https://api.levee.sh
 
 ```bash
 # Go tests
-go test -v ./internal/logic/...
-go test -v -run TestFunctionName ./internal/logic/auth/
+go test -v ./internal/handler/...
+go test -v -run TestFunctionName ./internal/handler/auth/
 
 # Frontend tests
 cd app && pnpm test:unit

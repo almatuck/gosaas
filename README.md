@@ -62,17 +62,14 @@ cd app && pnpm dev    # Frontend dev server (port 5173)
 
 ```
 myapp/
-├── myapp.api                  # API definition (routes, types)
 ├── myapp.go                   # Entry point
 ├── etc/
 │   └── gosaas.yaml            # Backend config + Products/Pricing
+├── cmd/genapi/                # Custom TypeScript generator
 ├── internal/
-│   ├── handler/               # Auto-generated handlers (DO NOT EDIT)
-│   ├── types/                 # Auto-generated types (DO NOT EDIT)
-│   ├── logic/                 # Business logic (EDIT HERE)
-│   │   ├── auth/              # Login, register, password reset
-│   │   ├── user/              # Profile, preferences, account
-│   │   └── subscription/      # Billing, checkout, usage
+│   ├── types/types.go         # Request/response types (source of truth)
+│   ├── handler/routes.go      # Route registrations (source of truth)
+│   ├── handler/{group}/       # Handler + business logic (one file per endpoint)
 │   ├── svc/                   # Service context
 │   ├── db/                    # SQLite setup (standalone mode)
 │   ├── local/                 # Local auth & billing (standalone mode)
@@ -86,7 +83,7 @@ myapp/
 │   │   └── lib/
 │   │       ├── config/
 │   │       │   └── site.ts    # Branding/SEO config
-│   │       ├── api/           # Auto-generated API client
+│   │       ├── api/           # Auto-generated TypeScript API client
 │   │       ├── stores/        # Svelte stores
 │   │       └── components/    # UI components
 │   └── static/                # Static assets
@@ -246,7 +243,7 @@ LEVEE_API_KEY=lvk_xxx
 make air              # Hot reload development
 make build            # Build binary
 make test             # Run tests
-make gen              # Regenerate handlers from .api file (NEVER run goctl directly)
+make gen              # Regenerate TypeScript API client from Go types/routes
 
 # Frontend
 cd app
@@ -257,42 +254,33 @@ pnpm check            # Type checking
 
 ## Adding API Endpoints
 
-1. **Define the endpoint** in `gosaas.api`:
+1. **Add types** to `internal/types/types.go`:
 
-```api
-@server(
-    prefix: /api/v1
-    middleware: JwtAuth
-)
-service gosaas {
-    @handler GetWidget
-    get /widgets/:id (GetWidgetRequest) returns (GetWidgetResponse)
-}
-
-type GetWidgetRequest {
+```go
+type GetWidgetRequest struct {
     Id string `path:"id"`
 }
-
-type GetWidgetResponse {
+type GetWidgetResponse struct {
     Id   string `json:"id"`
     Name string `json:"name"`
 }
 ```
 
-2. **Generate handlers**: `make gen`
-
-3. **Implement logic** in `internal/logic/getwidgetlogic.go`:
+2. **Add route** to `internal/handler/routes.go`:
 
 ```go
-func (l *GetWidgetLogic) GetWidget(req *types.GetWidgetRequest) (*types.GetWidgetResponse, error) {
-    return &types.GetWidgetResponse{
-        Id:   req.Id,
-        Name: "My Widget",
-    }, nil
-}
+{
+    Method:  http.MethodGet,
+    Path:    "/widgets/:id",
+    Handler: widget.GetWidgetHandler(serverCtx),
+},
 ```
 
-4. **Use in frontend** (TypeScript client auto-generated):
+3. **Create handler** at `internal/handler/widget/getwidget.go` (handler + logic in one file)
+
+4. **Regenerate TypeScript**: `make gen`
+
+5. **Use in frontend** (TypeScript client auto-generated):
 
 ```typescript
 import { getWidget } from '$lib/api';
