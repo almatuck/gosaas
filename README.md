@@ -1,6 +1,6 @@
 # GoSaaS
 
-Ship your SaaS in days, not months. A production-ready full-stack boilerplate with Go-Zero backend and SvelteKit frontend.
+Ship your SaaS in days, not months. A production-ready full-stack boilerplate with Go backend and SvelteKit frontend.
 
 ## Features
 

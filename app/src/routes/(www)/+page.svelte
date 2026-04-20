@@ -72,7 +72,7 @@
 		{
 			question: 'What technologies does this use?',
 			answer:
-				'The frontend is built with SvelteKit 5 and Tailwind CSS v4. The backend uses Go with the go-zero framework. Levee handles auth, billing, and email.'
+				'The frontend is built with SvelteKit 5 and Tailwind CSS v4. The backend uses Go with the chi router. Levee handles auth, billing, and email.'
 		},
 		{
 			question: 'Can I use this for commercial projects?',

@@ -134,7 +134,7 @@ Key methods: `l.svcCtx.UseLocal()`, `l.svcCtx.UseLevee()`, `l.svcCtx.DB`, `l.svc
 
 ## Critical Rules
 
-- **`make gen` for TypeScript only** - Regenerates TS from Go types/routes. No goctl.
+- **`make gen` for TypeScript only** - Regenerates TS from Go types/routes.
 - **pnpm only** - Never npm or yarn
 - **Styles in app.css only** - No inline styles or `<style>` blocks
 - **Svelte 5 runes** - `$state`, `$derived`, `$props`, `$effect` (not Svelte 4 `export let`, `$:`, `<slot>`)
